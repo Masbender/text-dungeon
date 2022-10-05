@@ -4,17 +4,17 @@ class Creature:
     def __init__(self, name, health):
         self.name = name
         
-        self.stealth = 0
-        self.dodge = 0
-        self.resistance = 0
-        self.maxHealth = health
-        self.awareness = 0
-        self.appraisal = 0
+        self.stealth = 0 # compared with opponents awareness in stealth checks
+        self.dodge = 0 # percent chance to dodge
+        self.resistance = 0 # resistance to some effects
+        self.maxHealth = health # amount of possible damage taken before death
+        self.awareness = 0 # compared with opponents stealth in awareness checks
+        self.appraisal = 0 # highest value item that the value can be identified
 
-        self.immuneTo = []
-        self.armorClass = 0
+        self.immuneTo = [] # effects that cannot be applied
+        self.armorClass = 0 # reduced from incoming damage
 
-        self.effects = []
+        self.effects = [] #
         self.effectDurations = []
         self.health = health
         self.stunned = False
@@ -101,7 +101,7 @@ class Creature:
     def affect(self, effect, duration):
     # applies resistance and immunities to an effect
         # applies resistance
-        if effect.naturalEffect:
+        if effect.natural and self.resistance >= effect.level:
             if duration - self.resistance + effect.level > 0:
                 duration -= self.resistance
             else:
@@ -120,7 +120,7 @@ class Creature:
 
         # checks if immune to effect
         if not type(effect) in self.immuneTo:
-            self.effects.append(effect)
+            self.effects.append(effect(self))
             self.effectTimers.append(duration)
             return True
         else:
@@ -149,3 +149,17 @@ class Enemy(Creature):
             print(f"{self.name} is stunned and unable to fight")
         else:
             self.attack(enemies)
+
+class Effect:
+    def __init__(self, target, natural = False, level = 0):
+        self.target = target
+        self.natural = natural
+        self.level = level
+
+    def update(self):
+    # called every turn
+        pass
+
+    def reverse(self):
+    # called when effect is removed
+        pass
