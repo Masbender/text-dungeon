@@ -9,6 +9,9 @@ venv
 replit.nix
 poetry.lock
 pyproject.toml
+.config
+.git
+.upm
 
 # User-specific files
 *.rsuser
