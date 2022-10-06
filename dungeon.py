@@ -7,5 +7,8 @@ def update_effects(creature):
         creature.effectTimers[i] -= 1
 
     # deletes expired effects
-    while 0 in creature.effectTimers: # FIX : add reverse
-        creature.effectTimers.remove(0)
+    while 0 in creature.effectTimers:
+        effectIndex = creature.effectTimers.index(0)
+        creature.effects[effectIndex].reverse()
+        
+        creature.effectTimers.pop(0)
