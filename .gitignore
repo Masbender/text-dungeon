@@ -12,6 +12,7 @@ pyproject.toml
 .config
 .git
 .upm
+.breakpoints
 
 # User-specific files
 *.rsuser
