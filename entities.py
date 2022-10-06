@@ -1,4 +1,4 @@
- from random import randint, choice
+from random import randint, choice
 
 class Creature:
     def __init__(self, name, health):
