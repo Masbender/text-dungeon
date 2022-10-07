@@ -69,8 +69,8 @@ class Creature:
 
     
     def hurt(self, damageTaken, message):
-    # lowers health but applies armor class and dodge
-        finalDamageTaken = damageTaken - self.armorClass
+    # lowers health but applies armor class and dodge        
+        finalDamageTaken = damageTaken + randint(-1, 1) - self.armorClass
         if finalDamageTaken < 0:
             finalDamageTaken = 0
 
@@ -140,8 +140,9 @@ player = Player() # creates the one and only instance of player
 
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
-    def __init__(self, name, health):
+    def __init__(self, name, health, awareness, stealth):
         super().__init__(name, health)
+        self.message = "you feel uneasy" # printed when player detects enemy
 
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield
@@ -178,3 +179,19 @@ class Bleeding(Effect):
     def reverse(self):
         # restores changes in __init__
         self.target.armorClass += 1
+
+class Draugr(Enemy):
+# an uncommon enemy that can appear in earlier floors
+# a tankier enemy who can inflict bleeding
+    def __init__(self):
+        super().__init__("draugr", 20, 2, 1)
+        self.resistance = 2
+        self.armorClass = 1
+
+    def attack(self, enemies):
+        message = "the DRAUGR hits you with their axe for _ damage"
+        if randint(1, 4) == 1:
+            player.affect(Bleeding, 6)
+            player.hurt(3 + self.strength, message + ", leaving you BLEEDING!")
+        else:
+            player.hurt(4 + self.strength, message + "!")

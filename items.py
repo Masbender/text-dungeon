@@ -83,6 +83,6 @@ class Sword(Item):
         message = f"You swing your sword at the {target.name} for _ damage"
         if randint(0, 5) < self.bleedChance:
             bleedApplied = target.affect(Bleed, self.bleedDuration)
-            target.hurt(randint(-2, 2) + self.damage + p.strength, message + ", leaving them bleeding!")
+            target.hurt(self.damage + p.strength, message + ", leaving them bleeding!")
         else:
-            target.hurt(randint(-2, 2) + self.damage + p.strength, messsage + "!")
+            target.hurt(self.damage + p.strength, messsage + "!")
