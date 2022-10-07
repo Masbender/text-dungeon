@@ -9,7 +9,7 @@ class Creature:
         self.resistance = 0 # resistance to some effects
         self.maxHealth = health # amount of possible damage taken before death
         self.awareness = 0 # compared with opponents stealth in awareness checks
-        self.appraisal = 0 # highest value item that the value can be identified
+        self.appraisal = 50 # highest value item that the value can be identified
 
         self.immuneTo = [] # effects that cannot be applied
         self.armorClass = 0 # reduced from incoming damage
@@ -57,7 +57,7 @@ class Creature:
         self.perception += increase
 
         self.awareness += increase
-        self.appraisal += increase
+        self.appraisal += increase * 25
     
     def set_stats(self, str, dex, con, int, per):
     # sets all 5 stats at once
@@ -163,3 +163,18 @@ class Effect:
     def reverse(self):
     # called when effect is removed
         pass
+
+class Bleeding(Effect):
+# does 1 damage per turn, lowers AC by 1
+    def __init__(self, target):
+        super().__init__(target, True, 0)
+        # AC only decreases when applied
+        self.target.armorClass -= 1
+
+    def update(self):
+        # lowers health by 1 every turn
+        self.target.health -= 1
+
+    def reverse(self):
+        # restores changes in __init__
+        self.target.armorClass += 1
