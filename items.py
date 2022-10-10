@@ -2,7 +2,7 @@ from random import randint
 from extra import gather_input
 import entities
 
-p = entities.player
+player = entities.player
 
 class Item:
     def __init__(self, name, value, uses):
@@ -13,14 +13,14 @@ class Item:
 
     def degrade(self):
         # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
-        if p.intelligence < 0:
-            if randint(0, -99) > p.intelligence * 7.5:
+        if player.intelligence < 0:
+            if randint(0, -99) > player.intelligence * 7.5:
                 self.uses -= 1
             self.uses -= 1
             return True
         # for every level of INT, there is a 7.5% that the item doesn't degrade
         else:
-            if randint(0, 99) < p.intelligence * 7.5:
+            if randint(0, 99) < player.intelligence * 7.5:
                 return False
             else:
                 self.uses -= 1
@@ -71,6 +71,7 @@ class Sword(Item):
             prefix = "worn"
 
         return f"({prefix})"
+
     def attack(self, enemies):
         self.degrade() # degrade is called when the item does something
 
@@ -82,7 +83,9 @@ class Sword(Item):
 
         message = f"You swing your sword at the {target.name} for _ damage"
         if randint(0, 5) < self.bleedChance:
-            bleedApplied = target.affect(Bleed, self.bleedDuration)
-            target.hurt(self.damage + p.strength, message + ", leaving them bleeding!")
+            bleedApplied = target.affect(entities.Bleeding, self.bleedDuration)
+            target.hurt(self.damage + player.strength, message + ", leaving them bleeding!")
         else:
-            target.hurt(self.damage + p.strength, messsage + "!")
+            target.hurt(self.damage + player.strength, message + "!")
+
+        return True

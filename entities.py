@@ -85,7 +85,7 @@ class Creature:
                 message += " The attack was a critical hit!"
 
         self.health -= finalDamageTaken
-        message.replace("_", str(finalDamageTaken))
+        message = message.replace("_", str(finalDamageTaken))
         print(message)
         return finalDamageTaken
 
@@ -152,10 +152,11 @@ class Enemy(Creature):
             self.attack(enemies)
 
 class Effect:
-    def __init__(self, target, natural = False, level = 0):
+    natural = False
+    level = 0
+    
+    def __init__(self, target):
         self.target = target
-        self.natural = natural
-        self.level = level
 
     def update(self):
     # called every turn
@@ -167,8 +168,11 @@ class Effect:
 
 class Bleeding(Effect):
 # does 1 damage per turn, lowers AC by 1
+    natural = True
+    level = 0
+    
     def __init__(self, target):
-        super().__init__(target, True, 0)
+        super().__init__(target)
         # AC only decreases when applied
         self.target.armorClass -= 1
 
