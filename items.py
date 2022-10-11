@@ -89,3 +89,35 @@ class Sword(Item):
             target.hurt(self.damage + player.strength, message + "!")
 
         return True
+
+class Bandage(Item):
+# cures bleeding, heals some health, and applies regeneration
+    def __init__(self):
+        super().__init__("bandage", 30, 3)
+
+    def degrade(self):
+    # value is based on uses
+        super().degrade()
+        self.value = 10 * self.uses
+
+    def attack(self, enemies):
+    # attack does the same thing as consume
+        self.consume()
+
+    def consume(self):
+        # heals and apples regeneration
+        healingDone = player.heal(randint(2, 4))
+        player.affect(Regeneration, 6)
+
+        # cures bleeding
+        bleedingCured = False
+        for i in range(len(player.effects)):
+            if type(player.effects[i]) == Bleeding:
+                player.effects.pop(i)
+                player.effectDurations.pop(i)
+                bleedingCured = True
+                break
+
+        message = f"the bandage restores {healingDone} health"
+        if bleedingCured:
+            print(message + " and stops your bleeding")
