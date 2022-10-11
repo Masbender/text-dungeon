@@ -35,7 +35,7 @@ class Battle:
                     updatedEnemies.append(enemy)
             self.enemies = updatedEnemies
 
-            if enemies == [] or player.health <= 0:
+            if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
 
         # detects if player won or lost

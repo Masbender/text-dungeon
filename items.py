@@ -120,6 +120,7 @@ class Bandage(Item):
         bleedingCured = False
         for i in range(len(player.effects)):
             if type(player.effects[i]) == entities.Bleeding:
+                player.effects[i].reverse()
                 player.effects.pop(i)
                 player.effectDurations.pop(i)
                 bleedingCured = True
