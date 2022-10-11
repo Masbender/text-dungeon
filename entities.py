@@ -173,7 +173,7 @@ class Bleeding(Effect):
     level = 0
     
     def __init__(self, target):
-        super().__init__(target)
+        self.target = target
         # AC only decreases when applied
         self.target.armorClass -= 1
 
@@ -184,6 +184,16 @@ class Bleeding(Effect):
     def reverse(self):
         # restores changes in __init__
         self.target.armorClass += 1
+
+class Regeneration(Effect):
+# heals 1 hp per turn
+    name = "regeneration"
+    
+    def __init__(self, target):
+        self.target = target
+
+    def update(self):
+        self.target.heal(1)
 
 class Draugr(Enemy):
 # an uncommon enemy that can appear in earlier floors
