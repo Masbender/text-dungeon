@@ -52,7 +52,7 @@ class Sword(Item):
         super().__init__(material + " sword", 30 + (20 * level), 15 + (10 * level))
         
         self.damage = 4 + level
-        self.bleedDuration = 3
+        self.bleedDuration = 4
         self.bleedChance = 2 # bleedChance is _ of 6
 
         if level >= 1:
@@ -78,15 +78,21 @@ class Sword(Item):
         options = [] # gets a list of enemy names
         for enemy in enemies:
             options.append(enemy.name)
-            
-        target = enemies[gather_input("Who do you attack?", options)]
 
-        message = f"You swing your sword at the {target.name} for _ damage"
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+        
+        # applies bleeding
+        bleedingApplied = False
         if randint(0, 5) < self.bleedChance:
-            bleedApplied = target.affect(entities.Bleeding, self.bleedDuration)
-            target.hurt(self.damage + player.strength, message + ", leaving them bleeding!")
+            bleedingApplied = target.affect(entities.Bleeding, self.bleedDuration)
+
+        # does damage and prints message
+        message = f"You swing your sword at the {target.name} for _ damage"
+        if bleedingApplied:
+            target.hurt(self.damage + player.strength, message + ", leaving them bleeding")
         else:
-            target.hurt(self.damage + player.strength, message + "!")
+            target.hurt(self.damage + player.strength, message + "")
 
         return True
 

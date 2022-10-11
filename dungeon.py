@@ -35,12 +35,21 @@ class Battle:
                     updatedEnemies.append(enemy)
             self.enemies = updatedEnemies
 
+            if enemies == [] or player.health <= 0:
+                self.battleOver = True
+
+        # detects if player won or lost
+        if player.health > 0:
+            return True
+        else:
+            return False
+
     def print_battle(self):
         print()
         creatures = self.enemies + [player]
 
         for creature in creatures:
-            print(f"{creature.name.upper()} : {creature.health}/{creature.maxHealth} HP")
+            print(f"{creature.name.upper()} : {creature.health}/{creature.maxHealth} HP, {creature.armorClass} AC")
             
             effects = []
             for i in range(len(creature.effects)):

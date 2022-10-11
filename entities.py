@@ -101,9 +101,9 @@ class Creature:
     def affect(self, effect, duration):
     # applies resistance and immunities to an effect
         # applies resistance
-        if effect.natural and self.resistance >= effect.level:
-            if duration - self.resistance + effect.level > 0:
-                duration -= self.resistance - effect.level
+        if effect.natural and self.resistance > effect.level:
+            if (duration - self.resistance + effect.level) > 0:
+                duration += effect.level - self.resistance
             else:
                 return False
 
@@ -112,6 +112,7 @@ class Creature:
             if effect == type(self.effects[i]):
                 # checks which effect is longer
                 if self.effectDurations[i] < duration or duration < 0:
+                    self.effects[i].reverse()
                     self.effectDurations.pop(i)
                     self.effects.pop(i)
                     break
