@@ -1,5 +1,5 @@
 from random import randint
-from extra import gather_input
+from extra import gather_input, clear_console
 import entities
 
 player = entities.player
@@ -27,7 +27,7 @@ class Item:
                 return True
 
     def status(self):
-        return f"({uses} of {maxUses} uses)"
+        return f"({self.uses})"
     def attack(self, enemies):
     # performs the items use in combat
         return False
@@ -64,13 +64,13 @@ class Sword(Item):
             bleedDuration += 1
 
     def status(self):
-        prefix = ""
-        if self.uses < self.maxUses / 3:
-            prefix = "damaged"
-        elif slef.uses < self.maxUses * 2 / 3:
-            prefix = "worn"
+        suffix = ""
+        if self.uses <= self.maxUses / 3:
+            suffix = "(damaged)"
+        elif self.uses <= self.maxUses * 2 / 3:
+            suffix = "(worn)"
 
-        return f"({prefix})"
+        return f"{suffix}"
 
     def attack(self, enemies):
         self.degrade() # degrade is called when the item does something
@@ -102,22 +102,28 @@ class Bandage(Item):
 
     def attack(self, enemies):
     # attack does the same thing as consume
-        self.consume()
+        return self.consume()
 
     def consume(self):
+        self.degrade()
         # heals and apples regeneration
         healingDone = player.heal(randint(2, 4))
-        player.affect(Regeneration, 6)
+        player.affect(entities.Regeneration, 6)
 
         # cures bleeding
         bleedingCured = False
         for i in range(len(player.effects)):
-            if type(player.effects[i]) == Bleeding:
+            if type(player.effects[i]) == entities.Bleeding:
                 player.effects.pop(i)
                 player.effectDurations.pop(i)
                 bleedingCured = True
                 break
-
+                
+        clear_console()
         message = f"the bandage restores {healingDone} health"
         if bleedingCured:
             print(message + " and stops your bleeding")
+        else:
+            print(message)
+
+        return True

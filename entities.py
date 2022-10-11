@@ -103,23 +103,23 @@ class Creature:
         # applies resistance
         if effect.natural and self.resistance >= effect.level:
             if duration - self.resistance + effect.level > 0:
-                duration -= self.resistance
+                duration -= self.resistance - effect.level
             else:
                 return False
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
-            if type(effect) == type(self.effects[i]):
+            if effect == type(self.effects[i]):
                 # checks which effect is longer
-                if self.effectDurations < duration[i] and not duration[i] < 0:
-                    self.effectDurrations.pop(i)
+                if self.effectDurations[i] < duration or duration < 0:
+                    self.effectDurations.pop(i)
                     self.effects.pop(i)
                     break
-            else:
-                return False
+                else:
+                    return False
 
         # checks if immune to effect
-        if not type(effect) in self.immuneTo:
+        if not effect in self.immuneTo:
             self.effects.append(effect(self))
             self.effectDurations.append(duration)
             return True

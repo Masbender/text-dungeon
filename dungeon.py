@@ -58,12 +58,15 @@ class Battle:
     def player_turn(self):
         options = []
         for item in player.inventory:
-            options.append(item.name)
+            options.append(f"{item.name} {item.status()}")
         
         turnOver = False
         while not turnOver:
             itemUsed = gather_input("What do you use?", options)
 
             turnOver = player.inventory[itemUsed].attack(self.enemies)
+
+            if player.inventory[itemUsed].uses <= 0:
+                player.inventory.pop(itemUsed)
 
         update_effects(player)
