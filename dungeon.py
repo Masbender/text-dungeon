@@ -13,8 +13,9 @@ def update_effects(creature):
     while 0 in creature.effectDurations:
         effectIndex = creature.effectDurations.index(0)
         creature.effects[effectIndex].reverse()
-        
-        creature.effectDurations.pop(0)
+
+        creature.effects.pop(effectIndex)
+        creature.effectDurations.pop(effectIndex)
 
 class Battle:
     def __init__(self, enemies):
@@ -26,7 +27,6 @@ class Battle:
         while not self.battleOver:
             self.print_battle()
             self.player_turn()
-            clear_console()
 
             updatedEnemies = []
             for enemy in self.enemies:
@@ -36,6 +36,7 @@ class Battle:
             self.enemies = updatedEnemies
 
     def print_battle(self):
+        print()
         creatures = self.enemies + [player]
 
         for creature in creatures:
@@ -43,7 +44,7 @@ class Battle:
             
             effects = []
             for i in range(len(creature.effects)):
-                effects.append(f"{creature.effects[i].name} - {creature.effectTimers[i]} turns")
+                effects.append(f"{creature.effects[i].name} - {creature.effectDurations[i]} turns")
 
             if len(effects) > 0:
                 print(f"[{' | '.join(effects)}]")

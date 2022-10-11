@@ -111,8 +111,8 @@ class Creature:
         for i in range(len(self.effects)):
             if type(effect) == type(self.effects[i]):
                 # checks which effect is longer
-                if self.effectTimers < duration[i] and not duration[i] < 0:
-                    self.effectTimers.pop(i)
+                if self.effectDurations < duration[i] and not duration[i] < 0:
+                    self.effectDurrations.pop(i)
                     self.effects.pop(i)
                     break
             else:
@@ -121,7 +121,7 @@ class Creature:
         # checks if immune to effect
         if not type(effect) in self.immuneTo:
             self.effects.append(effect(self))
-            self.effectTimers.append(duration)
+            self.effectDurations.append(duration)
             return True
         else:
             return False
@@ -168,6 +168,7 @@ class Effect:
 
 class Bleeding(Effect):
 # does 1 damage per turn, lowers AC by 1
+    name = "bleeding"
     natural = True
     level = 0
     
