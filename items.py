@@ -134,3 +134,38 @@ class Bandage(Item):
             print(message)
 
         return True
+
+class Spear(Item):
+# does damage to target and has some armor piercing
+# lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    def __init__(self, level):
+        material = ["bronze", "iron", "steel", "mithril"][level]
+        super().__init__(material + " spear", 30 + (20 * level), 15 + (10 * level))
+
+        self.damage = 4 + level
+        self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
+
+    def status(self):
+        suffix = ""
+        if self.uses <= self.maxUses / 3:
+            suffix = "(damaged)"
+        elif self.uses <= self.maxUses * 2 / 3:
+            suffix = "(worn)"
+
+        return f"{suffix}"
+
+    def attack(self, enemies):
+        self.degrade() # degrade is called when the item does something
+
+        options = [] # gets a list of enemy names
+        for enemy in enemies:
+            options.append(enemy.name)
+
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+
+        # does damage and prints message, armor piercing has some randomness
+        message = f"You stab the {target.name} with your spear for _ damage!"
+        target.hurt(self.damage + player.strength, message, self.armorPiercing - randint(0, 1))
+
+        return True

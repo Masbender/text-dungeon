@@ -6,7 +6,7 @@ import items
 player = entities.player
 
 player.inventory.extend([items.Sword(0), items.Bandage()])
-enemies = [entities.Draugr(), entities.Draugr()]
+enemies = [entities.Skeleton(), entities.Skeleton()]
 
 battle = dungeon.Battle(enemies)
 battle.start_battle()

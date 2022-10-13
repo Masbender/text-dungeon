@@ -68,17 +68,26 @@ class Creature:
         self.updatePerception(int - self.perception)
 
     
-    def hurt(self, damageTaken, message):
+    def hurt(self, damageTaken, message, armorPiercing = 0):
     # lowers health but applies armor class and dodge        
-        finalDamageTaken = damageTaken + randint(-1, 1) - self.armorClass
+        # applies armor piercing to armor class
+        damageReduction = self.armorClass
+        if damageReduction > 0:
+            damageReduction -= armorPiercing
+            if damageReduction < 0:
+                damageReduction = 0
+
+        # applies armor class and randomness to damage
+        finalDamageTaken = damageTaken + randint(-1, 1) - damageReduction
         if finalDamageTaken < 0:
             finalDamageTaken = 0
 
+        # applies dodge
         elif self.dodge > 0:
             if randint(0, 99) < self.dodge:
                 finalDamageTaken = 0
                 message += " The attack was dodged!"
-            
+        # if dodge is negative the attack may be critical
         elif self.dodge < 0:
             if randint(0, 99) < (self.dodge) * -1:
                 finalDamageTaken = int(finalDamageTaken * 1.5)
@@ -211,3 +220,41 @@ class Draugr(Enemy):
             player.hurt(3 + self.strength, message + ", leaving you BLEEDING!")
         else:
             player.hurt(4 + self.strength, message + "!")
+
+class Skeleton(Enemy):
+# a common enemy type throughout the dungeon
+# is immune to most natural effects and often staggers instead of attacking
+    def __init__(self):
+        super().__init__("skeleton", 16, 1, 0)
+        self.immuneTo = [Bleeding]
+        self.damage = 3
+        self.staggerChance = 2 # _ in 6
+        
+        self.message = "you hear bones moving around"
+        self.weapon = choice(["sword", "spear", "mace"])
+
+    def do_turn(self, enemies):
+    # there is a chance that skeletons stagger and don't attack
+        if randint(0, 5) < self.staggerChance:
+            print(f"{self.name.upper()} staggers and cannot attack")
+        else:
+            super().do_turn(enemies)
+
+    def attack(self, enemies):
+        message = f"the {self.name.upper()} hits you with their {self.weapon} for _ damage"
+
+        # spears  have armor piercing
+        armorPiercing = 0
+        if self.weapon == "spear" and randint(1, 3) < 3:
+            armorPiercing = 1
+
+        # swords can inflict bleeding
+        inflictsBleeding = (randint(1, 4) == 1) and (self.weapon == "sword")
+        if inflictsBleeding:
+            inflictsBleeding = player.affect(Bleeding, 4)
+
+        # does damage
+        if inflictsBleeding:
+            player.hurt(self.damage, message + ", leaving you BLEEDING!", armorPiercing)
+        else:
+            player.hurt(self.damage, message + "!", armorPiercing)
