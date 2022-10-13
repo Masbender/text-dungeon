@@ -53,15 +53,15 @@ class Sword(Item):
         
         self.damage = 4 + level
         self.bleedDuration = 4
-        self.bleedChance = 2 # bleedChance is _ of 6
+        self.bleedChance = 2 # bleedChance is _ in 6
 
         if level >= 1:
-            bleedChance += 1
+            self.bleedChance += 1
         if level >= 2:
-            bleedDuration += 1
+            self.bleedDuration += 1
         if level >= 3:
-            bleedChance += 1
-            bleedDuration += 1
+            self.bleedChance += 1
+            self.bleedDuration += 1
 
     def status(self):
         suffix = ""
@@ -92,7 +92,7 @@ class Sword(Item):
         if bleedingApplied:
             target.hurt(self.damage + player.strength, message + ", leaving them bleeding")
         else:
-            target.hurt(self.damage + player.strength, message + "")
+            target.hurt(self.damage + player.strength, message + "!")
 
         return True
 
@@ -167,5 +167,49 @@ class Spear(Item):
         # does damage and prints message, armor piercing has some randomness
         message = f"You stab the {target.name} with your spear for _ damage!"
         target.hurt(self.damage + player.strength, message, self.armorPiercing - randint(0, 1))
+
+        return True
+
+class Mace(Item):
+# does damage to target and can stun and inflict injured
+# lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    def __init__(self, level):
+        material = ["bronze", "iron", "steel", "mithril"][level]
+        super().__init__(material + " mace", 30 + (20 * level), 15 + (10 * level))
+        
+        self.damage = 4 + level
+        self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
+
+    def status(self):
+        suffix = ""
+        if self.uses <= self.maxUses / 3:
+            suffix = "(damaged)"
+        elif self.uses <= self.maxUses * 2 / 3:
+            suffix = "(worn)"
+
+        return f"{suffix}"
+
+    def attack(self, enemies):
+        self.degrade() # degrade is called when the item does something
+
+        options = [] # gets a list of enemy names
+        for enemy in enemies:
+            options.append(enemy.name)
+
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+        
+        # applies stun
+        stunApplied = False
+        if randint(0, 11) < self.stunChance:
+            stunApplied = True
+            target.stunned = True
+
+        # does damage and prints message
+        message = f"You hit {target.name} with your mace for _ damage"
+        if stunApplied:
+            target.hurt(self.damage + player.strength, message + ", leaving them stunned")
+        else:
+            target.hurt(self.damage + player.strength, message + "!")
 
         return True

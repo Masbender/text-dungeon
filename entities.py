@@ -158,6 +158,7 @@ class Enemy(Creature):
         # parameter 'enemies' allows the method to see the whole battlefield
         if self.stunned:
             print(f"{self.name} is stunned and unable to fight")
+            self.stunned = False
         else:
             self.attack(enemies)
 
@@ -204,6 +205,22 @@ class Regeneration(Effect):
 
     def update(self):
         self.target.heal(1)
+
+class Dazed(Effect):
+# lowers DEX and STR
+    name = "dazed"
+    natural = True
+    level = 1
+    
+    def __init__(self, target):
+        self.target = target
+
+        self.target.dexterity -= 1
+        self.target.strength -= 1
+
+    def reverse(self):
+        self.target.dexterity += 1
+        self.target.strength += 1
 
 class Draugr(Enemy):
 # an uncommon enemy that can appear in earlier floors
@@ -253,8 +270,15 @@ class Skeleton(Enemy):
         if inflictsBleeding:
             inflictsBleeding = player.affect(Bleeding, 4)
 
+        # maces can inflict dazed
+        inflictsDazed = (randint(1, 4) == 1) and (self.weapon == "mace")
+        if inflictsDazed:
+            inflictsDazed = player.affect(Dazed, 1)
+
         # does damage
         if inflictsBleeding:
             player.hurt(self.damage, message + ", leaving you BLEEDING!", armorPiercing)
+        elif inflictsDazed:
+            player.hurt(self.damage, message + ", leaving you DAZED!", armorPiercing)
         else:
             player.hurt(self.damage, message + "!", armorPiercing)
