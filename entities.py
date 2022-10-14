@@ -282,3 +282,13 @@ class Skeleton(Enemy):
             player.hurt(self.damage, message + ", leaving you DAZED!", armorPiercing)
         else:
             player.hurt(self.damage, message + "!", armorPiercing)
+
+class ArmoredSkeleton(Skeleton):
+# has more AC and staggers less, always has a mace
+    def __init__(self):
+        super().__init__()
+        self.staggerChance = 1
+        self.armorClass = 2
+        
+        self.weapon = "mace"
+        self.name = "armored skeleton"
