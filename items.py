@@ -171,7 +171,7 @@ class Spear(Item):
         return True
 
 class Mace(Item):
-# does damage to target and can stun and inflict injured
+# does damage to target and can stun, strong vs skeletons
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
@@ -205,11 +205,16 @@ class Mace(Item):
             stunApplied = True
             target.stunned = True
 
+        # applies strength vs skeletons
+        bonusDamage = player.strength
+        if type(target) == entities.Skeleton or issubclass(target, entities.skeleton):
+            bonusDamage += randint(1, 2)
+
         # does damage and prints message
         message = f"You hit {target.name} with your mace for _ damage"
         if stunApplied:
-            target.hurt(self.damage + player.strength, message + ", leaving them stunned")
+            target.hurt(self.damage + bonusDamage, message + ", leaving them stunned")
         else:
-            target.hurt(self.damage + player.strength, message + "!")
+            target.hurt(self.damage + bonusDamage, message + "!")
 
         return True
