@@ -152,7 +152,7 @@ class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     def __init__(self, name, health, awareness, stealth):
         super().__init__(name, health)
-        self.message = "you feel uneasy" # printed when player detects enemy
+        self.warning = "you feel uneasy" # printed when player detects enemy
         self.awareness = awareness
         self.stealth = stealth
 
@@ -263,7 +263,7 @@ class Skeleton(Enemy):
         self.damage = 3
         self.staggerChance = 2 # _ in 6
         
-        self.message = "you hear bones moving around"
+        self.warning = "you hear bones moving around"
         self.weapon = choice(["sword", "spear", "mace"])
 
     def do_turn(self, enemies):

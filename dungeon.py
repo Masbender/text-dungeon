@@ -138,22 +138,36 @@ class Floor:
         
     def update_map(self):
     # adds nearby rooms to the map
+    # warns player of nearby enemies
         y = self.posY
         x = self.posX
 
+        messages = []
+        nearbyEnemies = []
+        
         if self.check_pos(y + 1):
             self.update_room(y + 1, x)
+            nearbyEnemies.extend(self.layout[y + 1][x].threats)
             
         if self.check_pos(y - 1):
             self.update_room(y - 1, x)
+            nearbyEnemies.extend(self.layout[y - 1][x].threats)
             
         if self.check_pos(x + 1):
             self.update_room(y, x + 1)
+            nearbyEnemies.extend(self.layout[y][x + 1].threats)
             
         if self.check_pos(x - 1):
             self.update_room(y, x - 1)
+            nearbyEnemies.extend(self.layout[y][x - 1].threats)
 
-    def move(self, direction):
+        for enemy in nearbyEnemies:
+            if player.awareness >= enemy.stealth:
+                if not enemy.warning in messages:
+                    messages.append(enemy.warning)
+                    print(enemy.warning)
+
+    def move_player(self, direction):
     # moves the player
     # directions : 0 = up/north, 1 = right/east, 2 = down/south, 3 = left/west
         newY = self.posY + [-1, 0, 1, 0][direction]
@@ -185,10 +199,10 @@ class Floor:
         while player.health > 0:
             room = self.get_room()
 
+            # ===== PRINTS INFORMATION =====
             self.print_map()
             print()
             
-            # prints room description
             if room.description != "":
                 print(room.description)
                 print()
@@ -202,7 +216,7 @@ class Floor:
             if len(effects) > 0:
                 print(f"[{' | '.join(effects)}]")
 
-            # prepares a list of options for the player
+            # ===== CHECKS OPTIONS =====
             options = ["move", "use item"]
             if room.specialAction != "":
                 options.append(room.specialAction)
@@ -235,13 +249,14 @@ class Floor:
 
             # presents options to player and gathers input
             playerInput = gather_input("\nWhat do you do?", options, False)
-
+            
+            # ===== MOVE =====
             if playerInput == "move":
                 # gathers input and moves the player
-                options = ["up / North", "right / East", "down / South", "left / West"]
+                options = ["↑", "→", "↓", "←"]
 
                 self.print_map()
-                self.move(gather_input("\nWhat direction do you move?", options))
+                self.move_player(gather_input("\nWhat direction do you move?", options))
 
                 self.update_map()
                 update_effects(player)
@@ -261,7 +276,8 @@ class Floor:
                         battle.start_battle()
 
                         room.threats = []
-                        
+
+            # ===== USE ITEM =====
             elif playerInput == "use item":
                 options = ["cancel"] + item_list()
                 itemUsed = gather_input("what do you use?", options)
@@ -274,6 +290,7 @@ class Floor:
                     if player.inventory[itemUsed].uses <= 0:
                         player.inventory.pop(itemUsed)
 
+            # ===== TAKE ITEM =====
             elif playerInput == "take item":
                 options = []
                 for item in room.loot:
@@ -287,7 +304,8 @@ class Floor:
                 # moves item to inventory
                 player.inventory.append(room.loot.pop(chosenItem))
                 print(f"you pickup the {options[chosenItem]}")
-                    
+
+            # ===== SURPRISE ATTACK =====
             elif playerInput == "surprise attack":
                 for enemy in room.threats:
                     enemy.affect(entities.Surprised, 2)
@@ -298,6 +316,7 @@ class Floor:
 
                 room.threats = []
 
+            # ===== STAIRS =====
             elif playerInput == "stairs up":
                 return -1
             elif playerInput == "stairs down":
