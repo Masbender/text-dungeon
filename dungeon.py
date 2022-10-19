@@ -217,7 +217,9 @@ class Floor:
                 print(f"[{' | '.join(effects)}]")
 
             # ===== CHECKS OPTIONS =====
-            options = ["move", "use item"]
+            options = ["move"]
+            if player.inventory != []:
+                options.extend(["use item", "drop item"])
             if room.specialAction != "":
                 options.append(room.specialAction)
             if room.threats != []:
@@ -292,20 +294,34 @@ class Floor:
 
             # ===== TAKE ITEM =====
             elif playerInput == "take item":
-                options = []
-                for item in room.loot:
-                    options.append(item.name)
-
-                # if there are multiple items it asks for input
-                chosenItem = 0
-                if len(options) > 1:
-                    chosenItem = gather_input("What do you pick up?", options)
-
-                # moves item to inventory
-                player.inventory.append(room.loot.pop(chosenItem))
-                print(f"you pickup the {options[chosenItem]}")
+                if len(player.inventory) < player.inventorySize:
+                    options = []
+                    for item in room.loot:
+                        options.append(item.name)
+    
+                    # if there are multiple items it asks for input
+                    chosenItem = 0
+                    if len(options) > 1:
+                        chosenItem = gather_input("What do you pick up?", options)
+    
+                    # moves item to inventory
+                    player.inventory.append(room.loot.pop(chosenItem))
+                    print(f"you pickup the {options[chosenItem]}")
+                else:
+                    print(f"you are carrying too much, you can only have {player.inventorySize} items")
 
             # ===== SURPRISE ATTACK =====
+            elif playerInput == "drop item":
+                options = ["cancel"] + item_list()
+
+                chosenItem = gather_input("What do you drop?", options)
+
+                if chosenItem > 0: # 0 is cancel
+                    chosenItem -= 1 # changes index back to normal
+                    # removes item to inventory, leaving it in the room
+                    room.loot.append(player.inventory.pop(chosenItem))
+                    print(f"you drop the {options[chosenItem + 1]}")
+                
             elif playerInput == "surprise attack":
                 for enemy in room.threats:
                     enemy.affect(entities.Surprised, 2)

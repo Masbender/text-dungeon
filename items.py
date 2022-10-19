@@ -213,3 +213,4 @@ class Mace(Item):
             target.hurt(self.damage + player.strength, message + "!")
 
         return True
+        
