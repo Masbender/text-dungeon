@@ -153,6 +153,8 @@ class Enemy(Creature):
     def __init__(self, name, health, awareness, stealth):
         super().__init__(name, health)
         self.message = "you feel uneasy" # printed when player detects enemy
+        self.awareness = awareness
+        self.stealth = stealth
 
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield

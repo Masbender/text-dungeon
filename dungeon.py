@@ -42,7 +42,8 @@ class Battle:
             for enemy in self.enemies:
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
-                    updatedEnemies.append(enemy)
+                    if enemy.health > 0: # checks if enemy died during thier turn
+                        updatedEnemies.append(enemy)
             self.enemies = updatedEnemies
 
             if self.enemies == [] or player.health <= 0:
@@ -185,10 +186,21 @@ class Floor:
             room = self.get_room()
 
             self.print_map()
+            print()
             
             # prints room description
             if room.description != "":
                 print(room.description)
+                print()
+
+            print(f"You have {player.health}/{player.maxHealth} HP")
+            
+            effects = []
+            for i in range(len(player.effects)):
+                effects.append(f"{player.effects[i].name} - {player.effectDurations[i]} turns")
+
+            if len(effects) > 0:
+                print(f"[{' | '.join(effects)}]")
 
             # prepares a list of options for the player
             options = ["move", "use item"]
