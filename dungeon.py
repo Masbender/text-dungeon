@@ -217,7 +217,7 @@ class Floor:
                 print(f"[{' | '.join(effects)}]")
 
             # ===== CHECKS OPTIONS =====
-            options = ["move"]
+            options = ["move", "wait"]
             if player.inventory != []:
                 options.extend(["use item", "drop item"])
             if room.specialAction != "":
@@ -280,6 +280,10 @@ class Floor:
                         room.threats = []
 
             # ===== USE ITEM =====
+            elif playerInput == "wait":
+                self.update_map()
+                update_effects(player)
+                print("you wait")
             elif playerInput == "use item":
                 options = ["cancel"] + item_list()
                 itemUsed = gather_input("what do you use?", options)
