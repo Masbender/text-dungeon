@@ -5,8 +5,13 @@ import items
 
 player = entities.player
 
-player.inventory.extend([items.Sword(3), items.Spear(3), items.Bandage()])
-enemies = [entities.ArmoredSkeleton(), entities.Draugr()]
+player.inventory.extend([items.Sword(0)])
 
-battle = dungeon.Battle(enemies)
-battle.start_battle()
+layout = [
+    [dungeon.Room(), dungeon.Room([items.Mace(2)]), dungeon.Room([], [entities.Skeleton()])],
+    [dungeon.Room(), dungeon.Wall(), dungeon.Wall()],
+    [dungeon.Room(), dungeon.Room(), dungeon.Wall()]
+]
+
+floor1 = dungeon.Floor(layout, 0, 0)
+floor1.enter_floor()

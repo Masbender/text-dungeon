@@ -222,6 +222,20 @@ class Dazed(Effect):
         self.target.dexterity += 1
         self.target.strength += 1
 
+class Surprised(Effect):
+# lowers DEX and AC
+    name = "surprised"
+
+    def __init__(self, target):
+        self.target = target
+
+        self.target.dexterity -= 2
+        self.target.armorClass -= 1
+
+    def reverse(self):
+        self.target.dexterity += 2
+        self.target.armorClass += 1
+
 class Draugr(Enemy):
 # an uncommon enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
@@ -253,7 +267,7 @@ class Skeleton(Enemy):
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
         if randint(0, 5) < self.staggerChance:
-            print(f"{self.name.upper()} staggers and cannot attack")
+            print(f"{self.name.upper()} staggers and misses their attack")
         else:
             super().do_turn(enemies)
 
