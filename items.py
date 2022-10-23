@@ -14,13 +14,13 @@ class Item:
     def degrade(self):
         # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
         if player.intelligence < 0:
-            if randint(0, -99) > player.intelligence * 7.5:
+            if randint(0, -99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
             return True
         # for every level of INT, there is a 7.5% that the item doesn't degrade
         else:
-            if randint(0, 99) < player.intelligence * 7.5:
+            if randint(0, 99) < player.intelligence * 10:
                 return False
             else:
                 self.uses -= 1
@@ -28,20 +28,27 @@ class Item:
 
     def status(self):
         return f"({self.uses})"
+    def inspect(self):
+        print(f"This is a {self.name} with {self.status()} uses")
+        
     def attack(self, enemies):
     # performs the items use in combat
+        print(f"{self.name} has no use here")
         return False
 
     def consume(self):
     # performs the items use when there is no special prompt
+        print(f"{self.name} has no use here")
         return False
 
     def unlock(self, lockType):
-    # checks if the item can open a lock
+    # checks if the item can open a lockwall
+        print(f"{self.name} isn't a key")
         return False
 
-    def dig(Self):
+    def dig(self):
     # checks if the item can dig through a wall
+        print(f"{self.name} can't dig")
         return False
 
 class Sword(Item):
@@ -72,6 +79,14 @@ class Sword(Item):
 
         return f"{suffix}"
 
+    def inspect(self):
+        suffix = self.status()
+        if suffix == "":
+            suffix = "new"
+            
+        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"It does {self.damage} damage, with a {self.bleedChance} in 6 chance to inflict bleeding for {self.bleedDuration} turns.")
+    
     def attack(self, enemies):
         self.degrade() # degrade is called when the item does something
 
@@ -100,6 +115,11 @@ class Bandage(Item):
 # cures bleeding, heals some health, and applies regeneration
     def __init__(self):
         super().__init__("bandage", 30, 3)
+
+    def inspect(self):
+        print(f"The {self.name} has {self.uses} uses remaining.")
+        print(f"It heals 2 to 4 HP and heals an addition 1 HP per turn for 6 turns.")
+        print(f"Cures bleeding.")
 
     def degrade(self):
     # value is based on uses
@@ -154,6 +174,14 @@ class Spear(Item):
 
         return f"{suffix}"
 
+    def inspect(self):
+        suffix = self.status()
+        if suffix == "":
+            suffix = "new"
+            
+        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"It does {self.damage} damage and pierces {self.armorPiercing - 1} to {self.armorPiercing} points of armor.")
+    
     def attack(self, enemies):
         self.degrade() # degrade is called when the item does something
 
@@ -189,6 +217,14 @@ class Mace(Item):
 
         return f"{suffix}"
 
+    def inspect(self):
+        suffix = self.status()
+        if suffix == "":
+            suffix = "new"
+            
+        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"It does {self.damage} damage, with a {self.stunChance} in 12 chance to inflict stun.")
+    
     def attack(self, enemies):
         self.degrade() # degrade is called when the item does something
 
@@ -213,4 +249,32 @@ class Mace(Item):
             target.hurt(self.damage + player.strength, message + "!")
 
         return True
-        
+
+class Bomb(Item):
+    def __init__(self):
+        super().__init__("bomb", 40, 1)
+
+    def degrade(self):
+        self.uses = 0
+        return 
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("The bomb can destroy walls, possible revealing secrets.")
+        print("It can also be used in combat to harm all enemies.")
+
+    def attack(self, enemies):
+        self.degrade()
+        message = f"You swing your sword at the {target.name} for _ damage!"
+
+        for enemy in enemies:
+            target.hurt(15, message)
+
+        return True
+
+    def dig(self):
+        self.degrade()
+        print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
+        return True

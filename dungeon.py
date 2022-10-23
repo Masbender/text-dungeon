@@ -119,11 +119,11 @@ class Floor:
                 # walls are represented as ' '
                 elif self.map[i][I].blocked:
                     lines[i] += ' '
-                # stairs are represented as v or ^
+                # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "stairs down":
-                    lines[i] += 'v'
+                    lines[i] += '↓'
                 elif self.map[i][I].specialAction == "stairs up":
-                    lines[i] += '^'
+                    lines[i] += '↑'
                 # rooms are represented as '+'
                 else:
                     lines[i] += '+'
@@ -179,7 +179,11 @@ class Floor:
 
         # checks if new tile is a wall
         if self.layout[newY][newX].blocked:
-            return False
+            if self.layout[newY][newX].unblock():
+                self.layout[newY][newX].blocked = False
+                return True
+            else:
+                return False
         # updates players position
         else:
             self.posY = newY
@@ -250,6 +254,8 @@ class Floor:
                     print(f"there is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
             # presents options to player and gathers input
+            if room.loot != [] or player.inventory != []:
+                options.append("inspect item")
             playerInput = gather_input("\nWhat do you do?", options, False)
             
             # ===== MOVE =====
@@ -326,6 +332,17 @@ class Floor:
                     room.loot.append(player.inventory.pop(chosenItem))
                     print(f"you drop the {options[chosenItem + 1]}")
                 
+            elif playerInput == "inspect item":
+                options = item_list()
+                for item in room.loot:
+                    options.append(item.name)
+
+                chosenItem = gather_input("What do you inspect?", options)
+
+                if chosenItem < len(player.inventory):
+                    player.inventory[chosenItem].inspect()
+                else:
+                    room.loot[chosenItem - len(player.inventory)].inspect()
             elif playerInput == "surprise attack":
                 for enemy in room.threats:
                     enemy.affect(entities.Surprised, 2)
@@ -358,19 +375,21 @@ class Room:
 class Wall(Room):
     blocked = True
     description = "you are in a tunnel, there is rubble everywhere"
-    special = None
+    specialAction = None
 
     def __init__(self):
         self.loot = []
         self.threats = []
 
     def unblock(self): # requires a bomb or pickaxe
+        print("there is a wall in the way")
+        
         # gathers input
         options = ["cancel"]
         for item in player.inventory:
             options.append(f"{item.name} {item.status()}")
         
-        itemUsed = gather_input("How do you destroy the wall?", options)
+        itemUsed = gather_input("How do you destroy it?", options)
 
         # checks if item works then uses it
         tunnelDug = False
@@ -386,7 +405,7 @@ class Wall(Room):
 class StairsDown(Room):
     blocked = False
     description = "there are stairs here that lead down"
-    special = "stairs down"
+    specialAction = "stairs down"
     
     def __init__(self):
         self.loot = []
@@ -395,7 +414,7 @@ class StairsDown(Room):
 class StairsUp(Room):
     blocked = False
     description = "there are stairs here that lead up"
-    special = "stairs up"
+    specialAction = "stairs up"
 
     def __init__(self):
         self.loot = []
