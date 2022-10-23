@@ -278,3 +278,12 @@ class Bomb(Item):
         self.degrade()
         print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
         return True
+
+def gen_item(area, quality):
+    lootPool = [
+        # area 0 
+        [
+            [Sword(0), Spear(0), Mace(0), [Bandage()] * 3],
+            [Sword(1), Spear(1), Mace(1), [Bomb()] * 2]
+        ]
+    ]

@@ -1,6 +1,7 @@
 from random import randint, choice
 from extra import clear_console, gather_input
 import entities
+import items
 
 player = entities.player
 
@@ -358,6 +359,7 @@ class Floor:
                 return -1
             elif playerInput == "stairs down":
                 return 1
+
 class Room:
     blocked = False # determines if it counts as a wall or not
     description = ""
