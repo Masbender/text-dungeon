@@ -267,10 +267,10 @@ class Bomb(Item):
 
     def attack(self, enemies):
         self.degrade()
-        message = f"You swing your sword at the {target.name} for _ damage!"
+        message = f"The bomb does _ damage to {target.name}!"
 
         for enemy in enemies:
-            target.hurt(15, message)
+            enemy.hurt(15, message)
 
         return True
 
@@ -279,11 +279,31 @@ class Bomb(Item):
         print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
         return True
 
-def gen_item(area, quality):
-    lootPool = [
-        # area 0 
-        [
-            [Sword(0), Spear(0), Mace(0), [Bandage()] * 3],
-            [Sword(1), Spear(1), Mace(1), [Bomb()] * 2]
-        ]
+# stores values in tuples, (item, chance)
+lootPool = {
+    "prison": [
+        [(Sword(0), 1), (Spear(0), 1), (Mace(0), 1), (Bandage(), 3)],
+        [(Sword(1), 1), (Spear(1), 1), (Mace(1), 1), (Bomb(), 2)]
     ]
+}
+
+maxChances = {}
+chances = {}
+
+# turns chance into more useable values
+for key in lootPool.keys():
+    maxChances[key] = []
+    chances[key] = []
+    for i in range(len(lootPool[key])):
+        chance = 0
+        chances[key].append([])
+        for I in range(len(lootPool[key][i])):
+            chance += lootPool[key][i][I][1]
+            chances[key][i].append(chance)
+        maxChances[key].append(chance)
+            
+def gen_item(area, quality):
+    randomNumber = randint(1, maxChances[area][quality])
+    for i in range(len(lootPool[area][quality])):
+        if randomNumber <= chances[area][quality][i]:
+            return lootPool[area][quality][i][0]

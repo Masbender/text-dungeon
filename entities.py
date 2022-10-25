@@ -308,3 +308,41 @@ class ArmoredSkeleton(Skeleton):
         
         self.weapon = "mace"
         self.name = "armored skeleton"
+
+def gen_enemies(area, danger):
+    enemyPool = {
+        "prison": [
+            [[Skeleton()]],
+            [[Skeleton(), Skeleton()] * 2, [ArmoredSkeleton()] * 2, [Draugr()]]
+        ]
+    }
+    return enemyPool[area][danger]
+
+# stores values in tuples, (item, chance)
+enemyPool = {
+    "prison": [
+        [([Skeleton()], 1)],
+        [([Skeleton(), Skeleton()], 2), ([ArmoredSkeleton()], 2), ([Draugr()], 1)]
+    ]
+}
+
+maxChances = {}
+chances = {}
+
+# turns chance into more useable values
+for key in enemyPool.keys():
+    maxChances[key] = []
+    chances[key] = []
+    for i in range(len(enemyPool[key])):
+        chance = 0
+        chances[key].append([])
+        for I in range(len(enemyPool[key][i])):
+            chance += enemyPool[key][i][I][1]
+            chances[key][i].append(chance)
+        maxChances[key].append(chance)
+            
+def gen_enemies(area, danger):
+    randomNumber = randint(1, maxChances[area][danger])
+    for i in range(len(enemyPool[area][danger])):
+        if randomNumber <= chances[area][danger][i]:
+            return enemyPool[area][danger][i][0]

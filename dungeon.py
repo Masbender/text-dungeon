@@ -421,3 +421,21 @@ class StairsUp(Room):
     def __init__(self):
         self.loot = []
         self.threats = []
+
+def gen_room(area, id):
+    loot = []
+    threats = []
+    if id == 0:
+        if randint(1, 3) == 1:
+            if randint(1, 3) == 1:
+                loot = [items.gen_item(area, 1)]
+            else:
+                loot = [items.gen_item(area, 0)]
+
+        if randint(1, 3) == 1:
+            if randint(1, 3) == 1:
+                threats = entities.gen_enemies(area, 1)
+            else:
+                threats = entities.gen_enemies(area, 0)
+        
+        return Room(loot, threats)
