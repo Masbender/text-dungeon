@@ -38,7 +38,7 @@ class Item:
         print(f"{self.name} has no use here")
         return False
 
-    def consume(self):
+    def consume(self, floor):
     # performs the items use when there is no special prompt
         print(f"{self.name} has no use here")
         return False
@@ -168,7 +168,7 @@ class Spear(Item):
         return True
 
 class Mace(Item):
-# does damage to target and can stun, strong vs skeletons
+# does damage to target and can stun
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
@@ -219,6 +219,55 @@ class Mace(Item):
 
         return True
 
+class Dagger(Item):
+# does damage to target but uses DEX not STR, strong vs full hp enemies
+# lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    def __init__(self, level):
+        material = ["bronze", "iron", "steel", "mithril"][level]
+        super().__init__(material + " dagger", 30 + (20 * level), 15 + (10 * level))
+
+        self.damage = 4 + level
+        self.firstHitDamage = (level + 3) // 2
+
+    def status(self):
+        suffix = ""
+        if self.uses <= self.maxUses / 3:
+            suffix = "(damaged)"
+        elif self.uses <= self.maxUses * 2 / 3:
+            suffix = "(worn)"
+
+        return f"{suffix}"
+
+    def inspect(self):
+        suffix = self.status()
+        if suffix == "":
+            suffix = "new"
+            
+        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"It does {self.firstHitDamage} extra damage towards enemies with full health.")
+        print("Daggers add your dexterity to your attack, but ignore strength.")
+
+    def attack(self, enemies):
+        self.degrade() # degrade is called when the item does something
+
+        options = [] # gets a list of enemy names
+        for enemy in enemies:
+            options.append(enemy.name)
+
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+        
+        # applies first hit damage
+        bonusDamage = 0
+        if target.health == target.maxHealth:
+            bonusDamage = self.firstHitDamage
+
+        # does damage and prints message
+        message = f"You hit {target.name} with your mace for _ damage!"
+        target.hurt(self.damage + player.dexterity + bonusDamage, message)
+
+        return True
+
 class Armor(Item):
 # gives defense to player but lowers DEX
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
@@ -248,12 +297,13 @@ class Armor(Item):
         print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"When equipped it gives you {self.armorClass} armor class but lowers your dexterity by {self.dexLoss}.")
 
-    def consume(self):
+    def consume(self, floor):
         # this is where it equips
         if player.armor != None:
             player.inventory.append(player.armor)
             player.armor.unequip()
         player.armor = self
+        player.inventory.remove(self)
 
         # applies stats
         player.armorClass += self.armorClass
@@ -262,8 +312,8 @@ class Armor(Item):
         print("You put on the " + self.name)
         return True
 
-    def attack(self):
-        return self.consume()
+    def attack(self, enemies):
+        return self.consume(None)
 
     def unequip(self):
         # this is where it unequips
@@ -316,7 +366,7 @@ class Bandage(Item):
 
     def attack(self, enemies):
     # attack does the same thing as consume
-        return self.consume()
+        return self.consume(None)
 
     def consume(self):
         self.degrade()
@@ -345,8 +395,8 @@ class Bandage(Item):
 
 # see gen_enemy() in entities.py for explanation
 standardLoot = [
-    [(Sword, 3), (Spear, 3), (Mace, 3), (Armor, 3), (Bandage, 6)],
-    [(Sword, 3), (Spear, 3), (Mace, 3), (Armor, 3), (Bomb, 6)]
+    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 12), (Armor, 16), (Bandage, 24)],
+    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 122), (Armor, 16), (Bomb, 24)]
 ]
 
 rareLoot = []
@@ -358,7 +408,7 @@ def gen_loot(quality):
         if itemNum <= item[1]:
             chosenItem = item[0]
 
-            if chosenItem in [Sword, Mace, Spear, Armor]:
+            if chosenItem in [Sword, Mace, Spear, Dagger, Armor]:
                 return chosenItem(quality)
         
             return chosenItem()

@@ -302,7 +302,7 @@ class Floor:
                 if itemUsed != 0: # 0 is cancel, anything else is an item index
                     itemUsed -= 1 # reverts to proper index
 
-                    player.inventory[itemUsed].consume()
+                    player.inventory[itemUsed].consume(self)
 
             # ===== TAKE ITEM =====
             elif playerInput == "take item":
@@ -423,13 +423,13 @@ class StairsUp(Room):
 def gen_room(area, danger):
     loot = []
     threats = []
-    if randint(1, 3) == 1:
+    if randint(2, 5) <= 2:
         if randint(1, 3) == 1:
             loot = [items.gen_loot(1)]
         else:
             loot = [items.gen_loot(0)]
 
-    if randint(1, 4) == 1:
+    if randint(1, 3) == 1:
         threats = [entities.gen_enemy(area, danger)]
         if randint(1, 3) == 1:
             threats.append(entities.gen_enemy(area, danger - 2))
