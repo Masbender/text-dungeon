@@ -5,7 +5,7 @@ import items
 
 player = entities.player
 
-player.inventory.extend([items.Sword(0), items.Bomb()])
+player.inventory.extend([items.Sword(0), items.Armor(1)])
 player.update_dexterity(1)
 
 layout1 = [

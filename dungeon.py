@@ -71,6 +71,10 @@ class Battle:
                 print(f"[{' | '.join(effects)}]")
 
             print()
+
+        if player.armor != None:
+            print("you are wearing " + player.armor.name)
+            print()
     
     def enemy_turn(self, enemy):
         enemy.do_turn(self.enemies)
@@ -158,7 +162,7 @@ class Floor:
         if self.check_pos(x - 1):
             self.update_room(y, x - 1)
             nearbyEnemies.extend(self.layout[y][x - 1].threats)
-
+        
         for enemy in nearbyEnemies:
             if player.awareness >= enemy.stealth:
                 if not enemy.warning in messages:
@@ -217,6 +221,9 @@ class Floor:
 
             if len(effects) > 0:
                 print(f"[{' | '.join(effects)}]")
+
+            if player.armor != None:
+                print("\nyou are wearing " + player.armor.name)
 
             # ===== CHECKS OPTIONS =====
             options = ["move", "wait"]

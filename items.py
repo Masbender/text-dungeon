@@ -61,6 +61,9 @@ class Item:
     # runs when an item is dropped or destroyed, reverses pickup
         return False
 
+    def unequip(self):
+    # only used for equippable items such as armor or rings
+        return False
 class Sword(Item):
 # does damage to target and can inflict bleeding
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
@@ -118,50 +121,6 @@ class Sword(Item):
             target.hurt(self.damage + player.strength, message + ", leaving them bleeding")
         else:
             target.hurt(self.damage + player.strength, message + "!")
-
-        return True
-
-class Bandage(Item):
-# cures bleeding, heals some health, and applies regeneration
-    def __init__(self):
-        super().__init__("bandage", 30, 3)
-
-    def inspect(self):
-        print(f"The {self.name} has {self.uses} uses remaining.")
-        print(f"It heals 2 to 4 HP and heals an addition 1 HP per turn for 6 turns.")
-        print(f"Cures bleeding.")
-
-    def degrade(self):
-    # value is based on uses
-        super().degrade()
-        self.value = 10 * self.uses
-
-    def attack(self, enemies):
-    # attack does the same thing as consume
-        return self.consume()
-
-    def consume(self):
-        self.degrade()
-        # heals and apples regeneration
-        healingDone = player.heal(randint(2, 4))
-        player.affect(entities.Regeneration, 6)
-
-        # cures bleeding
-        bleedingCured = False
-        for i in range(len(player.effects)):
-            if type(player.effects[i]) == entities.Bleeding:
-                player.effects[i].reverse()
-                player.effects.pop(i)
-                player.effectDurations.pop(i)
-                bleedingCured = True
-                break
-                
-        clear_console()
-        message = f"the bandage restores {healingDone} health"
-        if bleedingCured:
-            print(message + " and stops your bleeding")
-        else:
-            print(message)
 
         return True
 
@@ -260,6 +219,57 @@ class Mace(Item):
 
         return True
 
+class Armor(Item):
+# gives defense to player but lowers DEX
+# lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    def __init__(self, level):
+        material = ["bronze", "iron", "steel", "mithril"][level]
+        super().__init__(material + " armor", 35 + (25 * level), 20 + (12 * level))
+
+        self.armorClass = level + 1
+        self.dexLoss = 1
+        if material == "iron" or material == "steel":
+            self.dexLoss += 1
+
+    def status(self):
+        suffix = ""
+        if self.uses <= self.maxUses / 3:
+            suffix = "(damaged)"
+        elif self.uses <= self.maxUses * 2 / 3:
+            suffix = "(worn)"
+
+        return f"{suffix}"
+
+    def inspect(self):
+        suffix = self.status()
+        if suffix == "":
+            suffix = "new"
+            
+        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"When equipped it gives you {self.armorClass} armor class but lowers your dexterity by {self.dexLoss}.")
+
+    def consume(self):
+        # this is where it equips
+        if player.armor != None:
+            player.inventory.append(player.armor)
+            player.armor.unequip()
+        player.armor = self
+
+        # applies stats
+        player.armorClass += self.armorClass
+        player.dexterity -= self.dexLoss
+
+        print("You put on the " + self.name)
+        return True
+
+    def attack(self):
+        return self.consume()
+
+    def unequip(self):
+        # this is where it unequips
+        player.armorClass -= self.armorClass
+        player.dexterity += self.dexLoss
+        
 class Bomb(Item):
     def __init__(self):
         super().__init__("bomb", 40, 1)
@@ -277,10 +287,9 @@ class Bomb(Item):
 
     def attack(self, enemies):
         self.degrade()
-        message = f"The bomb does _ damage to {target.name}!"
 
         for enemy in enemies:
-            enemy.hurt(15, message)
+            enemy.hurt(15, f"The bomb does _ damage to {enemy.name}!")
 
         return True
 
@@ -290,9 +299,53 @@ class Bomb(Item):
         return True
 
 # stores values in tuples, (item, chance)
+class Bandage(Item):
+# cures bleeding, heals some health, and applies regeneration
+    def __init__(self):
+        super().__init__("bandage", 30, 3)
+
+    def inspect(self):
+        print(f"The {self.name} has {self.uses} uses remaining.")
+        print(f"It heals 2 to 4 HP and heals an addition 1 HP per turn for 6 turns.")
+        print(f"Cures bleeding.")
+
+    def degrade(self):
+    # value is based on uses
+        super().degrade()
+        self.value = 10 * self.uses
+
+    def attack(self, enemies):
+    # attack does the same thing as consume
+        return self.consume()
+
+    def consume(self):
+        self.degrade()
+        # heals and apples regeneration
+        healingDone = player.heal(randint(2, 4))
+        player.affect(entities.Regeneration, 6)
+
+        # cures bleeding
+        bleedingCured = False
+        for i in range(len(player.effects)):
+            if type(player.effects[i]) == entities.Bleeding:
+                player.effects[i].reverse()
+                player.effects.pop(i)
+                player.effectDurations.pop(i)
+                bleedingCured = True
+                break
+                
+        clear_console()
+        message = f"the bandage restores {healingDone} health"
+        if bleedingCured:
+            print(message + " and stops your bleeding")
+        else:
+            print(message)
+
+        return True
+
 standardLoot = [
-    [Sword, Spear, Mace, Bandage],
-    [Sword, Spear, Mace, Bomb]
+    [Sword, Spear, Mace, Armor, Bandage],
+    [Sword, Spear, Mace, Armor, Bomb]
 ]
 
 rareLoot = []
@@ -300,7 +353,7 @@ rareLoot = []
 def gen_loot(quality):
     chosenItem = choice(standardLoot[quality])
 
-    if chosenItem in [Sword, Mace, Spear]:
+    if chosenItem in [Sword, Mace, Spear, Armor]:
         return chosenItem(quality)
 
     return chosenItem()

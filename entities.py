@@ -322,5 +322,5 @@ def gen_enemy(area, danger):
         enemyNum = 12
 
     for enemy in enemyPool[area]:
-        if enemy[1] <= enemyNum:
+        if enemyNum <= enemy[1]:
             return enemy[0]()
