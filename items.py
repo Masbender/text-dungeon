@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, choice
 from extra import gather_input, clear_console
 import entities
 
@@ -17,14 +17,16 @@ class Item:
             if randint(0, -99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
-            return True
         # for every level of INT, there is a 7.5% that the item doesn't degrade
         else:
             if randint(0, 99) < player.intelligence * 10:
                 return False
             else:
                 self.uses -= 1
-                return True
+
+        if self.uses == 0:
+            player.inventory.remove(self)
+        return True
 
     def status(self):
         return f"({self.uses})"
@@ -49,6 +51,14 @@ class Item:
     def dig(self):
     # checks if the item can dig through a wall
         print(f"{self.name} can't dig")
+        return False
+
+    def pickup(self):
+    # runs when an item is added to inventory, switches passive variables
+        return False
+
+    def discard(self):
+    # runs when an item is dropped or destroyed, reverses pickup
         return False
 
 class Sword(Item):
@@ -280,30 +290,17 @@ class Bomb(Item):
         return True
 
 # stores values in tuples, (item, chance)
-lootPool = {
-    "prison": [
-        [(Sword(0), 1), (Spear(0), 1), (Mace(0), 1), (Bandage(), 3)],
-        [(Sword(1), 1), (Spear(1), 1), (Mace(1), 1), (Bomb(), 2)]
-    ]
-}
+standardLoot = [
+    [Sword, Spear, Mace, Bandage],
+    [Sword, Spear, Mace, Bomb]
+]
 
-maxChances = {}
-chances = {}
-
-# turns chance into more useable values
-for key in lootPool.keys():
-    maxChances[key] = []
-    chances[key] = []
-    for i in range(len(lootPool[key])):
-        chance = 0
-        chances[key].append([])
-        for I in range(len(lootPool[key][i])):
-            chance += lootPool[key][i][I][1]
-            chances[key][i].append(chance)
-        maxChances[key].append(chance)
+rareLoot = []
             
-def gen_item(area, quality):
-    randomNumber = randint(1, maxChances[area][quality])
-    for i in range(len(lootPool[area][quality])):
-        if randomNumber <= chances[area][quality][i]:
-            return lootPool[area][quality][i][0]
+def gen_loot(quality):
+    chosenItem = choice(standardLoot[quality])
+
+    if chosenItem in [Sword, Mace, Spear]:
+        return chosenItem(quality)
+
+    return chosenItem()

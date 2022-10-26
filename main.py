@@ -16,7 +16,7 @@ layout1 = [
 
 layout2 = [
     [dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0)],
-    [dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0), dungeon.Wall()],
+    [dungeon.gen_room("prison", 0), dungeon.StairsUp(), dungeon.Wall()],
     [dungeon.Wall(), dungeon.gen_room("prison", 0), dungeon.Wall()]
 ]
 

@@ -309,40 +309,18 @@ class ArmoredSkeleton(Skeleton):
         self.weapon = "mace"
         self.name = "armored skeleton"
 
-def gen_enemies(area, danger):
-    enemyPool = {
-        "prison": [
-            [[Skeleton()]],
-            [[Skeleton(), Skeleton()] * 2, [ArmoredSkeleton()] * 2, [Draugr()]]
-        ]
-    }
-    return enemyPool[area][danger]
-
-# stores values in tuples, (item, chance)
+# numbers higher than 12 will only spawn with increased danger
+# the actual chance to spawn is (current) number - previous number) in 12
 enemyPool = {
-    "prison": [
-        [([Skeleton()], 1)],
-        [([Skeleton(), Skeleton()], 2), ([ArmoredSkeleton()], 2), ([Draugr()], 1)]
-    ]
+    "prison":[(Skeleton, 8), (Draugr, 10), (ArmoredSkeleton, 14)]
 }
-
-maxChances = {}
-chances = {}
-
-# turns chance into more useable values
-for key in enemyPool.keys():
-    maxChances[key] = []
-    chances[key] = []
-    for i in range(len(enemyPool[key])):
-        chance = 0
-        chances[key].append([])
-        for I in range(len(enemyPool[key][i])):
-            chance += enemyPool[key][i][I][1]
-            chances[key][i].append(chance)
-        maxChances[key].append(chance)
             
-def gen_enemies(area, danger):
-    randomNumber = randint(1, maxChances[area][danger])
-    for i in range(len(enemyPool[area][danger])):
-        if randomNumber <= chances[area][danger][i]:
-            return enemyPool[area][danger][i][0]
+def gen_enemy(area, danger):
+    enemyNum = randint(1, 12) + danger
+    # enemyNum is less than highest spawn chance
+    if enemyNum > enemyPool[area][-1][1]:
+        enemyNum = 12
+
+    for enemy in enemyPool[area]:
+        if enemy[1] <= enemyNum:
+            return enemy[0]()

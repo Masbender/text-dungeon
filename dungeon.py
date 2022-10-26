@@ -83,9 +83,6 @@ class Battle:
 
             turnOver = player.inventory[itemUsed].attack(self.enemies)
 
-            if player.inventory[itemUsed].uses <= 0:
-                player.inventory.pop(itemUsed)
-
         update_effects(player)
 
 
@@ -300,9 +297,6 @@ class Floor:
 
                     player.inventory[itemUsed].consume()
 
-                    if player.inventory[itemUsed].uses <= 0:
-                        player.inventory.pop(itemUsed)
-
             # ===== TAKE ITEM =====
             elif playerInput == "take item":
                 if len(player.inventory) < player.inventorySize:
@@ -398,9 +392,6 @@ class Wall(Room):
         if itemUsed > 0: # 0 is cancel
             itemUsed -= 1 # reverts back to proper index
             tunnelDug = player.inventory[itemUsed].dig()
-    
-            if player.inventory[itemUsed].uses <= 0:
-                player.inventory.pop(itemUsed)
 
         return tunnelDug
 
@@ -422,20 +413,18 @@ class StairsUp(Room):
         self.loot = []
         self.threats = []
 
-def gen_room(area, id):
+def gen_room(area, danger):
     loot = []
     threats = []
-    if id == 0:
+    if randint(1, 3) == 1:
         if randint(1, 3) == 1:
-            if randint(1, 3) == 1:
-                loot = [items.gen_item(area, 1)]
-            else:
-                loot = [items.gen_item(area, 0)]
+            loot = [items.gen_loot(1)]
+        else:
+            loot = [items.gen_loot(0)]
 
+    if randint(1, 4) == 1:
+        threats = [entities.gen_enemy(area, danger)]
         if randint(1, 3) == 1:
-            if randint(1, 3) == 1:
-                threats = entities.gen_enemies(area, 1)
-            else:
-                threats = entities.gen_enemies(area, 0)
-        
-        return Room(loot, threats)
+            threats.append(entities.gen_enemy(area, danger - 2))
+    
+    return Room(loot, threats)
