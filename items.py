@@ -343,17 +343,22 @@ class Bandage(Item):
 
         return True
 
+# see gen_enemy() in entities.py for explanation
 standardLoot = [
-    [Sword, Spear, Mace, Armor, Bandage],
-    [Sword, Spear, Mace, Armor, Bomb]
+    [(Sword, 3), (Spear, 3), (Mace, 3), (Armor, 3), (Bandage, 6)],
+    [(Sword, 3), (Spear, 3), (Mace, 3), (Armor, 3), (Bomb, 6)]
 ]
 
 rareLoot = []
             
 def gen_loot(quality):
-    chosenItem = choice(standardLoot[quality])
+    itemNum = randint(1, 24)
 
-    if chosenItem in [Sword, Mace, Spear, Armor]:
-        return chosenItem(quality)
+    for item in standardLoot[quality]:
+        if itemNum <= item[1]:
+            chosenItem = item[0]
 
-    return chosenItem()
+            if chosenItem in [Sword, Mace, Spear, Armor]:
+                return chosenItem(quality)
+        
+            return chosenItem()
