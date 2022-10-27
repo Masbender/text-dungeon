@@ -324,6 +324,80 @@ class Armor(Item):
         # this is where it unequips
         player.armorClass -= self.armorClass
         player.dexterity += self.dexLoss
+
+class Ring(Item):
+# boosts one stat
+    def __init__(self):
+        super().__init__("ring of ", 45, 1)
+        # decides what stat is boosted
+        self.statID = randint(0, 5)
+        self.stat = ["stealth", "dodge", "health", "resistance", "awareness", "appraisal"][chosenStat]
+        self.name += ["shadows", "evasion", "resilience", "immunity", "vision", "judgement"][chosenStat]
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print([
+            "The ring of shadows increases your stealth by 1 level",
+            "The ring of evasion increases your chance to dodge by 5%",
+            "The ring of resilience increases your health by 2",
+            "The ring of immunity increases your resistance to disease and injury by 1 level",
+            "The ring of vision increases your awareness of nearby threats by 1 level",
+            "The ring of judgement increases your appraisal of and items value by 1 level"
+        ][self.statID])
+
+    def consume(self, floor):
+        # this is where it equips
+        if player.ring != None:
+            player.inventory.append(player.ring)
+            player.ring.unequip()
+        player.ring = self
+        player.inventory.remove(self)
+
+        if self.stat == "stealth":
+            player.stealth += 1
+            
+        elif self.stat == "dodge":
+            player.dodge += 5
+            
+        elif self.stat == "health":
+            player.maxHealth += 2
+            player.health += 2
+            
+        elif self.stat == "resistance":
+            player.resistance += 1
+
+        elif self.stat == "awareness":
+            player.awareness += 1
+
+        elif self.stat == "appraisal":
+            player.appraisal += 25
+        
+        print("You put on the " + self.name)
+        return True
+
+    def attack(self, enemies):
+        return self.consume(None)
+    def unequip(self):
+        if self.stat == "stealth":
+            player.stealth -= 1
+            
+        elif self.stat == "dodge":
+            player.dodge -= 5
+            
+        elif self.stat == "health":
+            player.maxHealth -= 2
+            player.health -= 2
+            
+        elif self.stat == "resistance":
+            player.resistance -= 1
+
+        elif self.stat == "awareness":
+            player.awareness -= 1
+
+        elif self.stat == "appraisal":
+            player.appraisal -= 25
         
 class Bomb(Item):
     def __init__(self):
@@ -400,8 +474,8 @@ class Bandage(Item):
 
 # see gen_enemy() in entities.py for explanation
 standardLoot = [
-    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 12), (Armor, 16), (Bandage, 24)],
-    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 122), (Armor, 16), (Bomb, 24)]
+    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 12), (Armor, 16), (Ring, 18), (Bandage, 24)],
+    [(Sword, 3), (Spear, 6), (Mace, 9), (Dagger, 12), (Armor, 16), (Ring, 20), (Bomb, 24)]
 ]
 
 rareLoot = []

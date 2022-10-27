@@ -139,7 +139,7 @@ class Creature:
 class Player(Creature):
 # has inventory and equipment slots
     def __init__(self):
-        super().__init__("you", 30)
+        super().__init__("you", 20)
 
         self.inventorySize = 10
         self.inventory = []
