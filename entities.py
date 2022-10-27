@@ -146,6 +146,15 @@ class Player(Creature):
         self.ring = None
         self.armor = None
 
+    def hurt(self, damageTaken, message, armorPiercing = 0):
+    # damages armor
+        damageDealt = super().hurt(damageTaken, message, armorPiercing)
+
+        if self.armor != None:
+            self.armor.degrade()
+
+        return damageDealt
+
 player = Player() # creates the one and only instance of player
 
 class Enemy(Creature):

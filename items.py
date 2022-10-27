@@ -24,7 +24,12 @@ class Item:
             else:
                 self.uses -= 1
 
+        # destroys item if uses are at 0
         if self.uses == 0:
+            # if it is reusable it says when it breaks
+            if self.maxUses > 1:
+                print(self.name + " has broken")
+                
             player.inventory.remove(self)
         return True
 
