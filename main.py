@@ -5,22 +5,12 @@ import items
 
 player = entities.player
 
-player.inventory.extend([items.Sword(0), items.Armor(1)])
+player.inventory.extend([items.Sword(0), items.Ring(2), items.Rations()])
 player.update_dexterity(1)
 
-layout1 = [
-    [dungeon.Room(), dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0)],
-    [dungeon.gen_room("prison", 0), dungeon.Wall(), dungeon.Wall()],
-    [dungeon.gen_room("prison", 0), dungeon.StairsDown(), dungeon.Wall()]
-]
+generator = dungeon.Generator()
 
-layout2 = [
-    [dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0), dungeon.gen_room("prison", 0)],
-    [dungeon.gen_room("prison", 0), dungeon.StairsUp(), dungeon.Wall()],
-    [dungeon.Wall(), dungeon.gen_room("prison", 0), dungeon.Wall()]
-]
-
-floors = [dungeon.Floor(layout1, 0, 0), dungeon.Floor(layout2, 1, 1)]
+floors = [generator.gen_floor("prison", 0, 4), generator.gen_floor("prison", 1, 5)]
 
 floor = 0
 while player.health > 0:

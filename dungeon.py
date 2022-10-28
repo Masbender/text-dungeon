@@ -177,6 +177,7 @@ class Floor:
 
         # checks if new position is too big or small
         if not (self.check_pos(newY) and self.check_pos(newX)):
+            print("there is a wall there, it is protected by magic and is indestructible")
             return False
 
         # checks if new tile is a wall
@@ -420,18 +421,143 @@ class StairsUp(Room):
         self.loot = []
         self.threats = []
 
-def gen_room(area, danger):
+def gen_room(area, teir):
     loot = []
     threats = []
-    if randint(2, 5) <= 2:
+    if randint(1, 2) <= 1:
         if randint(1, 3) == 1:
-            loot = [items.gen_loot(1)]
+            loot = [items.gen_gear(teir)]
         else:
-            loot = [items.gen_loot(0)]
+            loot = [items.gen_item(teir)]
 
     if randint(1, 3) == 1:
-        threats = [entities.gen_enemy(area, danger)]
+        threats = [entities.gen_enemy(area, teir)]
         if randint(1, 3) == 1:
-            threats.append(entities.gen_enemy(area, danger - 2))
+            threats.append(entities.gen_enemy(area, teir - 4))
     
     return Room(loot, threats)
+
+class Generator:
+# generates floors
+    def gen_floor(self, area, depth, size):
+        # stores info about progression
+        self.area = area
+        self.depth = depth
+
+        # stores info about the layout
+        self.size = size
+        self.layoutNums = [] # this is the layout in integers
+        self.layoutRooms = [] # layoutNums is converted into rooms
+        self.startY = 0
+        self.startX = 0
+
+        # stores info for room placement
+        self.rooms = []
+        self.adjacentWalls = []
+        self.hiddenWalls = []
+
+        # forms a square
+        for i in range(self.size):
+            self.layoutNums.append([0] * self.size)
+
+        # generates rooms
+        self.gen_hall()
+        self.count_rooms()
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
+
+        # creates layoutRooms based on the numbers in layoutNums
+        for y in range(self.size):
+            self.layoutRooms.append([])
+            for x in range(self.size):
+                room = Wall() # 0 = Wall
+    
+                if self.layoutNums[y][x] == 1:
+                    room = gen_room(self.area, self.depth)
+                    
+                elif self.layoutNums[y][x] == -1:
+                    room = StairsDown()
+                
+                self.layoutRooms[y].append(room)
+
+        # generates starting room
+        if self.depth == 0:
+            self.layoutRooms[self.startY][self.startX] = Room()
+        else:
+            self.layoutRooms[self.startY][self.startX] = StairsUp()
+
+        # adds consistent encounters (loot & enemies)
+        self.spawn_item(items.Rations())
+        
+        return Floor(self.layoutRooms, self.startY, self.startX)
+    
+    def gen_hall(self):
+    # generates a snake-like hall
+        genOver = False
+        x, y = 0, 0
+    
+        self.layoutNums[x][y] = 1
+    
+        while not genOver:
+            chosenDirection = choice(['x', 'y'])
+    
+            # keeps the directions somewhat even
+            if (x - 2) > y:
+                chosenDirection = 'y'
+            elif (y - 2) > x:
+                chosenDirection = 'x'
+    
+            if chosenDirection == 'x':
+                # checks if x is too big
+                if (x + 1) < self.size:
+                    x += 1
+                else:
+                    break
+    
+            elif chosenDirection == 'y':
+                # checks if y is too big
+                if (y + 1) < self.size:
+                    y += 1
+                else:
+                    break
+    
+            self.layoutNums[y][x] = 1
+    
+        # addds stairs down at the end
+        self.layoutNums[y][x] = -1
+
+    def count_rooms(self):
+        for y in range(self.size):
+            for x in range(self.size):
+                if self.layoutNums[y][x] != 0:
+                    self.rooms.append([y, x])
+                else:
+                    # checks for walls adjacent to rooms
+                    adjacentToRoom = False
+                    for i in [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]]:
+                        # if coords are too large it passes
+                        if (i[0] < self.size) and (i[1] < self.size) and (i[0] >= 0) and (i[1] >= 0):
+                            # checks if viable for being an adjacent room 
+                            if self.layoutNums[i[0]][i[1]] != 0:
+                                self.adjacentWalls.append([y, x])
+                                adjacentToRoom = True
+                                break;
+
+                    # checks if viable for secret room
+                    if not adjacentToRoom:
+                        self.hiddenWalls.append([y, x])
+
+    def gen_rooms(self, amount):
+        for i in range(amount):
+            if len(self.adjacentWalls) > 0:
+                # picks a spot for a room
+                location = choice(self.adjacentWalls)
+                # places room
+                self.layoutNums[location[0]][location[1]] = 1
+    
+                # changes lists accordingly
+                self.rooms.append(location)
+                self.adjacentWalls.remove(location)
+
+    def spawn_item(self, item):
+        room = choice(self.rooms)
+        self.layoutRooms[room[0]][room[1]].loot.append(item)

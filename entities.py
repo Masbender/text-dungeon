@@ -189,7 +189,7 @@ class Effect:
         pass
 
 class Bleeding(Effect):
-# does 1 damage per turn, lowers AC by 1
+# does 1 damage per turn, lowers CON by 1
     name = "bleeding"
     natural = True
     level = 0
@@ -197,7 +197,7 @@ class Bleeding(Effect):
     def __init__(self, target):
         self.target = target
         # AC only decreases when applied
-        self.target.armorClass -= 1
+        self.target.constitution -= 1
 
     def update(self):
         # lowers health by 1 every turn
@@ -205,7 +205,7 @@ class Bleeding(Effect):
 
     def reverse(self):
         # restores changes in __init__
-        self.target.armorClass += 1
+        self.target.constitution += 1
 
 class Regeneration(Effect):
 # heals 1 hp per turn
@@ -217,6 +217,16 @@ class Regeneration(Effect):
     def update(self):
         self.target.heal(1)
 
+class WellFed(Effect):
+# heals 2 health per turn
+    name = "well fed"
+    
+    def __init__(self, target):
+        self.target = target
+
+    def update(self):
+        self.target.heal(2)
+        
 class Dazed(Effect):
 # lowers DEX and STR
     name = "dazed"
@@ -320,8 +330,11 @@ class ArmoredSkeleton(Skeleton):
 
 # numbers higher than 12 will only spawn with increased danger
 # the actual chance to spawn is (current) number - previous number) in 12
+# same as item randomness except the highest number is 12
+# numbers higher than 12 only show up when danger is increased
+# lower numbers are less likely when danger is increased
 enemyPool = {
-    "prison":[(Skeleton, 8), (Draugr, 10), (ArmoredSkeleton, 14)]
+    "prison":[(Skeleton, 8), (Draugr, 10), (ArmoredSkeleton, 12)]
 }
             
 def gen_enemy(area, danger):
