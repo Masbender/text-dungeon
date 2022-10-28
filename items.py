@@ -336,7 +336,7 @@ class Ring(Item):
         # decides what stat is boosted
         self.statID = ID
         if ID < 0:
-            self.statID = randint(0, 5)
+            self.statID = randint(0, 4)
             
         self.stat = ["stealth", "dodge", "health", "resistance", "awareness"][self.statID]
         self.name += ["shadows", "evasion", "resilience", "immunity", "vision"][self.statID]

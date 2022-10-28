@@ -77,6 +77,9 @@ class Battle:
             equipmentMessage = "you are wearing "
             if player.armor != None:
                 equipmentMessage += player.armor.name
+                # if both are there it adds "and"
+                if player.ring != None:
+                    equipmentMessage += " and "
             if player.ring != None:
                 equipmentMessage += "a " + player.ring.name
             print(equipmentMessage + "\n")
@@ -234,6 +237,9 @@ class Floor:
                 equipmentMessage = "you are wearing "
                 if player.armor != None:
                     equipmentMessage += player.armor.name
+                    # if both are there it adds "and"
+                    if player.ring != None:
+                        equipmentMessage += " and "
                 if player.ring != None:
                     equipmentMessage += "a " + player.ring.name
                 print(equipmentMessage + "\n")
@@ -502,6 +508,7 @@ class Generator:
 
         # adds consistent encounters (loot & enemies)
         self.spawn_item(items.Rations())
+        self.spawn_item(items.gen_gear(self.depth))
         
         return Floor(self.layoutRooms, self.startY, self.startX)
     
