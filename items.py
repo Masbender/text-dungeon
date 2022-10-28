@@ -112,8 +112,7 @@ class Sword(Weapon):
 # does damage to target and can inflict bleeding
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
-        material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " sword", 30 + (20 * level), 15 + (10 * level))
+        super().__init__("sword", level)
         
         self.bleedDuration = 4
         self.bleedChance = 2 # bleedChance is _ in 6
@@ -163,8 +162,7 @@ class Spear(Weapon):
 # does damage to target and has some armor piercing
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
-        material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " spear", 30 + (20 * level), 15 + (10 * level))
+        super().__init__("spear", level)
 
         self.damage = 4 + level
         self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
@@ -199,8 +197,7 @@ class Mace(Weapon):
 # does damage to target and can stun
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
-        material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " mace", 30 + (20 * level), 15 + (10 * level))
+        super().__init__("mace", level)
         
         self.damage = 4 + level
         self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
@@ -243,8 +240,7 @@ class Dagger(Weapon):
 # does damage to target but uses DEX not STR, strong vs full hp enemies
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
-        material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " dagger", 30 + (20 * level), 15 + (10 * level))
+        super().__init__("dagger", level)
 
         self.damage = 4 + level
         self.firstHitDamage = (level + 3) // 2
