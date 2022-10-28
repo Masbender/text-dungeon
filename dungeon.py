@@ -79,7 +79,7 @@ class Battle:
                 equipmentMessage += player.armor.name
             if player.ring != None:
                 equipmentMessage += "a " + player.ring.name
-            print("you are wearing " + equipmentMessage)
+            print(equipmentMessage + "\n")
             print()
     
     def enemy_turn(self, enemy):
@@ -236,8 +236,7 @@ class Floor:
                     equipmentMessage += player.armor.name
                 if player.ring != None:
                     equipmentMessage += "a " + player.ring.name
-                print("you are wearing " + equipmentMessage)
-                print()
+                print(equipmentMessage + "\n")
 
             # ===== CHECKS OPTIONS =====
             options = ["move", "wait"]
