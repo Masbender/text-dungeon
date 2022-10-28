@@ -72,8 +72,14 @@ class Battle:
 
             print()
 
-        if player.armor != None:
-            print("you are wearing " + player.armor.name)
+        # prints out what you are wearing
+        if player.armor != None or player.ring != None:
+            equipmentMessage = "you are wearing "
+            if player.armor != None:
+                equipmentMessage += player.armor.name
+            if player.ring != None:
+                equipmentMessage += "a " + player.ring.name
+            print("you are wearing " + equipmentMessage)
             print()
     
     def enemy_turn(self, enemy):
@@ -223,8 +229,15 @@ class Floor:
             if len(effects) > 0:
                 print(f"[{' | '.join(effects)}]")
 
-            if player.armor != None:
-                print("\nyou are wearing " + player.armor.name)
+            # prints out what you are wearing
+            if player.armor != None or player.ring != None:
+                equipmentMessage = "you are wearing "
+                if player.armor != None:
+                    equipmentMessage += player.armor.name
+                if player.ring != None:
+                    equipmentMessage += "a " + player.ring.name
+                print("you are wearing " + equipmentMessage)
+                print()
 
             # ===== CHECKS OPTIONS =====
             options = ["move", "wait"]
@@ -334,7 +347,8 @@ class Floor:
                     # removes item to inventory, leaving it in the room
                     room.loot.append(player.inventory.pop(chosenItem))
                     print(f"you drop the {options[chosenItem + 1]}")
-                
+
+            # ===== INSPECT ITEM =====
             elif playerInput == "inspect item":
                 options = item_list()
                 for item in room.loot:
@@ -346,6 +360,8 @@ class Floor:
                     player.inventory[chosenItem].inspect()
                 else:
                     room.loot[chosenItem - len(player.inventory)].inspect()
+
+            # ===== SURPRISE ATTACK =====
             elif playerInput == "surprise attack":
                 for enemy in room.threats:
                     enemy.affect(entities.Surprised, 2)
