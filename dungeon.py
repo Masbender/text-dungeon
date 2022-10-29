@@ -388,9 +388,10 @@ class Room:
     description = ""
     specialAction = ""
     
-    def __init__(self, loot = [], threats = []):
+    def __init__(self, loot = [], threats = [], description = ""):
         self.loot = loot
         self.threats = threats
+        self.description = ""
 
     def unblock(self): # called if the room needs a bomb or key to unlock
         return True
@@ -442,22 +443,52 @@ class StairsUp(Room):
         self.loot = []
         self.threats = []
 
-def gen_room(area, teir):
+def gen_room(area, depth, type):
     loot = []
     threats = []
-    if randint(1, 2) <= 1:
-        if randint(1, 3) == 1:
-            loot = [items.gen_gear(teir)]
-        else:
-            loot = [items.gen_item(teir)]
+    room = Room()
 
-    if randint(1, 3) == 1:
-        threats = [entities.gen_enemy(area, teir)]
-        if randint(1, 3) == 1:
-            threats.append(entities.gen_enemy(area, teir - 4))
+    # standard room
+    if type == 1:
+        if area == "prison":
+            if randint(1, 3) == 1:
+                room.description = "you are in an empty prison cell"
+
+    # special room
+    elif type == 2:
+        if area == "prison":
+            roomDesc = randint(1, 6)
+            if roomDesc == 1:
+                room.description = "you are in a storage room"
+            elif roomDesc == 2:
+                room.description = "it appears that you are in what used to be an armory"
+            elif roomDesc == 3:
+                room.description = "you are in a large empty room"
+        
+        if randint(1, 2) <= 1:
+            if randint(1, 3) == 1:
+                loot.append(items.gen_gear(depth))
+            else:
+                loot.append(items.gen_item(depth))
     
-    return Room(loot, threats)
+        if randint(1, 3) == 1:
+            threats.append(entities.gen_enemy(area, depth % 3))
+            if randint(1, 3) == 1:
+                threats.append(entities.gen_enemy(area, (depth % 3) - 4))
 
+    # secret room
+    elif type == 3:
+        room.description = "this is a secret room, if you didn't use a bomb to find this then uh-oh"
+        
+        loot.append(items.gen_gear(depth + 3))
+        for i in range(randint(1, 2)):
+            loot.append(items.gen_item(depth + 2 - i))
+
+    room.threats = threats
+    room.loot = loot
+    
+    return room
+    
 class Generator:
 # generates floors
     def gen_floor(self, area, depth, size):
@@ -486,14 +517,19 @@ class Generator:
         self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
+        # generates secret room
+        if len(self.hiddenWalls) > 0:
+            hiddenSpot = choice(self.hiddenWalls)
+            self.layoutNums[hiddenSpot[0]][hiddenSpot[1]] = 3
+
         # creates layoutRooms based on the numbers in layoutNums
         for y in range(self.size):
             self.layoutRooms.append([])
             for x in range(self.size):
                 room = Wall() # 0 = Wall
     
-                if self.layoutNums[y][x] == 1:
-                    room = gen_room(self.area, self.depth)
+                if self.layoutNums[y][x] > 0:
+                    room = gen_room(self.area, self.depth, self.layoutNums[y][x])
                     
                 elif self.layoutNums[y][x] == -1:
                     room = StairsDown()
@@ -569,16 +605,26 @@ class Generator:
                         self.hiddenWalls.append([y, x])
 
     def gen_rooms(self, amount):
+        viableLocations = self.adjacentWalls
         for i in range(amount):
             if len(self.adjacentWalls) > 0:
                 # picks a spot for a room
-                location = choice(self.adjacentWalls)
+                location = choice(viableLocations)
                 # places room
-                self.layoutNums[location[0]][location[1]] = 1
+                self.layoutNums[location[0]][location[1]] = 2
     
                 # changes lists accordingly
                 self.rooms.append(location)
                 self.adjacentWalls.remove(location)
+
+                y = location[0]
+                x = location[1]
+
+                # adds nearby exposed walls to adjacentWalls
+                for i in [[y - 1, x], [y + 1, x], [y, x - 1], [y, x + 1]]:
+                    if (i[0] < self.size) and (i[1] < self.size) and (i[0] >= 0) and (i[1] >= 0):
+                        if self.layoutNums[i[0]][i[1]] == 0 and not i in self.adjacentWalls:
+                            self.adjacentWalls.append(i)
 
     def spawn_item(self, item):
         room = choice(self.rooms)

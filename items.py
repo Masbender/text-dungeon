@@ -12,12 +12,12 @@ class Item:
         self.maxUses = uses
 
     def degrade(self):
-        # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
+        # if INT is less than 0, there's a 10 * INT % chance that item degrades twice
         if player.intelligence < 0:
             if randint(0, -99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
-        # for every level of INT, there is a 7.5% that the item doesn't degrade
+        # for every level of INT, there is a 10% that the item doesn't degrade
         else:
             if randint(0, 99) < player.intelligence * 10:
                 return False
@@ -403,10 +403,6 @@ class Bomb(Item):
     def __init__(self):
         super().__init__("bomb", 40, 1)
 
-    def degrade(self):
-        self.uses = 0
-        return 
-
     def status(self):
         return ""
 
@@ -418,11 +414,11 @@ class Bomb(Item):
         for enemy in enemies:
             enemy.hurt(15, f"The bomb does _ damage to {enemy.name}!")
 
-        self.degrade()
+        player.inventory.remove(self)
         return True
 
     def dig(self):
-        self.degrade()
+        player.inventory.remove(self)
         print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
         return True
 
@@ -533,7 +529,11 @@ def gen_gear(quality):
                 # can be higher quality
                 if randint(1, 4) == 1:
                     quality += 1
-                
-                return chosenItem((quality + 2)//3)
+
+                gearLevel = (quality + 2) // 3
+                if gearLevel > 3:
+                    gearLevel = 3
+                    
+                return chosenItem(gearLevel)
         
             return chosenItem()

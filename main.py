@@ -5,7 +5,7 @@ import items
 
 player = entities.player
 
-player.inventory.extend([items.Sword(0), items.Ring(2), items.Rations()])
+player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb(), items.Bomb()])
 player.update_dexterity(1)
 
 generator = dungeon.Generator()
