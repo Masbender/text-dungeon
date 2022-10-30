@@ -513,7 +513,11 @@ class Generator:
             self.layoutNums.append([0] * self.size)
 
         # generates rooms
-        self.gen_hall()
+        if randint(0, 1):
+            self.gen_random()
+        else:
+            self.gen_hall()
+            
         self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
@@ -581,6 +585,41 @@ class Generator:
             self.layoutNums[y][x] = 1
     
         # addds stairs down at the end
+        self.layoutNums[y][x] = -1
+
+    def gen_random(self):
+    # generates a random layout
+        # picks starting position
+        x = randint(1, self.size) - 1
+        y = randint(1, self.size) - 1
+
+        self.startX = x
+        self.startY = y
+
+        self.layoutNums[y][x] = 1
+
+        # generation starts here
+        previousDirection = -3
+
+        for i in range(int(self.size * 1.5)):
+            direction = randint(0, 3)
+            stepSize = randint(2, 3)
+
+            if direction == (previousDirection + 2) % 4:
+                direction = (direction + 1) % 4
+
+            for i in range(stepSize):
+                if direction == 0 and y > 0:
+                    y -= 1
+                elif direction == 1 and x < self.size - 1:
+                    x += 1
+                elif direction == 2 and y < self.size - 1:
+                    y += 1
+                elif direction == 3 and x > 0:
+                    x -= 1
+
+                self.layoutNums[y][x] = 1
+
         self.layoutNums[y][x] = -1
 
     def count_rooms(self):

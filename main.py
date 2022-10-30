@@ -10,7 +10,7 @@ player.update_dexterity(1)
 
 generator = dungeon.Generator()
 
-floors = [generator.gen_floor("prison", 0, 4), generator.gen_floor("prison", 1, 5)]
+floors = [generator.gen_floor("prison", 0, 4), generator.gen_floor("prison", 1, 5), generator.gen_floor("prison", 2, 5)]
 
 floor = 0
 while player.health > 0:
