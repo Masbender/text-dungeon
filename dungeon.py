@@ -128,7 +128,7 @@ class Floor:
                 elif self.map[i][I] == '?':
                     lines[i] += '?'
                 # walls are represented as ' '
-                elif self.map[i][I].blocked:
+                elif type(self.map[i][I]) == Wall and self.map[i][I].blocked:
                     lines[i] += ' '
                 # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "stairs down":
@@ -425,6 +425,37 @@ class Wall(Room):
 
         return tunnelDug
 
+class LockedRoom(Room):
+    blocked = True
+    description = ""
+    specialAction = ""
+
+    def __init__(self, lockType, depth):
+        self.loot = []
+        self.threats = []
+        self.lockType = lockType
+
+        if self.lockType == "iron":
+            self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
+
+    def unblock(self): # requires a certain key
+        print(f"there is a {self.lockType} lock in the way")
+        
+        # gathers input
+        options = ["cancel"]
+        for item in player.inventory:
+            options.append(f"{item.name} {item.status()}")
+        
+        itemUsed = gather_input("How do you unlock it?", options)
+
+        # checks if item works then uses it
+        unlocked = False
+        if itemUsed > 0: # 0 is cancel
+            itemUsed -= 1 # reverts back to proper index
+            unlocked = player.inventory[itemUsed].unlock(self.lockType)
+
+        return unlocked
+
 class StairsDown(Room):
     blocked = False
     description = "there are stairs here that lead down"
@@ -507,6 +538,7 @@ class Generator:
         self.rooms = []
         self.adjacentWalls = []
         self.hiddenWalls = []
+        self.sideRooms = []
 
         # forms a square
         for i in range(self.size):
@@ -546,8 +578,11 @@ class Generator:
         else:
             self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        # adds consistent encounters (loot & enemies)
+        # adds consistent encounters (loot, rooms, & enemies)
+        self.add_room(LockedRoom("iron", self.depth))
+            
         self.spawn_item(items.Rations())
+        self.spawn_item(items.Key(0))
         self.spawn_item(items.gen_gear(self.depth))
         
         return Floor(self.layoutRooms, self.startY, self.startX)
@@ -654,6 +689,7 @@ class Generator:
     
                 # changes lists accordingly
                 self.rooms.append(location)
+                self.sideRooms.append(location)
                 self.adjacentWalls.remove(location)
 
                 y = location[0]
@@ -664,6 +700,13 @@ class Generator:
                     if (i[0] < self.size) and (i[1] < self.size) and (i[0] >= 0) and (i[1] >= 0):
                         if self.layoutNums[i[0]][i[1]] == 0 and not i in self.adjacentWalls:
                             self.adjacentWalls.append(i)
+                            self.hiddenWalls.remove(i)
+
+    def add_room(self, room):
+        if len(self.sideRooms) != 0:
+            location = choice(self.sideRooms)
+            self.layoutRooms[location[0]][location[1]] = room
+            self.sideRooms.remove(location)
 
     def spawn_item(self, item):
         room = choice(self.rooms)

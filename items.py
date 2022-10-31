@@ -407,7 +407,7 @@ class Bomb(Item):
         return ""
 
     def inspect(self):
-        print("The bomb can destroy walls, possible revealing secrets.")
+        print("The bomb can destroy walls, possibly revealing secrets.")
         print("It can also be used in combat to harm all enemies.")
 
     def attack(self, enemies):
@@ -422,7 +422,25 @@ class Bomb(Item):
         print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
         return True
 
-# stores values in tuples, (item, chance)
+class Key(Item):
+    def __init__(self, tier):
+        self.type = ["iron", "gold", "crystal"][tier]
+        super().__init__(self.type + " key", (35 * tier) + 15, 1)
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print(f"This key can open a {self.type} lock.")
+
+    def unlock(self, lockType):
+        if self.type == lockType:
+            print("the door opens")
+            return True
+        else:
+            print("they key doesn't fit")
+            return False
+
 class Bandage(Item):
 # cures bleeding, heals some health, and applies regeneration
     def __init__(self):
