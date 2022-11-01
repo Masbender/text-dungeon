@@ -611,6 +611,37 @@ class Key(Item):
 # number 1 through 16 is chosen
 # if standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]
 # there is a 8 in 16 chance for rations, 6 in 16 chance for bandage, and 2 in 16 for bomb
+class KnowledgeBook(Item):
+# improves one stat
+    def __init__(self):
+        super().__init__("book of knowledge", 60, 1)
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("The book of knowledge will let you improve one stat when you read it.")
+
+    def consume(self, floor):
+        options = ["STR", "CON", "DEX", "PER", "INT"]
+        chosenStat = gather_input("What stat do you improve?", options, False)
+
+        if chosenStat == "STR":
+            player.update_strength(1)
+        elif chosenStat == "CON":
+            player.update_constitution(1)
+        elif chosenStat == "DEX":
+            player.update_dexterity(1)
+        elif chosenStat == "PER":
+            player.update_perception(1)
+        elif chosenStat == "INT":
+            player.update_intelligence(1)
+
+        print(f"your mind is flooded with knowledge, your {chosenStat} has improved!")
+        
+        player.inventory.remove(self)
+        return True
+
 standardLoot = [(Rations, 9), (Bandage, 14), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (HeavyArmor, 12), (BuffRing, 16)]

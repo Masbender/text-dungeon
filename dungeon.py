@@ -621,8 +621,9 @@ class Generator:
 
         # adds consistent encounters (loot, rooms, & enemies)
         self.add_room(LockedRoom("iron", self.depth))
-            
+        
         self.spawn_item(items.Rations())
+        self.spawn_item(items.KnowledgeBook())
         self.spawn_item(items.Key(0))
 
         # spawns items

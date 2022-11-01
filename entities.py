@@ -257,8 +257,34 @@ class Surprised(Effect):
         self.target.dexterity += 2
         self.target.armorClass += 1
 
+class Decay(Effect):
+# lowers CON, gets stronger over time
+    name = "decay"
+
+    def __init__(self, target):
+        self.target = target
+
+        self.decayLevel = 1
+        self.turnsToProgress = 2
+
+        self.name = "decay lvl " + str(self.decayLevel)
+
+        self.target.update_constitution(-self.decayLevel)
+
+    def update(self):
+        self.turnsToProgress -= 1
+
+        if self.turnsToProgres == 0:
+            self.decayLevel += 1
+            self.name = "decay lvl " + str(self.decayLevel)
+            self.turnsToProgress = self.decayLevel + 1
+            self.target.update_constitution(-1)
+
+    def reverse(self):
+        self.target.update_constitutuon(self.decayLevel)
+
 class Draugr(Enemy):
-# an uncommon enemy that can appear in earlier floors
+# a rare enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
     def __init__(self):
         super().__init__("draugr", 18, 2, 1)
@@ -272,6 +298,23 @@ class Draugr(Enemy):
             player.hurt(3 + self.strength, message + ", leaving you BLEEDING!")
         else:
             player.hurt(4 + self.strength, message + "!")
+
+class Ghoul(Enemy):
+# an uncommon, stealthier enemy that appears in the prison
+# can dodge attacks and inflicts decay
+    def __init__(self):
+        super().__init__("ghoul", 16, 4, 2)
+        self.dodge = 10
+        
+        self.warning = "you smell a foul stench"
+
+    def attack(self, enemies):
+        if randint(1, 3) == 1:
+            print("the GHOUL curses you with decay, lowering your CON over time")
+
+            player.affect(Decay, 6)
+        else:
+            player.hurt(4 + self.strength, "the GHOUL attacks you for _ damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -319,10 +362,10 @@ class Skeleton(Enemy):
             player.hurt(self.damage, message + "!", armorPiercing)
 
 class ArmoredSkeleton(Skeleton):
-# has more AC and staggers less, always has a mace
+# has more AC and staggers more, always has a mace
     def __init__(self):
         super().__init__()
-        self.staggerChance = 1
+        self.staggerChance = 3
         self.armorClass = 2
         
         self.weapon = "mace"
@@ -334,7 +377,7 @@ class ArmoredSkeleton(Skeleton):
 # numbers higher than 12 only show up when danger is increased
 # lower numbers are less likely when danger is increased
 enemyPool = {
-    "prison":[(Skeleton, 8), (Draugr, 10), (ArmoredSkeleton, 12)]
+    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12)]
 }
             
 def gen_enemy(area, danger):
