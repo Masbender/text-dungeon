@@ -88,6 +88,9 @@ class Battle:
             if len(effects) > 0:
                 print(f"[{' | '.join(effects)}]")
 
+            if creature == player:
+                print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
+
             print()
 
         # prints out what you are wearing
@@ -241,7 +244,8 @@ class Floor:
                 print(room.description)
                 print()
 
-            print(f"You have {player.health}/{player.maxHealth} HP")
+            print(f"You have {player.health}/{player.maxHealth} HP, {player.armorClass} AC")
+            print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
             
             effects = []
             for i in range(len(player.effects)):
@@ -298,6 +302,9 @@ class Floor:
             # presents options to player and gathers input
             if room.loot != [] or player.inventory != []:
                 options.append("inspect item")
+
+            options.append("view stats")
+            
             playerInput = gather_input("\nWhat do you do?", options, False)
             
             # ===== MOVE =====
@@ -327,11 +334,22 @@ class Floor:
 
                         room.threats = []
 
-            # ===== USE ITEM =====
+            # ===== WAIT =====
             elif playerInput == "wait":
                 self.update_map()
                 update_effects(player)
                 print("you wait")
+
+            # ===== VIEW STATS =====
+            elif playerInput == "view stats":
+                print(f"resistance : {player.resistance} | higher levels decrease the severity of many poisons and injuries")
+                print(f"dodge : {player.dodge}% | chance to avoid damage, negative values allow you to take critical damage")
+                print(f"stealth : {player.stealth} | compared against enemies' awareness to determine if you are detected")
+                print(f"awareness : {player.awareness} | gives you a message when adjacent to enemies with lower stealth")
+                print(f"appraisal : {player.appraisal} gold | if an item is worth more than you can appraise, you will be scammed")
+                print()
+
+            # ===== USE ITEM =====
             elif playerInput == "use item":
                 options = ["cancel"] + item_list()
                 itemUsed = gather_input("what do you use?", options)
@@ -607,6 +625,7 @@ class Generator:
         self.spawn_item(items.Rations())
         self.spawn_item(items.Key(0))
 
+        # spawns items
         chosenItems = []
         for i in range(randint(self.size - 1, self.size)):
             randomItem = items.gen_gear(self.depth)
@@ -616,7 +635,8 @@ class Generator:
 
             chosenItems.append(randomItem)
             self.spawn_item(randomItem)
-
+            
+        # spawns enemies
         for i in range(randint(self.size - 2, self.size)):
             self.spawn_random_enemy(self.depth - (i // 2))
         
@@ -754,8 +774,18 @@ class Generator:
 
     def spawn_random_enemy(self, threat):
         room = choice(self.rooms)
+
+        while len(self.layoutRooms[room[0]][room[1]].threats) > 3:
+            room = choice(self.rooms)
         
         if self.layoutRooms[room[0]][room[1]].threats != []:
             threat -= 5
+
+        enemy = entities.gen_enemy(self.area, threat)
+
+        # lowers enemy health if there are too many already there
+        enemyCount = len(self.layoutRooms[room[0]][room[1]].threats)
+        enemy.maxHealth = int(enemy.maxHealth * (1 - (randint(enemyCount, enemyCount * 2) / 10)))
+        enemy.health = enemy.maxHealth
         
-        self.layoutRooms[room[0]][room[1]].threats.append(entities.gen_enemy(self.area, threat))
+        self.layoutRooms[room[0]][room[1]].threats.append(enemy)

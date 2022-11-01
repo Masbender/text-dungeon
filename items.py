@@ -375,7 +375,7 @@ class HeavyArmor(Armor):
 
         # applies stats
         player.armorClass += self.armorClass + self.enchantment
-        player.dexterity -= self.dexLoss
+        player.update_dexterity(-self.dexLoss)
 
         print("You put on the " + self.name)
         return True
@@ -383,7 +383,7 @@ class HeavyArmor(Armor):
     def unequip(self):
         # this is where it unequips
         player.armorClass -= self.armorClass + self.enchantment
-        player.dexterity += self.dexLoss
+        player.update_dexterity(self.dexLoss)
 
 class Ring(Item):
     enchantable = True
@@ -436,7 +436,7 @@ class BuffRing(Ring):
         self.equip()
         
         enchantment = self.enchantment
-        if self.enchantment < 0: # negative self.enchantment is strong enough to reverse the effect
+        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
             enchantment -= 1
         
         if self.stat == "stealth":
@@ -459,6 +459,10 @@ class BuffRing(Ring):
         return True
 
     def unequip(self):
+        enchantment = self.enchantment
+        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
+            enchantment -= 1
+            
         if self.stat == "stealth":
             player.stealth -= 1 + enchantment
             
@@ -496,13 +500,17 @@ class Medicine(Item):
             player.affect(self.effectApplied, self.effectDuration)
 
         # cures bleeding
-        removedEffects = []
+        removedEffectsIndexes = []
         for i in range(len(player.effects)):
             if type(player.effects[i]) in self.effectsCured:
-                removedEffects.append(player.effects[i].name)
-                player.effects[i].reverse()
-                player.effects.pop(i)
-                player.effectDurations.pop(i)
+                removedEffects.append(i)
+
+        removedEffects = []
+        for i in removedEffectsIndexes.reverse():
+            removedEffects.append(player.effects[i].name)
+            player.effects[i].reverse()
+            player.effects.pop(i)
+            player.effectDurations.pop(i)
 
         # prints out a message based on healing and removed effects
         message = f"the {self.name} restores {healingDone} health"
@@ -526,11 +534,11 @@ class Medicine(Item):
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
     def __init__(self):
-        super().__init__("bandage", 30, 3, 4, entities.Regeneration, 6, [entities.Bleeding])
+        super().__init__("bandage", 30, 3, 4, entities.Regeneration, 4, [entities.Bleeding])
 
     def inspect(self):
         print(f"The {self.name} has {self.uses} uses remaining.")
-        print(f"It heals around 3 HP and heals an addition 1 HP per turn for 6 turns.")
+        print(f"It heals around 4 HP and heals an addition 1 HP per turn for 4 turns.")
         print(f"Cures bleeding.")
 
     def degrade(self):
@@ -542,13 +550,13 @@ class Bandage(Medicine):
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
     def __init__(self):
-        super().__init__("rations", 20, 1, 7, entities.WellFed, 3)
+        super().__init__("rations", 20, 1, 7, entities.WellFed, 4)
 
     def status(self):
         return ""
         
     def inspect(self):
-        print("Eating the rations will heal around 7 health, and 6 more health over 3 turns.")
+        print("Eating the rations will heal around 7 health, and 8 more health over 4 turns.")
         print("You don't have enough time to eat this during combat.")
 
     def attack(self, enemies):
@@ -602,7 +610,7 @@ class Key(Item):
 # number 1 through 16 is chosen
 # if standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]
 # there is a 8 in 16 chance for rations, 6 in 16 chance for bandage, and 2 in 16 for bomb
-standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]
+standardLoot = [(Rations, 9), (Bandage, 14), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (HeavyArmor, 12), (BuffRing, 16)]
 
