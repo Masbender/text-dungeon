@@ -506,7 +506,8 @@ class Medicine(Item):
                 removedEffects.append(i)
 
         removedEffects = []
-        for i in removedEffectsIndexes.reverse():
+        removedEffectsIndexes.reverse()
+        for i in removedEffectsIndexes:
             removedEffects.append(player.effects[i].name)
             player.effects[i].reverse()
             player.effects.pop(i)
