@@ -9,7 +9,7 @@ def item_list():
 # returns a list of item names
     itemList = []
     for item in player.inventory:
-        itemList.append(f"{item.name} {item.status()}")
+        itemList.append(item.get_name())
 
     return itemList
 
@@ -76,12 +76,12 @@ class Battle:
         if player.armor != None or player.ring != None:
             equipmentMessage = "you are wearing "
             if player.armor != None:
-                equipmentMessage += player.armor.name
+                equipmentMessage += player.armor.get_name()
                 # if both are there it adds "and"
                 if player.ring != None:
                     equipmentMessage += " and "
             if player.ring != None:
-                equipmentMessage += "a " + player.ring.name
+                equipmentMessage += "a " + player.ring.get_name()
             print(equipmentMessage + "\n")
             print()
     
@@ -236,12 +236,12 @@ class Floor:
             if player.armor != None or player.ring != None:
                 equipmentMessage = "you are wearing "
                 if player.armor != None:
-                    equipmentMessage += player.armor.name
+                    equipmentMessage += player.armor.get_name()
                     # if both are there it adds "and"
                     if player.ring != None:
                         equipmentMessage += " and "
                 if player.ring != None:
-                    equipmentMessage += "a " + player.ring.name
+                    equipmentMessage += "a " + player.ring.get_name()
                 print(equipmentMessage + "\n")
 
             # ===== CHECKS OPTIONS =====
@@ -268,12 +268,12 @@ class Floor:
                 options.append("take item")
                 # prints items
                 if len(room.loot) == 1:
-                    print(f"there is a {room.loot[0].name} here")
+                    print(f"there is a {room.loot[0].get_name()} here")
                 else:
                     # gets a list of item names
                     names = []
                     for item in room.loot:
-                        names.append(item.name)
+                        names.append(item.get_name())
                         
                     print(f"there is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
@@ -328,7 +328,7 @@ class Floor:
                 if len(player.inventory) < player.inventorySize:
                     options = []
                     for item in room.loot:
-                        options.append(item.name)
+                        options.append(item.get_name())
     
                     # if there are multiple items it asks for input
                     chosenItem = 0
@@ -341,7 +341,7 @@ class Floor:
                 else:
                     print(f"you are carrying too much, you can only have {player.inventorySize} items")
 
-            # ===== SURPRISE ATTACK =====
+            # ===== DROP ITEM =====
             elif playerInput == "drop item":
                 options = ["cancel"] + item_list()
 
@@ -350,14 +350,17 @@ class Floor:
                 if chosenItem > 0: # 0 is cancel
                     chosenItem -= 1 # changes index back to normal
                     # removes item to inventory, leaving it in the room
-                    room.loot.append(player.inventory.pop(chosenItem))
-                    print(f"you drop the {options[chosenItem + 1]}")
+                    if player.inventory[chosenItem].enchantment < 0:
+                        print(f"the {options[chosenItem + 1]} is cursed and cannot be dropped")
+                    else:
+                        room.loot.append(player.inventory.pop(chosenItem))
+                        print(f"you drop the {options[chosenItem + 1]}")
 
             # ===== INSPECT ITEM =====
             elif playerInput == "inspect item":
                 options = item_list()
                 for item in room.loot:
-                    options.append(item.name)
+                    options.append(item.get_name())
 
                 chosenItem = gather_input("What do you inspect?", options)
 
@@ -413,7 +416,7 @@ class Wall(Room):
         # gathers input
         options = ["cancel"]
         for item in player.inventory:
-            options.append(f"{item.name} {item.status()}")
+            options.append(item.get_name())
         
         itemUsed = gather_input("How do you destroy it?", options)
 
@@ -444,7 +447,7 @@ class LockedRoom(Room):
         # gathers input
         options = ["cancel"]
         for item in player.inventory:
-            options.append(f"{item.name} {item.status()}")
+            options.append(item.get_name())
         
         itemUsed = gather_input("How do you unlock it?", options)
 
@@ -707,6 +710,7 @@ class Generator:
             location = choice(self.sideRooms)
             self.layoutRooms[location[0]][location[1]] = room
             self.sideRooms.remove(location)
+            self.rooms.remove(location)
 
     def spawn_item(self, item):
         room = choice(self.rooms)
