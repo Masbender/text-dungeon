@@ -642,7 +642,7 @@ class KnowledgeBook(Item):
         player.inventory.remove(self)
         return True
 
-standardLoot = [(Rations, 9), (Bandage, 14), (Bomb, 16)]
+standardLoot = [(Rations, 8), (Bandage, 13), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (HeavyArmor, 12), (BuffRing, 16)]
 

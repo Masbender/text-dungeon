@@ -303,7 +303,7 @@ class Floor:
             if room.loot != [] or player.inventory != []:
                 options.append("inspect item")
 
-            options.append("view stats")
+            options.extend(["view stats", "debug : reveal map"])
             
             playerInput = gather_input("\nWhat do you do?", options, False)
             
@@ -417,6 +417,10 @@ class Floor:
                 battle.start_battle()
 
                 room.threats = []
+
+            # ===== DEBUG : REVEAL MAP =====
+            elif playerInput == "debug : reveal map":
+                self.map = self.layout
 
             # ===== STAIRS =====
             elif playerInput == "stairs up":
@@ -711,6 +715,22 @@ class Generator:
 
                 self.layoutNums[y][x] = 1
 
+        while not (x == self.startX and y == self.startY):
+            direction = randint(0, 3)
+            stepSize = randint(2, 3)
+
+            for i in range(stepSize):
+                if direction == 0 and y > 0:
+                    y -= 1
+                elif direction == 1 and x < self.size - 1:
+                    x += 1
+                elif direction == 2 and y < self.size - 1:
+                    y += 1
+                elif direction == 3 and x > 0:
+                    x -= 1
+
+                self.layoutNums[y][x] = 1
+
         self.layoutNums[y][x] = -1
 
     def count_rooms(self):
@@ -735,9 +755,9 @@ class Generator:
                         self.hiddenWalls.append([y, x])
 
     def gen_rooms(self, amount):
-        viableLocations = self.adjacentWalls
+        viableLocations = [] + self.adjacentWalls
         for i in range(amount):
-            if len(self.adjacentWalls) > 0:
+            if len(viableLocations) > 0:
                 # picks a spot for a room
                 location = choice(viableLocations)
                 # places room
@@ -747,6 +767,7 @@ class Generator:
                 self.rooms.append(location)
                 self.sideRooms.append(location)
                 self.adjacentWalls.remove(location)
+                viableLocations.remove(location)
 
                 y = location[0]
                 x = location[1]

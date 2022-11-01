@@ -71,7 +71,7 @@ class Creature:
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # lowers health but applies armor class and dodge        
         # applies strength
-        damageTaken += randint(0, attackerStrength)
+        damageTaken += randint(attackerStrength // 2, attackerStrength)
         
         # applies armor piercing to armor class
         damageReduction = self.armorClass
@@ -284,13 +284,13 @@ class Decay(Effect):
             self.target.update_constitution(-1)
 
     def reverse(self):
-        self.target.update_constitutuon(self.decayLevel)
+        self.target.update_constitution(self.decayLevel)
 
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
     def __init__(self):
-        super().__init__("draugr", 18, 2, 1)
+        super().__init__("draugr", 18, 2, 3)
         self.resistance = 2
         self.armorClass = 1
 
