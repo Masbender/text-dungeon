@@ -9,6 +9,8 @@ player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb(), items.Bo
 player.inventory[0].enchantment = 1
 player.update_dexterity(1)
 
+dungeon.sort_inventory()
+
 generator = dungeon.Generator()
 
 floors = [generator.gen_floor("prison", 0, 4), generator.gen_floor("prison", 1, 5), generator.gen_floor("prison", 2, 5)]

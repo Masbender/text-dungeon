@@ -5,6 +5,24 @@ import items
 
 player = entities.player
 
+def sort_inventory():
+    weapons = []
+    healing = []
+    apparel = []
+    misc = []
+
+    for item in player.inventory:
+        if issubclass(type(item), items.Weapon):
+            weapons.append(item)
+        elif issubclass(type(item), items.Medicine):
+            healing.append(item)
+        elif issubclass(type(item), items.Armor) or issubclass(type(item), items.Ring):
+            apparel.append(item)
+        else:
+            misc.append(item)
+
+        player.inventory = weapons + healing + apparel + misc
+
 def item_list():
 # returns a list of item names
     itemList = []
@@ -338,6 +356,8 @@ class Floor:
                     # moves item to inventory
                     player.inventory.append(room.loot.pop(chosenItem))
                     print(f"you pickup the {options[chosenItem]}")
+
+                    sort_inventory()
                 else:
                     print(f"you are carrying too much, you can only have {player.inventorySize} items")
 
@@ -500,10 +520,7 @@ def gen_room(area, depth, type):
                 room.description = "you are in a large empty room"
         
         if randint(1, 2) <= 1:
-            if randint(1, 3) == 1:
-                loot.append(items.gen_gear(depth))
-            else:
-                loot.append(items.gen_item(depth))
+            loot.append(items.gen_item(depth))
     
         if randint(1, 3) == 1:
             threats.append(entities.gen_enemy(area, depth % 3))
@@ -586,7 +603,19 @@ class Generator:
             
         self.spawn_item(items.Rations())
         self.spawn_item(items.Key(0))
-        self.spawn_item(items.gen_gear(self.depth))
+
+        chosenItems = []
+        for i in range(randint(self.size - 1, self.size)):
+            randomItem = items.gen_gear(self.depth)
+            
+            while randomItem in chosenItems:
+                 randomItem = items.gen_gear(self.depth)
+
+            chosenItems.append(randomItem)
+            self.spawn_item(randomItem)
+
+        for i in range(randint(self.size - 2, self.size)):
+            self.spawn_random_enemy(self.depth - (i // 2))
         
         return Floor(self.layoutRooms, self.startY, self.startX)
     
@@ -715,3 +744,15 @@ class Generator:
     def spawn_item(self, item):
         room = choice(self.rooms)
         self.layoutRooms[room[0]][room[1]].loot.append(item)
+
+    def spawn_enemy(self, enemy):
+        room = choice(self.rooms)
+        self.layoutRooms[room[0]][room[1]].threats.append(enemy)
+
+    def spawn_random_enemy(self, threat):
+        room = choice(self.rooms)
+        
+        if self.layoutRooms[room[0]][room[1]].threats != []:
+            threat -= 5
+        
+        self.layoutRooms[room[0]][room[1]].threats.append(entities.gen_enemy(self.area, threat))

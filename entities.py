@@ -261,14 +261,14 @@ class Draugr(Enemy):
 # an uncommon enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
     def __init__(self):
-        super().__init__("draugr", 20, 2, 1)
+        super().__init__("draugr", 18, 2, 1)
         self.resistance = 2
         self.armorClass = 1
 
     def attack(self, enemies):
         message = "the DRAUGR hits you with their axe for _ damage"
         if randint(1, 4) == 1:
-            player.affect(Bleeding, 6)
+            player.affect(Bleeding, 5)
             player.hurt(3 + self.strength, message + ", leaving you BLEEDING!")
         else:
             player.hurt(4 + self.strength, message + "!")

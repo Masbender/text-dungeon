@@ -6,7 +6,7 @@ player = entities.player
 
 class Item:
     enchantable = False
-    enchantments = 0
+    enchantment = 0
     
     def __init__(self, name, value, uses):
         self.name = name
