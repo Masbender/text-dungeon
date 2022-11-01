@@ -68,8 +68,11 @@ class Creature:
         self.updatePerception(int - self.perception)
 
     
-    def hurt(self, damageTaken, message, armorPiercing = 0):
+    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # lowers health but applies armor class and dodge        
+        # applies strength
+        damageTaken += randint(0, attackerStrength)
+        
         # applies armor piercing to armor class
         damageReduction = self.armorClass
         if damageReduction > 0:
@@ -146,9 +149,9 @@ class Player(Creature):
         self.ring = None
         self.armor = None
 
-    def hurt(self, damageTaken, message, armorPiercing = 0):
+    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # damages armor
-        damageDealt = super().hurt(damageTaken, message, armorPiercing)
+        damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
 
         if self.armor != None:
             self.armor.degrade()
@@ -274,7 +277,7 @@ class Decay(Effect):
     def update(self):
         self.turnsToProgress -= 1
 
-        if self.turnsToProgres == 0:
+        if self.turnsToProgress == 0:
             self.decayLevel += 1
             self.name = "decay lvl " + str(self.decayLevel)
             self.turnsToProgress = self.decayLevel + 1
@@ -295,9 +298,9 @@ class Draugr(Enemy):
         message = "the DRAUGR hits you with their axe for _ damage"
         if randint(1, 4) == 1:
             player.affect(Bleeding, 5)
-            player.hurt(3 + self.strength, message + ", leaving you BLEEDING!")
+            player.hurt(3, self.strength, message + ", leaving you BLEEDING!")
         else:
-            player.hurt(4 + self.strength, message + "!")
+            player.hurt(5, self.strength, message + "!")
 
 class Ghoul(Enemy):
 # an uncommon, stealthier enemy that appears in the prison
@@ -314,7 +317,7 @@ class Ghoul(Enemy):
 
             player.affect(Decay, 6)
         else:
-            player.hurt(4 + self.strength, "the GHOUL attacks you for _ damage!")
+            player.hurt(4, self.strength, "the GHOUL attacks you for _ damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -355,11 +358,11 @@ class Skeleton(Enemy):
 
         # does damage
         if inflictsBleeding:
-            player.hurt(self.damage, message + ", leaving you BLEEDING!", armorPiercing)
+            player.hurt(self.damage, self.strength, message + ", leaving you BLEEDING!", armorPiercing)
         elif inflictsDazed:
-            player.hurt(self.damage, message + ", leaving you DAZED!", armorPiercing)
+            player.hurt(self.damage, self.strength, message + ", leaving you DAZED!", armorPiercing)
         else:
-            player.hurt(self.damage, message + "!", armorPiercing)
+            player.hurt(self.damage, self.strength, message + "!", armorPiercing)
 
 class ArmoredSkeleton(Skeleton):
 # has more AC and staggers more, always has a mace

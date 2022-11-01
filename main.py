@@ -8,6 +8,8 @@ player = entities.player
 player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb(), items.Bomb()])
 player.inventory[0].enchantment = 1
 player.update_dexterity(1)
+player.update_strength(1)
+player.update_intelligence(1)
 
 dungeon.sort_inventory()
 

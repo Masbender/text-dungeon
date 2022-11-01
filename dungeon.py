@@ -537,7 +537,7 @@ def gen_room(area, depth, type):
             elif roomDesc == 3:
                 room.description = "you are in a large empty room"
         
-        if randint(1, 2) <= 1:
+        if randint(1, 3) == 1:
             loot.append(items.gen_item(depth))
     
         if randint(1, 3) == 1:

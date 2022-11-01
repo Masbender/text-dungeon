@@ -163,7 +163,7 @@ class Sword(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage + player.strength - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -180,9 +180,9 @@ class Sword(Weapon):
         # does damage and prints message
         message = f"You swing your sword at the {target.name} for _ damage"
         if bleedingApplied:
-            target.hurt(damageDealt, message + ", leaving them bleeding")
+            target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
         else:
-            target.hurt(damageDealt, message + "!")
+            target.hurt(damageDealt, player.strength, message + "!")
 
         self.degrade() # degrade is called when the item does something
         return True
@@ -212,7 +212,7 @@ class Spear(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage + player.strength - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
 
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -223,7 +223,7 @@ class Spear(Weapon):
 
         # does damage and prints message, armor piercing has some randomness
         message = f"You stab the {target.name} with your spear for _ damage!"
-        target.hurt(damageDealt, message, (self.armorPiercing - randint(0, 1)) * int(self.uses > 0))
+        target.hurt(damageDealt, player.strength, message, (self.armorPiercing - randint(0, 1)) * int(self.uses > 0))
 
         self.degrade() # degrade is called when the item does something
         return True
@@ -253,7 +253,7 @@ class Mace(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage + player.strength - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -271,9 +271,9 @@ class Mace(Weapon):
         # does damage and prints message
         message = f"You hit the {target.name} with your mace for _ damage"
         if stunApplied:
-            target.hurt(damageDealt, message + ", leaving them stunned")
+            target.hurt(damageDealt, player.strength, message + ", leaving them stunned")
         else:
-            target.hurt(damageDealt, message + "!")
+            target.hurt(damageDealt, player.strength, message + "!")
 
         self.degrade() # degrade is called when the item does something
         return True
@@ -303,7 +303,7 @@ class Dagger(Weapon):
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
-        damageDealt = self.damage + player.dexterity - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -318,7 +318,7 @@ class Dagger(Weapon):
 
         # does damage and prints message
         message = f"You stab {target.name} with your dagger for _ damage!"
-        target.hurt(damageDealt, message)
+        target.hurt(damageDealt, player.dexterity, message)
 
         self.degrade() # degrade is called when the item does something
         return True
@@ -577,7 +577,7 @@ class Bomb(Item):
 
     def attack(self, enemies):
         for enemy in enemies:
-            enemy.hurt(15, f"The bomb does _ damage to {enemy.name}!")
+            enemy.hurt(15, 0, f"The bomb does _ damage to {enemy.name}!")
 
         player.inventory.remove(self)
         return True
