@@ -157,9 +157,9 @@ class Sword(Weapon):
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot inflict bleeding.")
 
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
@@ -206,9 +206,9 @@ class Spear(Weapon):
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot pierce armor.")
 
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
@@ -247,9 +247,9 @@ class Mace(Weapon):
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot stun.")
 
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
@@ -269,7 +269,7 @@ class Mace(Weapon):
             target.stunned = True
 
         # does damage and prints message
-        message = f"You hit {target.name} with your mace for _ damage"
+        message = f"You hit the {target.name} with your mace for _ damage"
         if stunApplied:
             target.hurt(damageDealt, message + ", leaving them stunned")
         else:
@@ -297,9 +297,9 @@ class Dagger(Weapon):
         print("Daggers add your dexterity to your attack, but ignore strength.")
         if self.uses < 0:
             print("Because it's broken it does less damage and doesn't gain bonus damage towards enemies with full health.")
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
@@ -317,7 +317,7 @@ class Dagger(Weapon):
             damageDealt += self.firstHitDamage
 
         # does damage and prints message
-        message = f"You hit {target.name} with your mace for _ damage!"
+        message = f"You stab {target.name} with your dagger for _ damage!"
         target.hurt(damageDealt, message)
 
         self.degrade() # degrade is called when the item does something
@@ -365,9 +365,9 @@ class HeavyArmor(Armor):
         print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
 
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
 
     def consume(self, floor):
@@ -427,16 +427,16 @@ class BuffRing(Ring):
             f"The ring of vision increases your awareness of nearby threats by {1 + enchantment} level"
         ][self.statID])
 
-        if enchantment < 0:
+        if self.enchantment < 0:
             print(f"The {self.name} is cursed")
-        elif enchantment > 0:
+        elif self.enchantment > 0:
             print(f"The {self.name} is blessed")
 
     def consume(self, floor):
         self.equip()
         
         enchantment = self.enchantment
-        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
+        if self.enchantment < 0: # negative self.enchantment is strong enough to reverse the effect
             enchantment -= 1
         
         if self.stat == "stealth":

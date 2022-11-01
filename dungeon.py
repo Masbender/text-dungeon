@@ -532,6 +532,9 @@ def gen_room(area, depth, type):
         room.description = "this is a secret room, if you didn't use a bomb to find this then uh-oh"
         
         loot.append(items.gen_gear(depth + 3))
+        if loot[-1].enchantable:
+            loot[-1].enchantment += 1
+        
         for i in range(randint(1, 2)):
             loot.append(items.gen_item(depth + 2 - i))
 
