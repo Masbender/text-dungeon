@@ -32,7 +32,8 @@ class Item:
             # if it is reusable it says when it breaks
             if self.maxUses > 1:
                 print(self.name + " has broken")
-                
+
+            self.discard()
             player.inventory.remove(self)
         return True
 
@@ -564,6 +565,110 @@ class Rations(Medicine):
         print("you don't have enough time to eat!")
         return False
 
+class Scroll(Item):
+# one use item that is more powerful with higher intelligence
+    def __init__(self, name, value):
+        super().__init__(name, value, 1)
+
+    def degrade(self):
+        player.inventory.remove(self)
+        return True
+
+    def status(self):
+        return ""
+
+class ScrollRemoveCurse(Scroll):
+# reverses curses from all items, has an INT in 4 chance to enchant
+    def __init__(self):
+        super().__init__("scroll of remove curse", 40)
+
+    def inspect(self):
+        print("The scroll of remove curse reverses every curse on all of your items")
+        print("With higher levels of intelligence, it might make them even stronger")
+    
+    def consume(self, floor):
+        power = player.intelligence # intelligence boosts effectiveness
+        
+        for item in player.inventory: # cleanses each item
+            if item.enchantment < 0:
+                item.enchantment *= -1 # reverses curses
+
+                if randint(0, 3) < power: # can improve item
+                    item.enchantment += 1
+                    print(f"{item.name} has been improved")
+
+        self.degrade()
+        print("all of your items have been uncursed")
+        return True
+
+class ScrollEnchant(Scroll):
+# adds 1 + INT/2 levels of enchantment to an item
+    def __init__(self):
+        super().__init__("scroll of enchantment", 50)
+
+    def inspect(self):
+        print("The scroll of enchantment will upgrade one of your items.")
+        print("It's effect becomes stronger at higher levels of intelligence.")
+
+    def consume(self, floor):
+        power = player.intelligence // 2 # intelligence boosts effectiveness
+        if power < 0: # power cannot be negative
+            power = 0
+
+        # gathers input
+        options = ["cancel"]
+        for item in player.inventory:
+            options.append(item.get_name())
+
+        chosenItem = gather_input("What item do you upgrade?", options)
+
+        if chosenItem == 0: # 0 cancels
+            return False
+        else:
+            chosenItem -= 1 # converts to proper index
+            if player.inventory[chosenItem].enchantable: # checks if item is valid
+                player.inventory[chosenItem].enchantment += power + 1
+                print(player.inventory[chosenItem].name) + " has been improved"
+                self.degrade()
+                return True
+            else:
+                print(player.inventory[chosenItem].name + " cannot be enchanted")
+                return False
+
+class ScrollRepair(Scroll):
+# fully repairs and item, higher levels of int increase its max uses
+    def __init__(self):
+        super().__init__("scroll of repair", 35)
+
+    def inspect(self):
+        print("The scroll of repair will fully restore the uses of one item.")
+        print("At higher levels of intelligence the item will gain additional uses.")
+
+    def consume(self):
+        power = player.intelligence # intelligence boosts effectiveness
+
+        # gathers input
+        options = ["cancel"]
+        for item in player.inventory:
+            options.append(item.get_name())
+
+        chosenItem = gather_input("What item do you repair?", options)
+
+        if chosenItem == 0: # 0 cancels
+            return False
+        else:
+            item = player.inventory[chosenItem]
+            if item.maxUses > 1:
+                item.maxUses += int(item.maxUses * power / 10)
+                item.uses = item.maxUses
+                print(item.name + " has been fully repaired")
+                
+                self.degrade()
+                return True
+            else:
+                print(item.name + " does not work with the scroll of repair")
+                returnFalse
+        
 class Bomb(Item):
     def __init__(self):
         super().__init__("bomb", 40, 1)
@@ -644,7 +749,8 @@ class KnowledgeBook(Item):
         player.inventory.remove(self)
         return True
 
-standardLoot = [(Rations, 8), (Bandage, 13), (Bomb, 16)]
+
+standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (HeavyArmor, 12), (BuffRing, 16)]
 

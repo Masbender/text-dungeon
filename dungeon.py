@@ -8,6 +8,7 @@ player = entities.player
 def sort_inventory():
     weapons = []
     healing = []
+    scrolls = []
     apparel = []
     misc = []
 
@@ -16,12 +17,14 @@ def sort_inventory():
             weapons.append(item)
         elif issubclass(type(item), items.Medicine):
             healing.append(item)
+        elif issubclass(type(item), items.Scroll):
+            scrolls.append(item)
         elif issubclass(type(item), items.Armor) or issubclass(type(item), items.Ring):
             apparel.append(item)
         else:
             misc.append(item)
 
-        player.inventory = weapons + healing + apparel + misc
+        player.inventory = weapons + healing + scrolls + apparel + misc
 
 def item_list():
 # returns a list of item names
