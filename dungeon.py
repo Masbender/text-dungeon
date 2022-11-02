@@ -715,7 +715,7 @@ class Generator:
 
                 self.layoutNums[y][x] = 1
 
-        while not (x == self.startX and y == self.startY):
+        while (x == self.startX and y == self.startY):
             direction = randint(0, 3)
             stepSize = randint(2, 3)
 

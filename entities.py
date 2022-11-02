@@ -365,14 +365,28 @@ class Skeleton(Enemy):
             player.hurt(self.damage, self.strength, message + "!", armorPiercing)
 
 class ArmoredSkeleton(Skeleton):
-# has more AC and staggers more, always has a mace
+# has some AC and staggers more, always has a mace
     def __init__(self):
         super().__init__()
         self.staggerChance = 3
-        self.armorClass = 2
+        self.armorClass = 1
         
         self.weapon = "mace"
         self.name = "armored skeleton"
+        self.warning = "you hear the clanking of bones and metal"
+
+class SkeletonGuard(Skeleton):
+# has more AC, staggers less, always has a spear, very aware
+    def __init__(self):
+        super().__init__()
+        self.staggerChance = 1
+        self.armorClass = 2
+        self.awareness = 4
+        self.stealth = -1
+
+        self.weapon = "spear"
+        self.name = "skeleton guard"
+        self.warning = "you hear the clanking of bones and metal"
 
 # numbers higher than 12 will only spawn with increased danger
 # the actual chance to spawn is (current) number - previous number) in 12
@@ -380,7 +394,7 @@ class ArmoredSkeleton(Skeleton):
 # numbers higher than 12 only show up when danger is increased
 # lower numbers are less likely when danger is increased
 enemyPool = {
-    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12)]
+    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
 }
             
 def gen_enemy(area, danger):
