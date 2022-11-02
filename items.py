@@ -623,6 +623,8 @@ class KnowledgeBook(Item):
         print("The book of knowledge will let you improve one stat when you read it.")
 
     def consume(self, floor):
+        print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
+        
         options = ["STR", "CON", "DEX", "PER", "INT"]
         chosenStat = gather_input("What stat do you improve?", options, False)
 

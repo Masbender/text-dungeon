@@ -121,10 +121,11 @@ class Battle:
 
 
 class Floor:
-    def __init__(self, layout, posY, posX): # posY and posX are player's position
+    def __init__(self, layout, posY, posX, entryMessage = ""): # posY and posX are player's position
         self.layout = layout
         self.posY = posY
         self.posX = posX
+        self.entryMessage = entryMessage
 
         # forms the map
         self.map = []
@@ -231,6 +232,8 @@ class Floor:
     # starts when player enters the floor, ends when they exit
     # returns -1 or 1, representing the change in floor
         clear_console()
+        if self.entryMessage != "":
+            print(self.entryMessage)
         self.update_map()
         
         while player.health > 0:
@@ -286,18 +289,19 @@ class Floor:
                     print(f"there is a {', '.join(names[0:-1])}, and a {names[-1]} here!")
                     
                 print("they do not notice you")
+            
             if room.loot != []:
                 options.append("take item")
                 # prints items
                 if len(room.loot) == 1:
-                    print(f"there is a {room.loot[0].get_name()} here")
+                    print(f"\nthere is a {room.loot[0].get_name()} here")
                 else:
                     # gets a list of item names
                     names = []
                     for item in room.loot:
                         names.append(item.get_name())
                         
-                    print(f"there is a {', '.join(names[0:-1])}, and a {names[-1]} here")
+                    print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
             # presents options to player and gathers input
             if room.loot != [] or player.inventory != []:
@@ -572,6 +576,9 @@ class Generator:
         self.area = area
         self.depth = depth
 
+        self.modifier = ""
+        self.entryMessage = ""
+
         # stores info about the layout
         self.size = size
         self.layoutNums = [] # this is the layout in integers
@@ -585,15 +592,26 @@ class Generator:
         self.hiddenWalls = []
         self.sideRooms = []
 
+        # assigns modifier
+        if self.size > 4 and randint(0, 1):
+            self.modifier = choice(["dangerous", "large", "cursed"])
+
+            self.entryMessage = {
+                "dangerous":"You feel unsafe, watch your back.",
+                "large":"You hear your footsteps echo across the floor",
+                "cursed":"A malevolent energy is lurking here"
+            }[self.modifier]
+
+            if self.modifier == "large":
+                self.size += 1
+
         # forms a square
         for i in range(self.size):
             self.layoutNums.append([0] * self.size)
 
         # generates rooms
-        if randint(0, 1):
-            self.gen_random()
-        else:
-            self.gen_hall()
+        generation = choice([self.gen_hall, self.gen_random, self.gen_intersection, self.gen_square])
+        generation()
             
         self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
@@ -638,14 +656,21 @@ class Generator:
             while randomItem in chosenItems:
                  randomItem = items.gen_gear(self.depth)
 
+            if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
+                randomItem.enchantment -= 1
+
             chosenItems.append(randomItem)
             self.spawn_item(randomItem)
             
         # spawns enemies
         for i in range(randint(self.size - 2, self.size)):
             self.spawn_random_enemy(self.depth - (i // 2))
+
+        if self.modifier == "dangerous":
+            for i in range(2):
+                self.spawn_random_enemy(self.depth + 1)
         
-        return Floor(self.layoutRooms, self.startY, self.startX)
+        return Floor(self.layoutRooms, self.startY, self.startX, self.entryMessage)
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -681,6 +706,46 @@ class Generator:
     
         # addds stairs down at the end
         self.layoutNums[y][x] = -1
+
+    def gen_intersection(self):
+    # generates two intersecting halls
+        offset = 1 # how close to the edge the halls are allowed to be
+        if self.size > 5:
+            offset = 2
+
+        hallX = randint(offset, self.size - 1 - offset)
+        hallY = randint(offset, self.size - 1 - offset)
+
+        self.layoutNums[hallX] = [1] * self.size
+
+        for y in range(self.size):
+            self.layoutNums[y][hallY] = 1
+
+        self.startX = randint(0, self.size - 1)
+        self.startY = hallX
+
+        self.layoutNums[choice([0, self.size - 1])][hallY] = -1
+
+    def gen_square(self):
+    # generates a ring around that leaves one wall between it and the border
+        self.layoutNums[1] = [0] + ([1] * (self.size - 2)) + [0]
+        self.layoutNums[self.size - 2] = [0] + ([1] * (self.size - 2)) + [0]
+
+        for y in range(1, self.size - 2):
+            self.layoutNums[y][1] = 1
+            self.layoutNums[y][self.size - 2] = 1
+
+        self.startX = choice([1, self.size - 2])
+        self.startY = choice([1, self.size - 2])
+
+        endX = self.startX
+        endY = self.startY
+
+        while endX == self.startX and endY == self.startY:
+            endX = choice([1, self.size - 2])
+            endY = choice([1, self.size - 2])
+
+        self.layoutNums[endY][endX] = -1
 
     def gen_random(self):
     # generates a random layout
