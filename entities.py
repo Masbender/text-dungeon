@@ -176,9 +176,27 @@ class Enemy(Creature):
         else:
             self.attack(enemies)
 
+class Boss(Creature):
+    def __init__(self, name, health):
+        super().__init__(name, health, 50, 50)
+
+    def do_turn(self, enemies):
+    # less likely to be stunned
+        if self.stunned:
+            if randint(0, 1):
+                print(f"{self.name} is stunned and unable to fight")
+                self.stunned = False
+            else:
+                print(f"{self.name} resisted the stun")
+                self.stunned = False
+                self.attack(enemies)
+        else:
+            self.attack(enemies)
+
 class Effect:
     natural = False
     level = 0
+    permanent = False
     
     def __init__(self, target):
         self.target = target
@@ -231,7 +249,7 @@ class WellFed(Effect):
         self.target.heal(2)
         
 class Dazed(Effect):
-# lowers DEX and STR
+# lowers DEX
     name = "dazed"
     natural = True
     level = 1
@@ -240,11 +258,9 @@ class Dazed(Effect):
         self.target = target
 
         self.target.dexterity -= 1
-        self.target.strength -= 1
 
     def reverse(self):
         self.target.dexterity += 1
-        self.target.strength += 1
 
 class Surprised(Effect):
 # lowers DEX and AC
@@ -286,6 +302,23 @@ class Decay(Effect):
     def reverse(self):
         self.target.update_constitution(self.decayLevel)
 
+class BrokenBones(Effect):
+# lowers DEX, STR, permanent
+    name = "broken bones"
+    natural = True
+    level = 3
+    permanent = True
+
+    def __init__(self, target):
+        self.target = target
+
+        self.target.dexterity -= 4
+        self.target.strength -= 1
+        
+    def reverse(self):
+        self.target.dexterity += 4
+        self.target.strength += 1
+    
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding

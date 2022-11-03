@@ -48,6 +48,17 @@ def update_effects(creature):
         creature.effects.pop(effectIndex)
         creature.effectDurations.pop(effectIndex)
 
+def print_effects(creature):
+    effects = []
+    for i in range(len(creature.effects)):
+        if creature.effects[i].permanent:
+            effects.append(f"{creature.effects[i].name}")
+        else:
+            effects.append(f"{creature.effects[i].name} - {creature.effectDurations[i]} turns")
+
+    if len(effects) > 0:
+        print(f"[{' | '.join(effects)}]")
+
 class Battle:
     def __init__(self, enemies):
         self.battleOver = False
@@ -84,12 +95,7 @@ class Battle:
         for creature in creatures:
             print(f"{creature.name.upper()} : {creature.health}/{creature.maxHealth} HP, {creature.armorClass} AC")
             
-            effects = []
-            for i in range(len(creature.effects)):
-                effects.append(f"{creature.effects[i].name} - {creature.effectDurations[i]} turns")
-
-            if len(effects) > 0:
-                print(f"[{' | '.join(effects)}]")
+            print_effects(creature)
 
             if creature == player:
                 print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
@@ -253,12 +259,7 @@ class Floor:
             print(f"You have {player.health}/{player.maxHealth} HP, {player.armorClass} AC")
             print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
             
-            effects = []
-            for i in range(len(player.effects)):
-                effects.append(f"{player.effects[i].name} - {player.effectDurations[i]} turns")
-
-            if len(effects) > 0:
-                print(f"[{' | '.join(effects)}]")
+            print_effects(player)
 
             # prints out what you are wearing
             if player.armor != None or player.ring != None:
