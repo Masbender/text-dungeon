@@ -273,11 +273,33 @@ class Floor:
                 print(equipmentMessage + "\n")
 
             # ===== CHECKS OPTIONS =====
-            options = ["move", "wait"]
+            options = ["move", "wait", "view stats"]
+            if room.loot != [] or player.inventory != []:
+                options.append("inspect item")
+
             if player.inventory != []:
                 options.extend(["use item", "drop item"])
+
+            if player.ring != None or player.armor != None:
+                options.append("unequip")
+                
+            if room.loot != []:
+                options.append("take item")
+                # prints items
+                if len(room.loot) == 1:
+                    print(f"\nthere is a {room.loot[0].get_name()} here")
+                else:
+                    # gets a list of item names
+                    names = []
+                    for item in room.loot:
+                        names.append(item.get_name())
+                        
+                    print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
+
+            # presents options to player and gathers input
             if room.specialAction != "":
                 options.append(room.specialAction)
+
             if room.threats != []:
                 options.append("surprise attack")
                 # prints enemies
@@ -293,24 +315,8 @@ class Floor:
                     
                 print("they do not notice you")
             
-            if room.loot != []:
-                options.append("take item")
-                # prints items
-                if len(room.loot) == 1:
-                    print(f"\nthere is a {room.loot[0].get_name()} here")
-                else:
-                    # gets a list of item names
-                    names = []
-                    for item in room.loot:
-                        names.append(item.get_name())
-                        
-                    print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
-
-            # presents options to player and gathers input
-            if room.loot != [] or player.inventory != []:
-                options.append("inspect item")
-
-            options.extend(["view stats", "debug : reveal map"])
+            
+            options.append("debug : reveal map")
             
             playerInput = gather_input("\nWhat do you do?", options, False)
             
@@ -398,6 +404,7 @@ class Floor:
                     if player.inventory[chosenItem].enchantment < 0:
                         print(f"the {options[chosenItem + 1]} is cursed and cannot be dropped")
                     else:
+                        player.inventory[chosenItem].discard()
                         room.loot.append(player.inventory.pop(chosenItem))
                         print(f"you drop the {options[chosenItem + 1]}")
 
@@ -413,6 +420,46 @@ class Floor:
                     player.inventory[chosenItem].inspect()
                 else:
                     room.loot[chosenItem - len(player.inventory)].inspect()
+
+            # ===== UNEQUIP =====
+            elif playerInput == "unequip":
+                options = []
+                if player.armor != None:
+                    options.append("armor")
+                if player.ring != None:
+                    options.append("ring")
+
+                chosenOption = None
+                if len(options) == 1:
+                    chosenOption = options[0]
+                else:
+                    chosenOption = gather_input("What do you unequip?", options, False)
+
+                if chosenOption == "armor":
+                    player.armor.unequip()
+                    if len(player.inventory) < player.inventorySize:
+                        print("you take off the " + player.armor.name)
+                        player.inventory.append(player.armor)
+                        player.armor = None
+                        sort_inventory()
+                    else:
+                        print("you drop the " + player.armor.name + " because your inventory is full")
+                        room.loot.append(player.armor)
+                        player.armor.discard()
+                        player.armor = None
+
+                elif chosenOption == "ring":
+                    player.ring.unequip()
+                    if len(player.inventory) < player.inventorySize:
+                        print("you take off the " + player.ring.name)
+                        player.inventory.append(player.ring)
+                        player.ring = None
+                        sort_inventory()
+                    else:
+                        print("you drop the " + player.ring.name + " because your inventory is full")
+                        room.loot.append(player.ring)
+                        player.ring.discard()
+                        player.ring = None
 
             # ===== SURPRISE ATTACK =====
             elif playerInput == "surprise attack":
@@ -639,10 +686,9 @@ class Generator:
                 self.layoutRooms[y].append(room)
 
         # generates starting room
-        if self.depth == 0:
-            self.layoutRooms[self.startY][self.startX] = Room()
-        else:
-            self.layoutRooms[self.startY][self.startX] = StairsUp()
+        self.layoutRooms[self.startY][self.startX] = Room()
+        #if self.depth != 0:
+        #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
         # adds consistent encounters (loot, rooms, & enemies)
         self.add_room(LockedRoom("iron", self.depth))

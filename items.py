@@ -86,9 +86,6 @@ class Item:
     # runs when an item is dropped or destroyed, reverses pickup
         return False
 
-    def unequip(self):
-    # only used for equippable items such as armor or rings
-        return False
 
 class Weapon(Item):
     enchantable = True
@@ -345,6 +342,9 @@ class Armor(Item):
 
     def attack(self, enemies):
         return self.consume(None)
+
+    def unequip(self):
+        return False
     
 class HeavyArmor(Armor):
 # gives defense to player but lowers DEX
@@ -401,6 +401,9 @@ class Ring(Item):
 
     def attack(self, enemies):
         return self.consume(None)
+
+    def unequip(self):
+        return False
     
 class BuffRing(Ring):
 # boosts one stat by 1 level
@@ -628,7 +631,7 @@ class ScrollEnchant(Scroll):
             chosenItem -= 1 # converts to proper index
             if player.inventory[chosenItem].enchantable: # checks if item is valid
                 player.inventory[chosenItem].enchantment += power + 1
-                print(player.inventory[chosenItem].name) + " has been improved"
+                print(player.inventory[chosenItem].name + " has been improved")
                 self.degrade()
                 return True
             else:
