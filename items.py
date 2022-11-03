@@ -507,7 +507,7 @@ class Medicine(Item):
         removedEffectsIndexes = []
         for i in range(len(player.effects)):
             if type(player.effects[i]) in self.effectsCured:
-                removedEffects.append(i)
+                removedEffectsIndexes.append(i)
 
         removedEffects = []
         removedEffectsIndexes.reverse()
@@ -647,7 +647,7 @@ class ScrollRepair(Scroll):
         print("The scroll of repair will fully restore the uses of one item.")
         print("At higher levels of intelligence the item will gain additional uses.")
 
-    def consume(self):
+    def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
 
         # gathers input

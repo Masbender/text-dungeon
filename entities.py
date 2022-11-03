@@ -59,13 +59,13 @@ class Creature:
         self.awareness += increase
         self.appraisal += increase * 25
     
-    def set_stats(self, str, dex, con, int, per):
+    def set_stats(self, str, con, dex, per, int):
     # sets all 5 stats at once
-        self.updateStrength(str - self.strength)
-        self.updateDexterity(dex - self.dexterity)
-        self.updateConstitution(con - self.constitution)
-        self.updateIntelligence(int - self.intelligence)
-        self.updatePerception(int - self.perception)
+        self.update_strength(str - self.strength)
+        self.update_dexterity(dex - self.dexterity)
+        self.update_constitution(con - self.constitution)
+        self.update_intelligence(int - self.intelligence)
+        self.update_perception(per - self.perception)
 
     
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
@@ -176,7 +176,7 @@ class Enemy(Creature):
         else:
             self.attack(enemies)
 
-class Boss(Creature):
+class Boss(Enemy):
     def __init__(self, name, health):
         super().__init__(name, health, 50, 50)
 
@@ -210,23 +210,17 @@ class Effect:
         pass
 
 class Bleeding(Effect):
-# does 1 damage per turn, lowers CON by 1
+# does 1 damage per turn
     name = "bleeding"
     natural = True
     level = 0
     
     def __init__(self, target):
         self.target = target
-        # AC only decreases when applied
-        self.target.constitution -= 1
 
     def update(self):
         # lowers health by 1 every turn
         self.target.health -= 1
-
-    def reverse(self):
-        # restores changes in __init__
-        self.target.constitution += 1
 
 class Regeneration(Effect):
 # heals 1 hp per turn
@@ -257,10 +251,10 @@ class Dazed(Effect):
     def __init__(self, target):
         self.target = target
 
-        self.target.dexterity -= 1
+        self.target.update_dexterity(-1)
 
     def reverse(self):
-        self.target.dexterity += 1
+        self.target.update_dexterity(1)
 
 class Surprised(Effect):
 # lowers DEX and AC
@@ -269,11 +263,11 @@ class Surprised(Effect):
     def __init__(self, target):
         self.target = target
 
-        self.target.dexterity -= 2
+        self.target.update_dexterity(-2)
         self.target.armorClass -= 1
 
     def reverse(self):
-        self.target.dexterity += 2
+        self.target.update_dexterity(2)
         self.target.armorClass += 1
 
 class Decay(Effect):
@@ -304,6 +298,7 @@ class Decay(Effect):
 
 class BrokenBones(Effect):
 # lowers DEX, STR, permanent
+# instantly kills skeletons
     name = "broken bones"
     natural = True
     level = 3
@@ -312,12 +307,16 @@ class BrokenBones(Effect):
     def __init__(self, target):
         self.target = target
 
-        self.target.dexterity -= 4
-        self.target.strength -= 1
+        if issubclass(type(self.target), Skeleton):
+            self.target.health = 0
+            print(self.target.name + " dies")
+
+        self.target.update_dexterity(-4)
+        self.target.update_strength(-1)
         
     def reverse(self):
-        self.target.dexterity += 4
-        self.target.strength += 1
+        self.target.update_dexterity(4)
+        self.target.update_strength(1)
     
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
@@ -346,7 +345,7 @@ class Ghoul(Enemy):
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            print("the GHOUL curses you with decay, lowering your CON over time")
+            print("the GHOUL curses you with DECAY, lowering your CON over time")
 
             player.affect(Decay, 6)
         else:
@@ -421,14 +420,69 @@ class SkeletonGuard(Skeleton):
         self.name = "skeleton guard"
         self.warning = "you hear the clanking of bones and metal"
 
+class Ogre(Boss):
+# big enemy, can inflict dazed, bleeding, and broken bones
+    def __init__(self):
+        super().__init__("ogre", 35)
+        self.strength = 1
+        self.armorClass = 1
+        self.resistance = 2
+        self.dodge = -10
+        
+        self.isRaged = False
+        self.isCharging = False
+        self.previousMove = "heavy"
+
+    def attack(self, enemies):
+        # becomes stronger when below 20 HP
+        if self.health < 20 and not self.isRaged:
+            self.isRaged = True
+            self.strength += 3
+            print("the OGRE is enraged, increasing their damage")
+        
+        # choses move, can't do the same twice in a row
+        choices = ["heavy", "slam", "attack"]
+        choices.remove(self.previousMove)
+        chosenMove = choice(choices)
+
+        if not self.isCharging:
+            self.previousMove = chosenMove
+
+        if self.isCharging:
+            self.isCharging = False
+            message = "the OGRE hits you with a devastating blow, dealing _ damage!"
+            player.dodge -= 15 # attack is less likely to be dodge
+            damageDealt = player.hurt(8, self.strength, message, 2)
+            player.dodge += 15
+            # if enough damage is dealt, it breaks bones
+            if damageDealt > 8:
+                if player.affect(BrokenBones, 1):
+                    print("you have BROKEN BONES")
+            
+        elif chosenMove == "heavy":
+            print("the OGRE is charging up a swing")
+            self.isCharging = True
+
+        elif chosenMove == "slam":
+            message = "the OGRE slams the ground, dealing _ damage and leaving you DAZED!"
+            player.hurt(3, self.strength, message, 1)
+            player.affect(Dazed, 2)
+
+        else:
+            message = "the OGRE hits you with their club for _ damage"
+            if player.affect(Bleeding, 3):
+                message += ", leaving you BLEEDING"
+            player.hurt(5, self.strength, message + "!", 0)
+        
+enemyPool = {
+    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
+}
+
 # numbers higher than 12 will only spawn with increased danger
 # the actual chance to spawn is (current) number - previous number) in 12
 # same as item randomness except the highest number is 12
 # numbers higher than 12 only show up when danger is increased
 # lower numbers are less likely when danger is increased
-enemyPool = {
-    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
-}
             
 def gen_enemy(area, danger):
     enemyNum = randint(1, 12) + danger

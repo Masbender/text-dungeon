@@ -288,12 +288,12 @@ class Floor:
                 options.append("take item")
                 # prints items
                 if len(room.loot) == 1:
-                    print(f"\nthere is a {room.loot[0].get_name()} here")
+                    print(f"\nthere is a {room.loot[0].get_name().upper()} here")
                 else:
                     # gets a list of item names
                     names = []
                     for item in room.loot:
-                        names.append(item.get_name())
+                        names.append(item.get_name().upper())
                         
                     print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
@@ -312,7 +312,7 @@ class Floor:
                     for enemy in room.threats:
                         names.append(enemy.name.upper())
                         
-                    print(f"there is a {', '.join(names[0:-1])}, and a {names[-1]} here!")
+                    print(f"there is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
                     
                 print("they do not notice you")
             
@@ -696,6 +696,7 @@ class Generator:
         
         self.spawn_item(items.Rations())
         self.spawn_item(items.KnowledgeBook())
+        input("hi")
         self.spawn_item(items.Key(0))
 
         # spawns items
@@ -703,13 +704,13 @@ class Generator:
         for i in range(randint(self.size - 1, self.size)):
             randomItem = items.gen_gear(self.depth)
             
-            while randomItem in chosenItems:
+            while type(randomItem) in chosenItems:
                  randomItem = items.gen_gear(self.depth)
 
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
                 randomItem.enchantment -= 1
 
-            chosenItems.append(randomItem)
+            chosenItems.append(type(randomItem))
             self.spawn_item(randomItem)
             
         # spawns enemies
