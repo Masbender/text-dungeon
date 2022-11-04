@@ -71,7 +71,10 @@ class Creature:
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # lowers health but applies armor class and dodge        
         # applies strength
-        damageTaken += randint(attackerStrength // 2, attackerStrength)
+        if attackerStrength > 0:
+            damageTaken += randint(attackerStrength // 2, attackerStrength)
+        elif attackerStrength < 0: # prevents error from randint
+            damageTaken += randint(attackerStrength // -2, attackerStrength * -1) * -1
         
         # applies armor piercing to armor class
         damageReduction = self.armorClass
@@ -374,9 +377,9 @@ class Skeleton(Enemy):
         message = f"the {self.name.upper()} hits you with their {self.weapon} for _ damage"
 
         # spears  have armor piercing
-        armorPiercing = 0
+        armorPiercing = 1
         if self.weapon == "spear" and randint(1, 3) < 3:
-            armorPiercing = 1
+            armorPiercing += 1
 
         # swords can inflict bleeding
         inflictsBleeding = (randint(1, 4) == 1) and (self.weapon == "sword")

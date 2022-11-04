@@ -17,7 +17,7 @@ class Item:
     def degrade(self):
         # if INT is less than 0, there's a 10 * INT % chance that item degrades twice
         if player.intelligence < 0:
-            if randint(0, -99) > player.intelligence * 10:
+            if -randint(0, 99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
         # for every level of INT, there is a 10% that the item doesn't degrade
@@ -34,7 +34,12 @@ class Item:
                 print(self.name + " has broken")
 
             self.discard()
-            player.inventory.remove(self)
+            if player.armor == self:
+                player.armor = None
+            elif player.ring == self:
+                player.ring = None
+            else:
+                player.inventory.remove(self)
         return True
 
     def status(self):
@@ -99,7 +104,7 @@ class Weapon(Item):
     def degrade(self):
         # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
         if player.intelligence < 0:
-            if randint(0, -99) > player.intelligence * 10:
+            if -randint(0, 99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
         # for every level of INT, there is a 7.5% that the item doesn't degrade
@@ -386,6 +391,29 @@ class HeavyArmor(Armor):
         player.armorClass -= self.armorClass + self.enchantment
         player.update_dexterity(self.dexLoss)
 
+class Cloak(Armor):
+# provides 0 base armor, but +1 stealth
+    def __init__(self, level):
+        super().__init__("cloak", 45, 25)
+
+    def inspect(self):
+        print(f"The cloak looks {suffix.replace('(', '').replace(')', '')}.")
+        print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1")
+
+    def consume(self, floor):
+        self.equip()
+
+        # applies stats
+        player.armorClass += self.enchantment
+        player.stealth += 1
+
+        print("You put on the cloak")
+        return True
+
+    def unequip(self):
+        player.armorClass += self.enchantment
+        player.stealth += 1
+        
 class Ring(Item):
     enchantable = True
     
@@ -645,7 +673,8 @@ class ScrollRepair(Scroll):
 
     def inspect(self):
         print("The scroll of repair will fully restore the uses of one item.")
-        print("At higher levels of intelligence the item will gain additional uses.")
+        print("A negative INT will make the item less durable.")
+        print("A positive INT will make the item more durable")
 
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
@@ -664,6 +693,11 @@ class ScrollRepair(Scroll):
             item = player.inventory[chosenItem]
             if item.maxUses > 1:
                 item.maxUses += int(item.maxUses * power / 10)
+                if power > 0:
+                    print(item.name + " is more durable now")
+                elif power < 0:
+                    print(item.name + " is less durable now")
+                    
                 item.uses = item.maxUses
                 print(item.name + " has been fully repaired")
                 
@@ -756,7 +790,7 @@ class KnowledgeBook(Item):
 
 standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
-gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (HeavyArmor, 12), (BuffRing, 16)]
+gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
 rareLoot = []
 
@@ -785,7 +819,7 @@ def gen_gear(quality):
             chosenItem = None
 
             # quality improves the material of some items
-            if not chosenItem in [Ring]:
+            if not chosenItem in [Ring, Cloak]:
                 # can be higher quality
                 if randint(1, 4) == 1:
                     quality += 1
@@ -798,6 +832,9 @@ def gen_gear(quality):
 
             else:
                 chosenItem = item[0]()
+
+            if type(chosenItem) in [Cloak]:
+                chosenItem.enchantment += (quality + 2) // 5
 
             if chosenItem.enchantable:
                 chosenItem.enchantment = randint(-1, 1)

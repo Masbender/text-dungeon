@@ -166,6 +166,12 @@ class Floor:
                     lines[i] += '↓'
                 elif self.map[i][I].specialAction == "stairs up":
                     lines[i] += '↑'
+                # enemies are represented as !
+                elif self.map[i][I].check_detection():
+                    lines[i] += '!'
+                # locked rooms appear as locks
+                elif type(self.map[i][I]) == LockedRoom and self.map[i][I].blocked:
+                    lines[i] += 'x'
                 # rooms are represented as '+'
                 else:
                     lines[i] += '+'
@@ -271,7 +277,7 @@ class Floor:
                         equipmentMessage += " and "
                 if player.ring != None:
                     equipmentMessage += "a " + player.ring.get_name()
-                print(equipmentMessage + "\n")
+                print(equipmentMessage)
 
             # ===== CHECKS OPTIONS =====
             options = ["move", "wait", "view stats"]
@@ -305,14 +311,14 @@ class Floor:
                 options.append("surprise attack")
                 # prints enemies
                 if len(room.threats) == 1:
-                    print(f"there is a {room.threats[0].name.upper()} here!")
+                    print(f"\nthere is a {room.threats[0].name.upper()} here!")
                 else:
                     # gets a list of uppercase enemy names
                     names = []
                     for enemy in room.threats:
                         names.append(enemy.name.upper())
                         
-                    print(f"there is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
+                    print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
                     
                 print("they do not notice you")
             
@@ -338,7 +344,7 @@ class Floor:
                     # decides if enemies detect player
                     isNoticed = False
                     for enemy in room.threats:
-                        if (enemy.awareness + randint(-1, 1)) >= player.stealth:
+                        if enemy.awareness >= player.stealth:
                             isNoticed = True
                             
                     # does battle
@@ -496,7 +502,13 @@ class Room:
     def unblock(self): # called if the room needs a bomb or key to unlock
         return True
     
+    def check_detection(self): # checks if player notices enemies here
+        detected = False
+        for enemy in self.threats:
+            if player.awareness >= enemy.stealth:
+                detected = True
 
+        return detected
 
 class Wall(Room):
     blocked = True
