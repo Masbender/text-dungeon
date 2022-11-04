@@ -13,9 +13,13 @@ dungeon.sort_inventory()
 #battle = dungeon.Battle([entities.Ogre()])
 #battle.start_battle()
 
-generator = dungeon.Generator()
+floors = []
 
-floors = [generator.gen_floor("prison", 0, 4), generator.gen_floor("prison", 1, 5), generator.gen_floor("prison", 2, 5), dungeon.Floor([[dungeon.Room([], [entities.Ogre()])]], 0, 0)]
+for i in range(3):
+    generator = dungeon.Generator()
+    floors.append(generator.gen_floor("prison", i, 4 + ((i + 2) // 3)))
+
+floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])]], 0, 0))
 
 floor = 0
 while player.health > 0:

@@ -660,6 +660,7 @@ class ScrollRepair(Scroll):
         if chosenItem == 0: # 0 cancels
             return False
         else:
+            chosenItem -= 1
             item = player.inventory[chosenItem]
             if item.maxUses > 1:
                 item.maxUses += int(item.maxUses * power / 10)

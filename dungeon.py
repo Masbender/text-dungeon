@@ -696,7 +696,6 @@ class Generator:
         
         self.spawn_item(items.Rations())
         self.spawn_item(items.KnowledgeBook())
-        input("hi")
         self.spawn_item(items.Key(0))
 
         # spawns items

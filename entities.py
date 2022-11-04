@@ -93,7 +93,7 @@ class Creature:
         # if dodge is negative the attack may be critical
         elif self.dodge < 0:
             if randint(0, 99) < (self.dodge) * -1:
-                finalDamageTaken = int(finalDamageTaken * 1.5)
+                finalDamageTaken = int(finalDamageTaken * 1.5) + attackerStrength
                 message += " The attack was a critical hit!"
 
         self.health -= finalDamageTaken
