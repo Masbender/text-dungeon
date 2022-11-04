@@ -687,7 +687,7 @@ class Generator:
                 self.layoutRooms[y].append(room)
 
         # generates starting room
-        self.layoutRooms[self.startY][self.startX] = Room()
+        #self.layoutRooms[self.startY][self.startX] = Room()
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 

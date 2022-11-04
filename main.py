@@ -6,7 +6,7 @@ import items
 player = entities.player
 
 player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb()])
-player.set_stats(1, 0, 1, 1, 0)
+player.set_stats(1, 0, 10, 1, 0)
 
 dungeon.sort_inventory()
 
