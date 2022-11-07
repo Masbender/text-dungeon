@@ -23,5 +23,16 @@ for i in range(3):
 floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Wall()]], 0, 0))
 
 floor = 0
-while player.health > 0:
-    floor += floors[floor].enter_floor()
+while True:
+    floors[floor].enter_floor()
+    floor += 1
+
+    if player.health <= 0:
+        clear_console()
+        print("you died")
+        break
+
+    elif floor == len(floors):
+        clear_console()
+        print("thanks for playing")
+        break

@@ -43,7 +43,7 @@ def gather_input(prompt, options, returnInt = True):
             else:
                 print(f"'{playerInput}' is too large")
         except ValueError:
-            print(f"'{playerInput}' is not an integer")
+            print(f"'{playerInput}' is not a number")
 
     clear_console()
 

@@ -243,6 +243,119 @@ class Floor:
     # retunrs the room that the player is in
         return self.layout[self.posY][self.posX]
 
+    def action_move(self):
+    # called when player decides to move
+        # - INPUT -
+        options = ["cancel", "↑", "→", "↓", "←"]
+
+        self.print_map()
+        playerInput = gather_input("\nWhat direction do you move?", options) - 1
+
+        if playerInput > -1: # -1 is cancel
+            # - MOVE -
+            self.move_player(playerInput)
+            
+            self.update_map()
+            update_effects(player)
+    
+            # - COMBAT -
+            room = self.get_room()
+            if room.threats != []:
+                isNoticed = False
+                for enemy in room.threats: # checks if player is noticed
+                    if enemy.awareness >= player.stealth:
+                        isNoticed = True
+                        
+                if isNoticed:
+                    battle = Battle(room.threats)
+                    battle.start_battle()
+    
+                    room.threats = []
+
+    def action_view_stats(self):
+    # called when player decides to view stats
+        print(f"resistance : {player.resistance} | decreases the severity of poisons and injuries")
+            print(f"dodge : {player.dodge}% | chance to avoid damage")
+            print(f"stealth : {player.stealth} | your ability to be unnoticed")
+            print(f"awareness : {player.awareness} | detects enemies on the map")
+            print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
+            print()
+
+    def action_use_item(self):
+    # called when player uses an item
+        options = ["cancel"] + item_list()
+        itemUsed = gather_input("what do you use?", options) - 1
+
+        if itemUsed > -1: # -1 is cancel
+            player.inventory[itemUsed].consume(self)
+
+    def action_take_item(self):
+    # called when player takes an item
+        room = self.get_room()
+        
+        if len(player.inventory) >= player.inventorySize: # checks if inventory has space
+            print(f"you are carrying too much, you can only have {player.inventorySize} items")
+            return
+
+        # decides options
+        options = ["cancel"]
+        for item in room.loot:
+            options.append(item.get_name())
+
+        # gathers input if more than one item
+        chosenItem = 0
+        if len(options) > 1:
+            chosenItem = gather_input("What do you pick up?", options) - 1
+
+        if chosenItem > -1: # -1 is cancel
+            # moves item to inventory
+            player.inventory.append(room.loot.pop(chosenItem))
+            print(f"you pickup the {options[chosenItem]}")
+    
+            sort_inventory()
+
+    def action_drop_item(self):
+    # called when player drops an item
+        room = self.get_room()
+        
+        options = ["cancel"] + item_list()
+
+        chosenItem = gather_input("What do you drop?", options) - 1
+
+        if chosenItem > -1: # -1 is cancel
+            # removes item to inventory, leaving it in the room
+            if player.inventory[chosenItem].enchantment < 0: # checks if item is cursed
+                print(f"the {options[chosenItem + 1]} is cursed and cannot be dropped")
+            else: # drops item
+                player.inventory[chosenItem].discard()
+                room.loot.append(player.inventory.pop(chosenItem))
+                print(f"you drop the {options[chosenItem + 1]}")
+
+    def action_inspect_item(self):
+    # called when player inspects an item
+        room = self.get_room()
+
+        # gathers all options
+        inspectableItems = [player.inventory, room.loot]
+
+        if player.armor != None:
+            inspectableItems.append(player.armor)
+            
+        if player.ring != None:
+            inspectableItems.append(player.ring)
+
+        # gathers the names of all options
+        options = ["cancel"]
+        for item in inspectableItems:
+            options.append(item.get_name())
+
+        # gathers input
+        chosenItem = gather_input("What do you inspect?", options) - 1
+
+        if chosenItem > -1: # -1 is cancel 
+            # inspects chosen item
+            inspectableItems[chosenItem].inspect()
+
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
     # returns -1 or 1, representing the change in floor
@@ -327,106 +440,28 @@ class Floor:
             
             playerInput = gather_input("\nWhat do you do?", options, False)
             
-            # ===== MOVE =====
             if playerInput == "move":
-                # gathers input and moves the player
-                options = ["↑", "→", "↓", "←"]
+               self.action_move()
 
-                self.print_map()
-                self.move_player(gather_input("\nWhat direction do you move?", options))
-
-                self.update_map()
-                update_effects(player)
-
-                # handles stealth and combat
-                room = self.get_room()
-                if room.threats != []:
-                    # decides if enemies detect player
-                    isNoticed = False
-                    for enemy in room.threats:
-                        if enemy.awareness >= player.stealth:
-                            isNoticed = True
-                            
-                    # does battle
-                    if isNoticed:
-                        battle = Battle(room.threats)
-                        battle.start_battle()
-
-                        room.threats = []
-
-            # ===== WAIT =====
             elif playerInput == "wait":
                 self.update_map()
                 update_effects(player)
                 print("you wait")
 
-            # ===== VIEW STATS =====
             elif playerInput == "view stats":
-                print(f"resistance : {player.resistance} | higher levels decrease the severity of many poisons and injuries")
-                print(f"dodge : {player.dodge}% | chance to avoid damage, negative values allow you to take critical damage")
-                print(f"stealth : {player.stealth} | compared against enemies' awareness to determine if you are detected")
-                print(f"awareness : {player.awareness} | gives you a message when adjacent to enemies with lower stealth")
-                print(f"appraisal : {player.appraisal} gold | if an item is worth more than you can appraise, you will be scammed")
-                print()
+                self.action_view_stats()
 
-            # ===== USE ITEM =====
             elif playerInput == "use item":
-                options = ["cancel"] + item_list()
-                itemUsed = gather_input("what do you use?", options)
+                self.action_use_item()
 
-                if itemUsed != 0: # 0 is cancel, anything else is an item index
-                    itemUsed -= 1 # reverts to proper index
-
-                    player.inventory[itemUsed].consume(self)
-
-            # ===== TAKE ITEM =====
             elif playerInput == "take item":
-                if len(player.inventory) < player.inventorySize:
-                    options = []
-                    for item in room.loot:
-                        options.append(item.get_name())
-    
-                    # if there are multiple items it asks for input
-                    chosenItem = 0
-                    if len(options) > 1:
-                        chosenItem = gather_input("What do you pick up?", options)
-    
-                    # moves item to inventory
-                    player.inventory.append(room.loot.pop(chosenItem))
-                    print(f"you pickup the {options[chosenItem]}")
+                self.action_take_item()
 
-                    sort_inventory()
-                else:
-                    print(f"you are carrying too much, you can only have {player.inventorySize} items")
-
-            # ===== DROP ITEM =====
             elif playerInput == "drop item":
-                options = ["cancel"] + item_list()
+                self.action_drop_item()
 
-                chosenItem = gather_input("What do you drop?", options)
-
-                if chosenItem > 0: # 0 is cancel
-                    chosenItem -= 1 # changes index back to normal
-                    # removes item to inventory, leaving it in the room
-                    if player.inventory[chosenItem].enchantment < 0:
-                        print(f"the {options[chosenItem + 1]} is cursed and cannot be dropped")
-                    else:
-                        player.inventory[chosenItem].discard()
-                        room.loot.append(player.inventory.pop(chosenItem))
-                        print(f"you drop the {options[chosenItem + 1]}")
-
-            # ===== INSPECT ITEM =====
             elif playerInput == "inspect item":
-                options = item_list()
-                for item in room.loot:
-                    options.append(item.get_name())
-
-                chosenItem = gather_input("What do you inspect?", options)
-
-                if chosenItem < len(player.inventory):
-                    player.inventory[chosenItem].inspect()
-                else:
-                    room.loot[chosenItem - len(player.inventory)].inspect()
+                self.action_inspect_item()
 
             # ===== UNEQUIP =====
             elif playerInput == "unequip":
@@ -484,10 +519,8 @@ class Floor:
                 self.map = self.layout
 
             # ===== STAIRS =====
-            elif playerInput == "stairs up":
-                return -1
-            elif playerInput == "stairs down":
-                return 1
+            elif playerInput == "descend stairs":
+                break
 
 class Room:
     blocked = False # determines if it counts as a wall or not
@@ -568,20 +601,11 @@ class LockedRoom(Room):
 
         return unlocked
 
-class StairsDown(Room):
+class Stairs(Room):
     blocked = False
     description = "there are stairs here that lead down"
-    specialAction = "stairs down"
+    specialAction = "descend stairs"
     
-    def __init__(self):
-        self.loot = []
-        self.threats = []
-
-class StairsUp(Room):
-    blocked = False
-    description = "there are stairs here that lead up"
-    specialAction = "stairs up"
-
     def __init__(self):
         self.loot = []
         self.threats = []
@@ -694,7 +718,7 @@ class Generator:
                     room = gen_room(self.area, self.depth, self.layoutNums[y][x])
                     
                 elif self.layoutNums[y][x] == -1:
-                    room = StairsDown()
+                    room = Stairs()
                 
                 self.layoutRooms[y].append(room)
 
