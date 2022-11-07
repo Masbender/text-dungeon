@@ -91,13 +91,16 @@ class Item:
     # runs when an item is dropped or destroyed, reverses pickup
         return False
 
+    def get_price(self):
+    # returns value based on uses and enchantment
+        return int((self.value + (self.value * self.enchantment / 3)) * (self.uses / self.maxUses))
 
 class Weapon(Item):
     enchantable = True
     
     def __init__(self, name, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " " + name, 30 + (20 * level), 15 + (10 * level))
+        super().__init__(material + " " + name, 10 + (20 * level), 15 + (10 * level))
 
         self.damage = 4 + level
 
@@ -356,7 +359,7 @@ class HeavyArmor(Armor):
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " armor", 35 + (25 * level), 20 + (12 * level))
+        super().__init__(material + " armor", 20 + (25 * level), 20 + (12 * level))
 
         self.armorClass = level + 1
         self.dexLoss = 1
@@ -394,7 +397,7 @@ class HeavyArmor(Armor):
 class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
     def __init__(self, level):
-        super().__init__("cloak", 45, 25)
+        super().__init__("cloak", 40, 25)
 
     def inspect(self):
         print(f"The cloak looks {suffix.replace('(', '').replace(')', '')}.")
@@ -437,7 +440,7 @@ class BuffRing(Ring):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
     def __init__(self, ID = -1):
-        super().__init__("ring of ", 45, 1)
+        super().__init__("ring of ", 50, 1)
         # decides what stat is boosted
         self.statID = ID
         if ID < 0:
@@ -574,11 +577,6 @@ class Bandage(Medicine):
         print(f"It heals around 4 HP and heals an addition 1 HP per turn for 4 turns.")
         print(f"Cures bleeding.")
 
-    def degrade(self):
-    # value is based on uses
-        super().degrade()
-        self.value = 10 * self.uses
-
 # see gen_enemy() in entities.py for explanation
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
@@ -635,7 +633,7 @@ class ScrollRemoveCurse(Scroll):
 class ScrollEnchant(Scroll):
 # adds 1 + INT/2 levels of enchantment to an item
     def __init__(self):
-        super().__init__("scroll of enchantment", 50)
+        super().__init__("scroll of enchantment", 60)
 
     def inspect(self):
         print("The scroll of enchantment will upgrade one of your items.")
@@ -669,7 +667,7 @@ class ScrollEnchant(Scroll):
 class ScrollRepair(Scroll):
 # fully repairs and item, higher levels of int increase its max uses
     def __init__(self):
-        super().__init__("scroll of repair", 35)
+        super().__init__("scroll of repair", 50)
 
     def inspect(self):
         print("The scroll of repair will fully restore the uses of one item.")
@@ -709,7 +707,7 @@ class ScrollRepair(Scroll):
         
 class Bomb(Item):
     def __init__(self):
-        super().__init__("bomb", 40, 1)
+        super().__init__("bomb", 35, 1)
 
     def status(self):
         return ""
@@ -757,7 +755,7 @@ class Key(Item):
 class KnowledgeBook(Item):
 # improves one stat
     def __init__(self):
-        super().__init__("book of knowledge", 60, 1)
+        super().__init__("book of knowledge", 70, 1)
 
     def status(self):
         return ""

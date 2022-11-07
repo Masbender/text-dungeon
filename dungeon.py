@@ -59,6 +59,26 @@ def print_effects(creature):
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
 
+def print_player_info():
+# prints player health, effects, stats, and equipment
+    print(f"You have {player.health}/{player.maxHealth} HP, {player.armorClass} AC")
+    
+    print_effects(player)
+    
+    print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
+
+    # prints out what you are wearing
+    if player.armor != None or player.ring != None:
+        equipmentMessage = "you are wearing "
+        if player.armor != None:
+            equipmentMessage += player.armor.get_name()
+            # if both are there it adds "and"
+            if player.ring != None:
+                equipmentMessage += " and "
+        if player.ring != None:
+            equipmentMessage += "a " + player.ring.get_name()
+        print(equipmentMessage)
+                
 class Battle:
     def __init__(self, enemies):
         self.battleOver = False
@@ -77,6 +97,10 @@ class Battle:
                     self.enemy_turn(enemy)
                     if enemy.health > 0: # checks if enemy died during thier turn
                         updatedEnemies.append(enemy)
+                if enemy.health <= 0:
+                    print(f"{enemy.name} drops {enemy.gold} gold")
+                    player.gold += enemy.gold
+                        
             self.enemies = updatedEnemies
 
             if self.enemies == [] or player.health <= 0:
@@ -90,30 +114,17 @@ class Battle:
 
     def print_battle(self):
         print()
-        creatures = self.enemies + [player]
 
-        for creature in creatures:
+        for creature in self.enemies:
             print(f"{creature.name.upper()} : {creature.health}/{creature.maxHealth} HP, {creature.armorClass} AC")
             
             print_effects(creature)
 
-            if creature == player:
-                print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
-
             print()
 
-        # prints out what you are wearing
-        if player.armor != None or player.ring != None:
-            equipmentMessage = "you are wearing "
-            if player.armor != None:
-                equipmentMessage += player.armor.get_name()
-                # if both are there it adds "and"
-                if player.ring != None:
-                    equipmentMessage += " and "
-            if player.ring != None:
-                equipmentMessage += "a " + player.ring.get_name()
-            print(equipmentMessage + "\n")
-            print()
+        print_player_info()
+        
+        print()
     
     def enemy_turn(self, enemy):
         enemy.do_turn(self.enemies)
@@ -162,10 +173,8 @@ class Floor:
                 elif type(self.map[i][I]) == Wall and self.map[i][I].blocked:
                     lines[i] += ' '
                 # stairs are represented as ↓ or ↑
-                elif self.map[i][I].specialAction == "stairs down":
+                elif self.map[i][I].specialAction == "descend stairs":
                     lines[i] += '↓'
-                elif self.map[i][I].specialAction == "stairs up":
-                    lines[i] += '↑'
                 # enemies are represented as !
                 elif self.map[i][I].check_detection():
                     lines[i] += '!'
@@ -243,6 +252,56 @@ class Floor:
     # retunrs the room that the player is in
         return self.layout[self.posY][self.posX]
 
+    def get_options(self):
+    # returns a list of options for the player to choose
+        room = self.get_room()
+
+        options = ["move", "wait", "view stats"]
+        if room.loot != [] or player.inventory != []:
+            options.append("inspect item")
+
+        if player.inventory != []:
+            options.extend(["use item", "drop item"])
+
+        if player.ring != None or player.armor != None:
+            options.append("unequip")
+            
+        if room.loot != []:
+            options.append("take item")
+            # prints items
+            if len(room.loot) == 1:
+                print(f"\nthere is a {room.loot[0].get_name().upper()} here")
+            else:
+                # gets a list of item names
+                names = []
+                for item in room.loot:
+                    names.append(item.get_name().upper())
+                    
+                print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
+
+        # presents options to player and gathers input
+        if room.specialAction != "":
+            options.append(room.specialAction)
+
+        if room.threats != []:
+            options.append("surprise attack")
+            # prints enemies
+            if len(room.threats) == 1:
+                print(f"\nthere is a {room.threats[0].name.upper()} here!")
+            else:
+                # gets a list of uppercase enemy names
+                names = []
+                for enemy in room.threats:
+                    names.append(enemy.name.upper())
+                    
+                print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
+                
+            print("they do not notice you")
+        
+        options.append("debug : reveal map")
+    
+        return options
+
     def action_move(self):
     # called when player decides to move
         # - INPUT -
@@ -272,14 +331,20 @@ class Floor:
     
                     room.threats = []
 
+    def action_wait(self):
+    # called when player chooses to wait
+        self.update_map()
+        update_effects(player)
+        print("you wait")
+        
     def action_view_stats(self):
     # called when player decides to view stats
         print(f"resistance : {player.resistance} | decreases the severity of poisons and injuries")
-            print(f"dodge : {player.dodge}% | chance to avoid damage")
-            print(f"stealth : {player.stealth} | your ability to be unnoticed")
-            print(f"awareness : {player.awareness} | detects enemies on the map")
-            print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
-            print()
+        print(f"dodge : {player.dodge}% | chance to avoid damage")
+        print(f"stealth : {player.stealth} | your ability to be unnoticed")
+        print(f"awareness : {player.awareness} | detects enemies on the map")
+        print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
+        print()
 
     def action_use_item(self):
     # called when player uses an item
@@ -355,7 +420,68 @@ class Floor:
         if chosenItem > -1: # -1 is cancel 
             # inspects chosen item
             inspectableItems[chosenItem].inspect()
+            cost = inspectableItems[chosenItem].get_price()
+            if player.appraisal > cost:
+                print("this item is worth " + cost + " gold")
+            else:
+                print("you are unable to appriase the price of the item")
 
+    def action_unequip(self):
+    # called when player unequips something
+        # forms options
+        options = ["cancel"]
+        if player.armor != None:
+            options.append("armor")
+        if player.ring != None:
+            options.append("ring")
+
+        # gathers input
+        chosenOption = gather_input("What do you unequip?", options, False) - 1
+
+        if chosenOption == "armor": # unquips armor
+            player.armor.unequip()
+            if len(player.inventory) < player.inventorySize:
+                print("you take off the " + player.armor.name)
+                player.inventory.append(player.armor)
+                player.armor = None
+                sort_inventory()
+            else: # drops instead if inventory is full
+                print("you drop the " + player.armor.name + " because your inventory is full")
+                room.loot.append(player.armor)
+                player.armor.discard()
+                player.armor = None
+
+        elif chosenOption == "ring": # unequips ring
+            player.ring.unequip()
+            if len(player.inventory) < player.inventorySize:
+                print("you take off the " + player.ring.name)
+                player.inventory.append(player.ring)
+                player.ring = None
+                sort_inventory()
+            else: # drops instead if inventory is full
+                print("you drop the " + player.ring.name + " because your inventory is full")
+                room.loot.append(player.ring)
+                player.ring.discard()
+                player.ring = None
+
+    def action_surprise(self):
+    # called when player does surprise attack
+        room = self.get_room()
+        
+        for enemy in room.threats: # makes sure all enemies are surprised and stunned
+            enemy.affect(entities.Surprised, 2)
+            enemy.stunned = True
+
+        # starts the battle
+        battle = Battle(room.threats)
+        battle.start_battle()
+
+        room.threats = []
+
+    def action_shop(self):
+    # called when the player talks to the shopkeeper
+        print("you can't tell if the golem is alive, but you approach it anyways")
+        
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
     # returns -1 or 1, representing the change in floor
@@ -375,150 +501,28 @@ class Floor:
                 print(room.description)
                 print()
 
-            print(f"You have {player.health}/{player.maxHealth} HP, {player.armorClass} AC")
-            print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
-            
-            print_effects(player)
+            print_player_info()
+            if player.gold > 0:
+                print(f"you have {player.gold} gold")
 
-            # prints out what you are wearing
-            if player.armor != None or player.ring != None:
-                equipmentMessage = "you are wearing "
-                if player.armor != None:
-                    equipmentMessage += player.armor.get_name()
-                    # if both are there it adds "and"
-                    if player.ring != None:
-                        equipmentMessage += " and "
-                if player.ring != None:
-                    equipmentMessage += "a " + player.ring.get_name()
-                print(equipmentMessage)
-
-            # ===== CHECKS OPTIONS =====
-            options = ["move", "wait", "view stats"]
-            if room.loot != [] or player.inventory != []:
-                options.append("inspect item")
-
-            if player.inventory != []:
-                options.extend(["use item", "drop item"])
-
-            if player.ring != None or player.armor != None:
-                options.append("unequip")
-                
-            if room.loot != []:
-                options.append("take item")
-                # prints items
-                if len(room.loot) == 1:
-                    print(f"\nthere is a {room.loot[0].get_name().upper()} here")
-                else:
-                    # gets a list of item names
-                    names = []
-                    for item in room.loot:
-                        names.append(item.get_name().upper())
-                        
-                    print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
-
-            # presents options to player and gathers input
-            if room.specialAction != "":
-                options.append(room.specialAction)
-
-            if room.threats != []:
-                options.append("surprise attack")
-                # prints enemies
-                if len(room.threats) == 1:
-                    print(f"\nthere is a {room.threats[0].name.upper()} here!")
-                else:
-                    # gets a list of uppercase enemy names
-                    names = []
-                    for enemy in room.threats:
-                        names.append(enemy.name.upper())
-                        
-                    print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
-                    
-                print("they do not notice you")
-            
-            
-            options.append("debug : reveal map")
+            options = self.get_options()
             
             playerInput = gather_input("\nWhat do you do?", options, False)
+
+            actions = {
+                "move":self.action_move, "wait":self.action_wait, 
+                "view stats":self.action_view_stats, "use item":self.action_use_item, 
+                "take item":self.action_take_item, "drop item":self.action_drop_item,
+                "inspect item":self.action_inspect_item, "unequip":self.action_unequip, 
+                "surprise attack":self.action_surprise, "shop":self.action_shop
+            }
             
-            if playerInput == "move":
-               self.action_move()
-
-            elif playerInput == "wait":
-                self.update_map()
-                update_effects(player)
-                print("you wait")
-
-            elif playerInput == "view stats":
-                self.action_view_stats()
-
-            elif playerInput == "use item":
-                self.action_use_item()
-
-            elif playerInput == "take item":
-                self.action_take_item()
-
-            elif playerInput == "drop item":
-                self.action_drop_item()
-
-            elif playerInput == "inspect item":
-                self.action_inspect_item()
-
-            # ===== UNEQUIP =====
-            elif playerInput == "unequip":
-                options = []
-                if player.armor != None:
-                    options.append("armor")
-                if player.ring != None:
-                    options.append("ring")
-
-                chosenOption = None
-                if len(options) == 1:
-                    chosenOption = options[0]
-                else:
-                    chosenOption = gather_input("What do you unequip?", options, False)
-
-                if chosenOption == "armor":
-                    player.armor.unequip()
-                    if len(player.inventory) < player.inventorySize:
-                        print("you take off the " + player.armor.name)
-                        player.inventory.append(player.armor)
-                        player.armor = None
-                        sort_inventory()
-                    else:
-                        print("you drop the " + player.armor.name + " because your inventory is full")
-                        room.loot.append(player.armor)
-                        player.armor.discard()
-                        player.armor = None
-
-                elif chosenOption == "ring":
-                    player.ring.unequip()
-                    if len(player.inventory) < player.inventorySize:
-                        print("you take off the " + player.ring.name)
-                        player.inventory.append(player.ring)
-                        player.ring = None
-                        sort_inventory()
-                    else:
-                        print("you drop the " + player.ring.name + " because your inventory is full")
-                        room.loot.append(player.ring)
-                        player.ring.discard()
-                        player.ring = None
-
-            # ===== SURPRISE ATTACK =====
-            elif playerInput == "surprise attack":
-                for enemy in room.threats:
-                    enemy.affect(entities.Surprised, 2)
-                    enemy.stunned = True
-
-                battle = Battle(room.threats)
-                battle.start_battle()
-
-                room.threats = []
-
-            # ===== DEBUG : REVEAL MAP =====
+            if playerInput in actions.keys(): # some actions aren't in the dictionary
+                actions[playerInput]()
+                
             elif playerInput == "debug : reveal map":
                 self.map = self.layout
 
-            # ===== STAIRS =====
             elif playerInput == "descend stairs":
                 break
 
@@ -530,7 +534,7 @@ class Room:
     def __init__(self, loot = [], threats = [], description = ""):
         self.loot = loot
         self.threats = threats
-        self.description = ""
+        self.description = description
 
     def unblock(self): # called if the room needs a bomb or key to unlock
         return True
@@ -610,6 +614,20 @@ class Stairs(Room):
         self.loot = []
         self.threats = []
 
+class Shop(Room):
+    blocked = False
+    description = "you stumble upon the shopkeeper, a living stone golem with a blank stare"
+    specialAction = "shop"
+
+    def __init__(self, depth):
+        self.loot = None
+        self.threats = None
+
+        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5)]
+        
+        if self.stock[1].enchantable:
+            self.stock[1].enchantment += randint(1, 2)
+
 def gen_room(area, depth, type):
     loot = []
     threats = []
@@ -637,8 +655,6 @@ def gen_room(area, depth, type):
     
         if randint(1, 3) == 1:
             threats.append(entities.gen_enemy(area, depth % 3))
-            if randint(1, 3) == 1:
-                threats.append(entities.gen_enemy(area, (depth % 3) - 4))
 
     # secret room
     elif type == 3:
@@ -958,7 +974,7 @@ class Generator:
 
         # lowers enemy health if there are too many already there
         enemyCount = len(self.layoutRooms[room[0]][room[1]].threats)
-        enemy.maxHealth = int(enemy.maxHealth * (1 - (randint(enemyCount, enemyCount * 2) / 10)))
+        enemy.maxHealth = int(enemy.maxHealth * (1 - (randint(enemyCount, enemyCount * 3) / 10)))
         enemy.health = enemy.maxHealth
         
         self.layoutRooms[room[0]][room[1]].threats.append(enemy)

@@ -1,8 +1,9 @@
 from random import randint, choice
 
 class Creature:
-    def __init__(self, name, health):
+    def __init__(self, name, health, gold):
         self.name = name
+        self.gold = gold
         
         self.stealth = 0 # compared with opponents awareness in stealth checks
         self.dodge = 0 # percent chance to dodge
@@ -145,7 +146,7 @@ class Creature:
 class Player(Creature):
 # has inventory and equipment slots
     def __init__(self):
-        super().__init__("you", 20)
+        super().__init__("you", 20, 0)
 
         self.inventorySize = 10
         self.inventory = []
@@ -165,8 +166,8 @@ player = Player() # creates the one and only instance of player
 
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
-    def __init__(self, name, health, awareness, stealth):
-        super().__init__(name, health)
+    def __init__(self, name, health, gold, awareness, stealth):
+        super().__init__(name, health, (gold * randint(8, 12)) // 10)
         self.warning = "you feel uneasy" # printed when player detects enemy
         self.awareness = awareness + randint(-1, 1)
         self.stealth = stealth + randint(-1, 1)
@@ -181,7 +182,7 @@ class Enemy(Creature):
 
 class Boss(Enemy):
     def __init__(self, name, health):
-        super().__init__(name, health, 50, 50)
+        super().__init__(name, health, 100, 50, 50)
 
     def do_turn(self, enemies):
     # less likely to be stunned
@@ -325,7 +326,7 @@ class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
     def __init__(self):
-        super().__init__("draugr", 18, 2, 3)
+        super().__init__("draugr", 18, 20, 2, 3)
         self.resistance = 2
         self.armorClass = 1
 
@@ -341,7 +342,7 @@ class Ghoul(Enemy):
 # an uncommon, stealthier enemy that appears in the prison
 # can dodge attacks and inflicts decay
     def __init__(self):
-        super().__init__("ghoul", 16, 4, 2)
+        super().__init__("ghoul", 16, 16, 4, 2)
         self.dodge = 10
         
         self.warning = "you smell a foul stench"
@@ -358,7 +359,7 @@ class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
 # is immune to most natural effects and often staggers instead of attacking
     def __init__(self):
-        super().__init__("skeleton", 16, 1, 0)
+        super().__init__("skeleton", 16, 8, 1, 0)
         self.immuneTo = [Bleeding]
         self.damage = 3
         self.staggerChance = 2 # _ in 6
@@ -403,6 +404,8 @@ class ArmoredSkeleton(Skeleton):
 # has some AC and staggers more, always has a mace
     def __init__(self):
         super().__init__()
+        self.gold = 10
+        
         self.staggerChance = 3
         self.armorClass = 1
         
@@ -414,6 +417,8 @@ class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
     def __init__(self):
         super().__init__()
+        self.gold = 15
+        
         self.staggerChance = 1
         self.armorClass = 2
         self.awareness = 4
