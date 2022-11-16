@@ -2,6 +2,9 @@ from random import randint, choice
 from extra import clear_console, gather_input
 import entities
 import items
+import color
+
+c = color
 
 player = entities.player
 
@@ -61,7 +64,16 @@ def print_effects(creature):
 
 def print_player_info():
 # prints player health, effects, stats, and equipment
-    print(f"You have {player.health}/{player.maxHealth} HP, {player.armorClass} AC")
+    hpStatus = f"{player.health}/{player.maxHealth}"
+
+    if player.health / player.maxHealth < 0.4:
+        hpStatus = c.criticalHealth(hpStatus)
+    elif player.health / player.maxHealth < 0.8:
+        hpStatus = c.lowHealth(hpStatus)
+    else:
+        hpStatus = c.fullHealth(hpStatus)
+    
+    print(f"You have {hpStatus} HP, {player.armorClass} AC")
     
     print_effects(player)
     
@@ -258,12 +270,12 @@ class Floor:
             options.append("take item")
             # prints items
             if len(room.loot) == 1:
-                print(f"\nthere is a {room.loot[0].get_name().upper()} here")
+                print(f"\nthere is a {c.loot(room.loot[0].get_name().upper())} here")
             else:
                 # gets a list of item names
                 names = []
                 for item in room.loot:
-                    names.append(item.get_name().upper())
+                    names.append(c.loot(item.get_name().upper()))
                     
                 print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
@@ -275,12 +287,12 @@ class Floor:
             options.append("surprise attack")
             # prints enemies
             if len(room.threats) == 1:
-                print(f"\nthere is a {room.threats[0].name.upper()} here!")
+                print(f"\nthere is a {c.threat(room.threats[0].name.upper())} here!")
             else:
                 # gets a list of uppercase enemy names
                 names = []
                 for enemy in room.threats:
-                    names.append(enemy.name.upper())
+                    names.append(c.threat(enemy.name.upper()))
                     
                 print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
                 
