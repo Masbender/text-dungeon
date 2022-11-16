@@ -1,6 +1,6 @@
 import dungeon
 import entities
-import extra
+from extra import clear_console
 import items
 from random import randint
 
@@ -18,9 +18,15 @@ floors = []
 
 for i in range(3):
     generator = dungeon.Generator()
-    floors.append(generator.gen_floor("prison", i, 4 + ((i + 2) // 3)))
+    generator.gen_floor("prison", i, 4 + ((i + 2) // 3))
 
-floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Wall()]], 0, 0))
+    if i % 3 == 2: # adds shops
+        generator.add_room(dungeon.Shop(i))
+
+    floors.append(dungeon.Floor(generator.layoutRooms, generator.startY, generator.startX, generator.entryMessage))
+
+    if i % 3 == 2: # adds boss
+        floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Wall()]], 0, 0))
 
 floor = 0
 while True:

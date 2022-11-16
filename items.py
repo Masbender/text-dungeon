@@ -10,7 +10,7 @@ class Item:
     
     def __init__(self, name, value, uses):
         self.name = name
-        self.value = int(value * randint(7, 13) / 10) # 70% to 130% of value
+        self.value = int(value * randint(9, 11) / 10) # 90% to 110% of value
         self.uses = uses
         self.maxUses = uses
 
@@ -91,9 +91,24 @@ class Item:
     # runs when an item is dropped or destroyed, reverses pickup
         return False
 
-    def get_price(self):
+    def get_price(self, shop = False, returnString = False):
     # returns value based on uses and enchantment
-        return int((self.value + (self.value * self.enchantment / 3)) * (self.uses / self.maxUses))
+    # shop indicates if the item is yours or a vendors
+        price = int((self.value + (self.value * self.enchantment / 3)) * (self.uses / self.maxUses))
+
+        if player.appraisal < price:
+            if shop:
+                price = int(price * 1.3)
+            else:
+                price = int(price * 0.7)
+
+            if returnString:
+                return str(price) + '?'
+
+        if returnString:
+            return str(price)
+        else:
+            return price
 
 class Weapon(Item):
     enchantable = True
@@ -414,8 +429,8 @@ class Cloak(Armor):
         return True
 
     def unequip(self):
-        player.armorClass += self.enchantment
-        player.stealth += 1
+        player.armorClass -= self.enchantment
+        player.stealth -= 1
         
 class Ring(Item):
     enchantable = True

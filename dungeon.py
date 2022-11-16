@@ -66,18 +66,6 @@ def print_player_info():
     print_effects(player)
     
     print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
-
-    # prints out what you are wearing
-    if player.armor != None or player.ring != None:
-        equipmentMessage = "you are wearing "
-        if player.armor != None:
-            equipmentMessage += player.armor.get_name()
-            # if both are there it adds "and"
-            if player.ring != None:
-                equipmentMessage += " and "
-        if player.ring != None:
-            equipmentMessage += "a " + player.ring.get_name()
-        print(equipmentMessage)
                 
 class Battle:
     def __init__(self, enemies):
@@ -297,8 +285,6 @@ class Floor:
                 print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
                 
             print("they do not notice you")
-        
-        options.append("debug : reveal map")
     
         return options
 
@@ -345,6 +331,20 @@ class Floor:
         print(f"awareness : {player.awareness} | detects enemies on the map")
         print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
         print()
+        # prints out what you are wearing
+        if player.armor != None or player.ring != None:
+            equipmentMessage = "you are wearing "
+            if player.armor != None:
+                equipmentMessage += player.armor.get_name()
+                # if both are there it adds "and"
+                if player.ring != None:
+                    equipmentMessage += " and "
+            if player.ring != None:
+                equipmentMessage += "a " + player.ring.get_name()
+            print(equipmentMessage)
+        if player.gold > 0:
+                print(f"you have {player.gold} gold")
+        print()
 
     def action_use_item(self):
     # called when player uses an item
@@ -369,13 +369,13 @@ class Floor:
 
         # gathers input if more than one item
         chosenItem = 0
-        if len(options) > 1:
+        if len(room.loot) > 1:
             chosenItem = gather_input("What do you pick up?", options) - 1
 
         if chosenItem > -1: # -1 is cancel
             # moves item to inventory
             player.inventory.append(room.loot.pop(chosenItem))
-            print(f"you pickup the {options[chosenItem]}")
+            print(f"you pickup the {options[chosenItem + 1]}")
     
             sort_inventory()
 
@@ -401,7 +401,7 @@ class Floor:
         room = self.get_room()
 
         # gathers all options
-        inspectableItems = [player.inventory, room.loot]
+        inspectableItems = [player.inventory] + [room.loot]
 
         if player.armor != None:
             inspectableItems.append(player.armor)
@@ -436,7 +436,7 @@ class Floor:
             options.append("ring")
 
         # gathers input
-        chosenOption = gather_input("What do you unequip?", options, False) - 1
+        chosenOption = gather_input("What do you unequip?", options, False)
 
         if chosenOption == "armor": # unquips armor
             player.armor.unequip()
@@ -480,7 +480,73 @@ class Floor:
 
     def action_shop(self):
     # called when the player talks to the shopkeeper
-        print("you can't tell if the golem is alive, but you approach it anyways")
+        room = self.get_room()
+        
+        print("you can't tell if the golem is alive, but you approach it anyways\n")
+
+        options = ["cancel"]
+        # displays items and forms options
+        for item in room.stock:
+            options.append("buy " + item.get_name())
+            print(f"{item.get_name()}, {item.get_price(True, True)} gold\n")
+
+        # player decides what to do
+        playerInput = gather_input(f"You have {player.gold} gold", options) - 1
+
+        if playerInput > -1: # -1 is cancel
+            chosenItem = room.stock[playerInput]
+
+            print(f"{chosenItem.get_name()} costs {chosenItem.get_price(True, True)} gold")
+            print(f"You have {player.gold} gold")
+            
+            # player decides how to purchase the chosen item
+            playerInput = gather_input(f"How do you purchase {chosenItem.get_name()}?", ["cancel", "buy", "trade"], False)
+
+            if playerInput == "buy":
+                if player.gold < chosenItem.get_price(True):
+                    print("You don't have enough gold!")
+                    
+                else:
+                    player.gold -= chosenItem.get_price(True)
+
+                    print("you purchased the item")
+                    
+                    if len(player.inventory) < player.inventorySize - 1:
+                        player.inventory.append(chosenItem)
+                    else: # drops item if there isn't enough space
+                        room.loot.append(chosenItem)
+                        print("your inventory is full so you drop the item instead")
+
+                    room.stock.remove(chosenItem)
+
+            elif playerInput == "trade":
+                if len(player.inventory) == 0:
+                    print("You don't have any items to trade!")
+                    
+                else:
+                    while True:
+                        print(f"{chosenItem.get_name()} costs {chosenItem.get_price(True, True)} gold")
+
+                        options = ["cancel"]
+                        for item in player.inventory:
+                            options.append(f"{item.get_name()}, {item.get_price(False, True)} gold")
+
+                        playerInput = gather_input("What item do you try to trade?", options) - 1
+
+                        if playerInput == -1:
+                            break
+
+                        tradedItem = player.inventory[playerInput]
+                        if tradedItem.get_price(False) < chosenItem.get_price(True):
+                            print(f"{tradedItem.get_name} isn't worth enough to trade")
+
+                        else:
+                            player.inventory.remove(tradedItem)
+                            player.inventory.append(chosenItem)
+                            room.stock.remove(chosenItem)
+
+                            print(f"you trade the {tradedItem.get_name()} for the {chosenItem.get_name()}")
+                            break
         
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
@@ -502,8 +568,6 @@ class Floor:
                 print()
 
             print_player_info()
-            if player.gold > 0:
-                print(f"you have {player.gold} gold")
 
             options = self.get_options()
             
@@ -616,12 +680,12 @@ class Stairs(Room):
 
 class Shop(Room):
     blocked = False
-    description = "you stumble upon the shopkeeper, a living stone golem with a blank stare"
+    description = "you stumble upon the SHOPKEEPER, a golem made of stone"
     specialAction = "shop"
 
     def __init__(self, depth):
-        self.loot = None
-        self.threats = None
+        self.loot = []
+        self.threats = []
 
         self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5)]
         
@@ -694,7 +758,7 @@ class Generator:
         self.adjacentWalls = []
         self.hiddenWalls = []
         self.sideRooms = []
-
+        
         # assigns modifier
         if self.size > 4 and randint(0, 1):
             self.modifier = choice(["dangerous", "large", "cursed"])
@@ -771,8 +835,6 @@ class Generator:
         if self.modifier == "dangerous":
             for i in range(2):
                 self.spawn_random_enemy(self.depth + 1)
-        
-        return Floor(self.layoutRooms, self.startY, self.startX, self.entryMessage)
     
     def gen_hall(self):
     # generates a snake-like hall
