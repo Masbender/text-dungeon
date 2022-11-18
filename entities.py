@@ -176,7 +176,7 @@ class Player(Creature):
 
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
-            self.affect(Burning, 6 - self.ring.enchantment)
+            self.affect(Burned, 6 - self.ring.enchantment)
             print(f"Your ring of inferno {c.harm('BURNS')} you!")
 
         return damageDealt
@@ -185,6 +185,8 @@ player = Player() # creates the one and only instance of player
 
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
+    undead = False
+    
     def __init__(self, name, health, gold, awareness, stealth):
         super().__init__(name, health, (gold * randint(8, 12)) // 10)
         self.warning = "you feel uneasy" # printed when player detects enemy
@@ -363,10 +365,43 @@ class Burned(Effect):
 
     def reverse(self):
         self.target.armorClass += 1
-    
+
+class OnFire(Effect):
+# does 2 damage per turn
+    name = "on fire"
+    natural = True
+    level = 3
+    color = c.effectBad
+
+    def __init__(self, target):
+        self.target = target
+
+    def update(self):
+        self.target.health -= 2
+
+class Poisoned(Effect):
+# does 1 damage per turn and lowers STR
+    name = "poisoned"
+    natural = True
+    level = -1
+    color = c.effectBad
+
+    def __init__(self, target):
+        self.target = target
+        
+        self.target.strength -= 1
+
+    def update(self):
+        self.target.health -= 1
+
+    def reverse(self):
+        self.target.strength +=1 
+
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # a tankier enemy who can inflict bleeding
+    undead = True
+    
     def __init__(self):
         super().__init__("draugr", 18, 20, 2, 3)
         self.resistance = 2
@@ -381,8 +416,10 @@ class Draugr(Enemy):
             player.hurt(5, self.strength, message + "!")
 
 class Ghoul(Enemy):
-# an uncommon, stealthier enemy that appears in the prison
+# an uncommon, more aware enemy that appears in the prison
 # can dodge attacks and inflicts decay
+    undead = True
+    
     def __init__(self):
         super().__init__("ghoul", 16, 16, 4, 2)
         self.dodge = 10
@@ -400,6 +437,8 @@ class Ghoul(Enemy):
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
 # is immune to most natural effects and often staggers instead of attacking
+    undead = True
+    
     def __init__(self):
         super().__init__("skeleton", 16, 8, 1, 0)
         self.immuneTo = [Bleeding, Burned]
@@ -470,6 +509,32 @@ class SkeletonGuard(Skeleton):
         self.name = "skeleton guard"
         self.warning = "you hear the clanking of bones and metal"
 
+class Thief(Enemy):
+# an uncommon, stealthy and aware enemy
+# hits you with a poison dart when at full health, might run away later in combat
+    def __init__(self):
+        super().__init__("thief", 18, 10, 4, 4)
+        self.warning = "you sense that someone is watching you"
+
+        self.time = 0
+
+    def do_turn(self, enemies):
+    # as time goes on, they are more likely to run away
+        self.time += 1
+        if randint(1, 4) < self.time:
+            self.health = 0
+            print("the THIEF runs away")
+        
+        super().do_turn(enemies)
+
+    def attack(self, enemies):
+        if player.health < player.maxHealth:
+            player.hurt(4, self.strength, "the THIEF stabs you for _ damage!", randint(1, 2))
+        else:
+            print(f"the THIEF hits you with a dart, leaving you {c.harm('POISONED')}!")
+
+            player.affect(Poisoned, 6)
+    
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     def __init__(self):
@@ -525,7 +590,7 @@ class Ogre(Boss):
             player.hurt(5, self.strength, message + "!", 0)
         
 enemyPool = {
-    "prison":[(Skeleton, 7), (ArmoredSkeleton, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
+    "prison":[(Skeleton, 5), (ArmoredSkeleton, 6), (Thief, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
 }
 
 # numbers higher than 12 will only spawn with increased danger

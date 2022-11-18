@@ -153,6 +153,55 @@ class Weapon(Item):
             suffix = "worn"
 
         return f"{suffix}"
+
+class JudgementSword(Weapon):
+# similar to a steel sword, sets undead on fire
+    def __init__(self):
+        self.name = "sword of judgement" 
+        self.value = 85
+        self.uses = 22
+        self.maxUses = 22
+
+    def inspect(self):
+        print(f"It does {self.damage + self.enchantment} damage, with a 2 in 3 chance to inflict bleeding for 5 turns.")
+        print(f"Sets undead enemies on fire.")
+        
+        if self.uses < 0:
+            print("Because it's broken it does less damage and cannot inflict bleeding.")
+
+        if self.enchantment < 0:
+            print(f"The {self.name} is cursed")
+        elif self.enchantment > 0:
+            print(f"The {self.name} is blessed")
+
+    def attack(self, enemies):
+        damageDealt = 6 - 2 * int(self.uses <= 0) + self.enchantment
+
+        options = [] # gets a list of enemy names
+        for enemy in enemies:
+            options.append(enemy.name)
+
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+
+        # applies bleeding
+        bleedingApplied = False
+        if randint(0, 3) < 2 and self.uses > 0:
+            bleedingApplied = target.affect(entities.Bleeding, 5)
+
+        # sets undead on fire
+        if target.undead:
+            target.affect(entities.OnFire, 3)
+
+        # does damage and prints message
+        message = f"You swing the sword of judgement at the {target.name} for _ damage"
+        if bleedingApplied:
+            target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
+        else:
+            target.hurt(damageDealt, player.strength, message)
+
+        self.degrade() # degrade is called when the item does something
+        return True
         
 class Sword(Weapon):
 # does damage to target and can inflict bleeding
@@ -182,7 +231,7 @@ class Sword(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -226,7 +275,7 @@ class Spear(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
 
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -262,7 +311,7 @@ class Mace(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -307,7 +356,7 @@ class Dagger(Weapon):
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
-        damageDealt = self.damage - int(self.uses <= 0) + self.enchantment
+        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
         
         options = [] # gets a list of enemy names
         for enemy in enemies:
@@ -423,6 +472,11 @@ class ShadowCloak(Armor):
             
         print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}")
 
+        if self.enchantment < 0:
+            print(f"The {self.name} is cursed")
+        elif self.enchantment > 0:
+            print(f"The {self.name} is blessed")
+
     def consume(self, floor):
         self.equip()
 
@@ -461,7 +515,33 @@ class Ring(Item):
 
     def unequip(self):
         return False
-    
+
+class InfernoRing(Ring):
+# increases strength, but burns you when attacked
+    enchantable = True
+
+    def __init__(self):
+        super().__init__("ring of rage", 65, 1)
+
+    def inspect(self):
+        print("Increases your strength (STR) by 2")
+        print("When you are attacked, you might be burned (-1 AC)")
+
+        if self.enchantment < 0:
+            print(f"The {self.name} is cursed, burning is more severe")
+        elif self.enchantment > 0:
+            print(f"The {self.name} is blessed, burning is less severe")
+
+    def consume(self, floor):
+        self.equip()
+
+        player.strength += 2
+        player.infernoRing = True
+
+    def unequip(self):
+        player.strength -= 2
+        player.infernoRing = False
+
 class BuffRing(Ring):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
@@ -785,7 +865,7 @@ class KnowledgeBook(Item):
         return ""
 
     def inspect(self):
-        print("Reading this will let you improve one stat when you read it.")
+        print("This will let you improve one stat when you read it.")
 
     def consume(self, floor):
         print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
@@ -817,7 +897,7 @@ standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCur
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak]
+rareLoot = [ShadowCloak, InfernoRing, JudgementSword]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
@@ -835,6 +915,9 @@ def gen_item(quality):
 
             return chosenItem()
 
+def gen_loot():
+    return choice(rareLoot)()
+            
 # generates an item such as a sword or armor
 def gen_gear(quality):
     itemNum = randint(1, 16)
