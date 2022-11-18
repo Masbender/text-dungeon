@@ -389,7 +389,7 @@ class HeavyArmor(Armor):
 
 class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
-    def __init__(self, level):
+    def __init__(self):
         super().__init__("cloak", 40, 25)
 
     def inspect(self):
@@ -408,6 +408,40 @@ class Cloak(Armor):
     def unequip(self):
         player.armorClass -= self.enchantment
         player.stealth -= 1
+
+class ShadowCloak(Armor):
+# same as cloak, but enchantments affect stealth, not armor
+# starts enchanted
+    def __init__(self):
+        super().__init__("cloak of shadows", 70, 30)
+        self.enchantment += 1
+
+    def inspect(self):
+        enchantment = self.enchantment
+        if enchantment < 0: # ensures that -1 enchantment means -1 stealth
+            enchantment -= 1
+            
+        print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}")
+
+    def consume(self, floor):
+        self.equip()
+
+        enchantment = self.enchantment
+        if enchantment < 0: # ensures that -1 enchantment means -1 stealth
+            enchantment -= 1
+
+        # applies stats
+        player.stealth += 1 + enchantment
+
+        print("You put on the cloak")
+        return True
+
+    def unequip(self):
+        enchantment = self.enchantment
+        if enchantment < 0: # ensures that -1 enchantment means -1 stealth
+            enchantment -= 1
+        
+        player.stealth -= 1 + enchantment
         
 class Ring(Item):
     enchantable = True
@@ -783,7 +817,7 @@ standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCur
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = []
+rareLoot = [ShadowCloak]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
@@ -810,7 +844,7 @@ def gen_gear(quality):
             chosenItem = None
 
             # quality improves the material of some items
-            if not chosenItem in [Ring, Cloak]:
+            if not item[0] in [Ring, Cloak]:
                 # can be higher quality
                 if randint(1, 4) == 1:
                     quality += 1
@@ -824,7 +858,7 @@ def gen_gear(quality):
             else:
                 chosenItem = item[0]()
 
-            if type(chosenItem) in [Cloak]:
+            if type(chosenItem) in [Cloak]: # cloaks are better the further they're found
                 chosenItem.enchantment += (quality + 2) // 5
 
             if chosenItem.enchantable:

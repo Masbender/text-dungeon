@@ -54,10 +54,11 @@ def update_effects(creature):
 def print_effects(creature):
     effects = []
     for i in range(len(creature.effects)):
-        if creature.effects[i].permanent:
-            effects.append(f"{creature.effects[i].name}")
+        effect = creature.effects[i]
+        if effect.permanent:
+            effects.append(f"{effect.color(effect.name)}")
         else:
-            effects.append(f"{creature.effects[i].name} - {creature.effectDurations[i]} turns")
+            effects.append(f"{effect.color(effect.name)} - {creature.effectDurations[i]} turns")
 
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")

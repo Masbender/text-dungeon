@@ -1,4 +1,7 @@
 from random import randint, choice
+import color
+
+c = color
 
 class Creature:
     def __init__(self, name, health, gold):
@@ -101,7 +104,15 @@ class Creature:
                 message += " The attack was a critical hit!"
 
         self.health -= finalDamageTaken
-        message = message.replace("_", str(finalDamageTaken))
+
+        # applies color to finalDamageTaken
+        damageMessage = ""
+        if type(self) == Player:
+            damageMessage = c.harm(str(finalDamageTaken))
+        else:
+            damageMessage = c.player(str(finalDamageTaken))
+        
+        message = message.replace("_", damageMessage)
         print(message)
         return finalDamageTaken
 
@@ -153,12 +164,20 @@ class Player(Creature):
         self.ring = None
         self.armor = None
 
+        # stats for different items
+        self.infernoRing = False
+
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # damages armor
         damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
 
         if self.armor != None:
             self.armor.degrade()
+
+        # applies inferno ring's effect
+        if self.infernoRing and randint(1, 3) == 1:
+            self.affect(Burning, 6 - self.ring.enchantment)
+            print(f"Your ring of inferno {c.harm('BURNS')} you!")
 
         return damageDealt
 
@@ -201,6 +220,7 @@ class Effect:
     natural = False
     level = 0
     permanent = False
+    color = c.effectNeutral
     
     def __init__(self, target):
         self.target = target
@@ -218,6 +238,7 @@ class Bleeding(Effect):
     name = "bleeding"
     natural = True
     level = 0
+    color = c.effectBad
     
     def __init__(self, target):
         self.target = target
@@ -229,6 +250,7 @@ class Bleeding(Effect):
 class Regeneration(Effect):
 # heals 1 hp per turn
     name = "regeneration"
+    color = c.effectGood
     
     def __init__(self, target):
         self.target = target
@@ -239,6 +261,7 @@ class Regeneration(Effect):
 class WellFed(Effect):
 # heals 2 health per turn
     name = "well fed"
+    color = c.effectGood
     
     def __init__(self, target):
         self.target = target
@@ -251,6 +274,7 @@ class Dazed(Effect):
     name = "dazed"
     natural = True
     level = 1
+    color = c.effectBad
     
     def __init__(self, target):
         self.target = target
@@ -263,6 +287,7 @@ class Dazed(Effect):
 class Surprised(Effect):
 # lowers DEX and AC
     name = "surprised"
+    color = c.effectBad
 
     def __init__(self, target):
         self.target = target
@@ -277,6 +302,7 @@ class Surprised(Effect):
 class Decay(Effect):
 # lowers CON, gets stronger over time
     name = "decay"
+    color = c.effectBad
 
     def __init__(self, target):
         self.target = target
@@ -307,6 +333,7 @@ class BrokenBones(Effect):
     natural = True
     level = 3
     permanent = True
+    color = c.effectBad
 
     def __init__(self, target):
         self.target = target
@@ -321,6 +348,21 @@ class BrokenBones(Effect):
     def reverse(self):
         self.target.update_dexterity(4)
         self.target.update_strength(1)
+
+class Burned(Effect):
+# lowers AC by 1
+    name = "burned"
+    natural = True
+    level = -2
+    color = c.effectBad
+
+    def __init__(self, target):
+        self.target = target
+
+        self.target.armorClass -= 1
+
+    def reverse(self):
+        self.target.armorClass += 1
     
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
@@ -334,7 +376,7 @@ class Draugr(Enemy):
         message = "the DRAUGR hits you with their axe for _ damage"
         if randint(1, 4) == 1:
             player.affect(Bleeding, 5)
-            player.hurt(3, self.strength, message + ", leaving you BLEEDING!")
+            player.hurt(3, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
         else:
             player.hurt(5, self.strength, message + "!")
 
@@ -349,7 +391,7 @@ class Ghoul(Enemy):
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            print("the GHOUL curses you with DECAY, lowering your CON over time")
+            print(f"the GHOUL curses you with {c.harm('DECAY')}, lowering your CON over time")
 
             player.affect(Decay, 6)
         else:
@@ -360,7 +402,7 @@ class Skeleton(Enemy):
 # is immune to most natural effects and often staggers instead of attacking
     def __init__(self):
         super().__init__("skeleton", 16, 8, 1, 0)
-        self.immuneTo = [Bleeding]
+        self.immuneTo = [Bleeding, Burned]
         self.damage = 3
         self.staggerChance = 2 # _ in 6
         
@@ -394,9 +436,9 @@ class Skeleton(Enemy):
 
         # does damage
         if inflictsBleeding:
-            player.hurt(self.damage, self.strength, message + ", leaving you BLEEDING!", armorPiercing)
+            player.hurt(self.damage, self.strength, message + f", leaving you {c.harm('BLEEDING')}!", armorPiercing)
         elif inflictsDazed:
-            player.hurt(self.damage, self.strength, message + ", leaving you DAZED!", armorPiercing)
+            player.hurt(self.damage, self.strength, message + f", leaving you {c.harm('DAZED')}!", armorPiercing)
         else:
             player.hurt(self.damage, self.strength, message + "!", armorPiercing)
 

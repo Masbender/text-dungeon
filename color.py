@@ -6,7 +6,20 @@ warning = "\033[1;31m"
 notification = "\033[1;93m"
 good = "\033[1;92m"
 
+# effect____ has effect as an argument because python tries to input self into them
+def effectGood(effect, text):
+    return good + text + regular
+
+def effectNeutral(effect, text):
+    return notification + text + regular
+
+def effectBad(effect, text):
+    return warning + text + regular
+
 def threat(text):
+    return warning + text + regular
+
+def harm(text):
     return warning + text + regular
 
 def loot(text):
