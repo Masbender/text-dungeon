@@ -520,12 +520,12 @@ class Thief(Enemy):
 
     def do_turn(self, enemies):
     # as time goes on, they are more likely to run away
+        super().do_turn(enemies)
+        
         self.time += 1
         if randint(1, 4) < self.time:
             self.health = 0
             print("the THIEF runs away")
-        
-        super().do_turn(enemies)
 
     def attack(self, enemies):
         if player.health < player.maxHealth:

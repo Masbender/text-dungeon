@@ -161,6 +161,7 @@ class JudgementSword(Weapon):
         self.value = 85
         self.uses = 22
         self.maxUses = 22
+        self.damage = 5
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage, with a 2 in 3 chance to inflict bleeding for 5 turns.")
