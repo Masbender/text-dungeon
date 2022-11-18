@@ -2,17 +2,33 @@
 
 regular = "\033[0m"
 
+warning = "\033[1;31m"
+notification = "\033[1;93m"
+good = "\033[1;92m"
+
 def threat(text):
-    return "\033[1;31m" + text + regular
+    return warning + text + regular
 
 def loot(text):
-    return "\033[1;93m" + text + regular
+    return notification + text + regular
 
 def criticalHealth(text):
-    return "\033[1;31m" + text + regular
+    return warning + text + regular
 
 def lowHealth(text):
-    return "\033[1;93m" + text + regular
+    return notification + text + regular
 
 def fullHealth(text):
-    return "\033[1;92m" + text + regular
+    return good + text + regular
+
+def player(text):
+    return good + text + regular
+
+def special(text):
+    return notification + text + regular
+
+def blessed(text):
+    return good + text + regular
+
+def cursed(text):
+    return warning + text + regular

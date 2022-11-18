@@ -1,6 +1,9 @@
 from random import randint, choice
 from extra import gather_input, clear_console
 import entities
+import color
+
+c = color
 
 player = entities.player
 
@@ -54,9 +57,9 @@ class Item:
         message += self.name
 
         if self.enchantment > 0:
-            message += f" (+{self.enchantment})"
+            message += c.blessed(f" (+{self.enchantment})")
         elif self.enchantment < 0:
-            message += f" (-{-self.enchantment})"
+            message += c.cursed(f" (-{-self.enchantment})")
 
         return message
         
@@ -169,11 +172,6 @@ class Sword(Weapon):
             self.bleedDuration += 1
 
     def inspect(self):
-        suffix = self.status()
-        if suffix == "":
-            suffix = "new"
-            
-        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"It does {self.damage + self.enchantment} damage, with a {self.bleedChance} in 6 chance to inflict bleeding for {self.bleedDuration} turns.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot inflict bleeding.")
@@ -218,11 +216,6 @@ class Spear(Weapon):
         self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
-        suffix = self.status()
-        if suffix == "":
-            suffix = "new"
-            
-        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"It does {self.damage + self.enchantment} damage and pierces {self.armorPiercing - 1} to {self.armorPiercing} points of armor.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot pierce armor.")
@@ -259,11 +252,6 @@ class Mace(Weapon):
         self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
-        suffix = self.status()
-        if suffix == "":
-            suffix = "new"
-            
-        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to inflict stun.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot stun.")
@@ -309,11 +297,6 @@ class Dagger(Weapon):
         self.firstHitDamage = (level + 3) // 2
 
     def inspect(self):
-        suffix = self.status()
-        if suffix == "":
-            suffix = "new"
-            
-        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"It does {self.damage + self.enchantment} damage, and {self.firstHitDamage} extra damage towards enemies with full health.")
         print("Daggers add your dexterity to your attack, but ignore strength.")
         if self.uses < 0:
@@ -382,11 +365,6 @@ class HeavyArmor(Armor):
             self.dexLoss += 1
 
     def inspect(self):
-        suffix = self.status()
-        if suffix == "":
-            suffix = "new"
-            
-        print(f"The {self.name} looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
 
         if self.enchantment < 0:
@@ -415,7 +393,6 @@ class Cloak(Armor):
         super().__init__("cloak", 40, 25)
 
     def inspect(self):
-        print(f"The cloak looks {suffix.replace('(', '').replace(')', '')}.")
         print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1")
 
     def consume(self, floor):
@@ -470,11 +447,11 @@ class BuffRing(Ring):
             enchantment -= 1
 
         print([
-            f"The ring of shadows increases your stealth by {1 + enchantment} level",
-            f"The ring of evasion increases your chance to dodge by {5 + 5 * enchantment}%",
-            f"The ring of resilience increases your health by {2 + 2 * enchantment}",
-            f"The ring of immunity increases your resistance to disease and injury by {1 + enchantment} level",
-            f"The ring of vision increases your awareness of nearby threats by {1 + enchantment} level"
+            f"Increases your stealth by {1 + enchantment} level(s)",
+            f"Increases your chance to dodge by {5 + 5 * enchantment}%",
+            f"Increases your health by {2 + 2 * enchantment}",
+            f"Increases your resistance to disease and injury by {1 + enchantment} level(s)",
+            f"Increases your awareness of nearby threats by {1 + enchantment} level(s)"
         ][self.statID])
 
         if self.enchantment < 0:
@@ -588,7 +565,6 @@ class Bandage(Medicine):
         super().__init__("bandage", 30, 3, 4, entities.Regeneration, 4, [entities.Bleeding])
 
     def inspect(self):
-        print(f"The {self.name} has {self.uses} uses remaining.")
         print(f"It heals around 4 HP and heals an addition 1 HP per turn for 4 turns.")
         print(f"Cures bleeding.")
 
@@ -627,8 +603,8 @@ class ScrollRemoveCurse(Scroll):
         super().__init__("scroll of remove curse", 40)
 
     def inspect(self):
-        print("The scroll of remove curse reverses every curse on all of your items")
-        print("With higher levels of intelligence, it might make them even stronger")
+        print("Reverses every curse into blessings on all of your items")
+        print("With higher levels of intelligence (INT), it might make them even stronger")
     
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
@@ -651,7 +627,7 @@ class ScrollEnchant(Scroll):
         super().__init__("scroll of enchantment", 60)
 
     def inspect(self):
-        print("The scroll of enchantment will upgrade one of your items.")
+        print("This scroll will bless one of your items.")
         print("It's effect becomes stronger at higher levels of intelligence.")
 
     def consume(self, floor):
@@ -685,9 +661,8 @@ class ScrollRepair(Scroll):
         super().__init__("scroll of repair", 50)
 
     def inspect(self):
-        print("The scroll of repair will fully restore the uses of one item.")
-        print("A negative INT will make the item less durable.")
-        print("A positive INT will make the item more durable")
+        print("This scroll will fully restore the uses of one item.")
+        print("You intelligence (INT) can increase or decrease the item's durability.")
 
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
@@ -718,7 +693,7 @@ class ScrollRepair(Scroll):
                 return True
             else:
                 print(item.name + " does not work with the scroll of repair")
-                returnFalse
+                return False
         
 class Bomb(Item):
     def __init__(self):
@@ -728,8 +703,8 @@ class Bomb(Item):
         return ""
 
     def inspect(self):
-        print("The bomb can destroy walls, possibly revealing secrets.")
-        print("It can also be used in combat to harm all enemies.")
+        print("Bombs can destroy walls, possibly revealing secrets.")
+        print("It can be used in combat to harm all enemies.")
 
     def attack(self, enemies):
         for enemy in enemies:
@@ -776,7 +751,7 @@ class KnowledgeBook(Item):
         return ""
 
     def inspect(self):
-        print("The book of knowledge will let you improve one stat when you read it.")
+        print("Reading this will let you improve one stat when you read it.")
 
     def consume(self, floor):
         print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
@@ -786,16 +761,19 @@ class KnowledgeBook(Item):
 
         if chosenStat == "STR":
             player.update_strength(1)
+            print("your attacks are stronger now")
         elif chosenStat == "CON":
             player.update_constitution(1)
+            print("your health and resistance to injury and disease has increased")
         elif chosenStat == "DEX":
             player.update_dexterity(1)
+            print("your ability to dodge and go unnoticed has increased")
         elif chosenStat == "PER":
             player.update_perception(1)
+            print("your ability to detect scams and enemies has increased")
         elif chosenStat == "INT":
             player.update_intelligence(1)
-
-        print(f"your mind is flooded with knowledge, your {chosenStat} has improved!")
+            print("the effectivenes of scrolls and durability of all items has increased")
         
         player.inventory.remove(self)
         return True

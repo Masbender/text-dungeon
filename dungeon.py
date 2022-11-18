@@ -62,18 +62,19 @@ def print_effects(creature):
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
 
+def healthStatus(health, maxHealth):
+# returns green, yellow, or red depending on health
+    text = f"{health}/{maxHealth}"
+    if health / maxHealth < 0.4:
+        return c.criticalHealth(text)
+    elif health / maxHealth < 0.8:
+        return c.lowHealth(text)
+    else:
+        return c.fullHealth(text)
+
 def print_player_info():
 # prints player health, effects, stats, and equipment
-    hpStatus = f"{player.health}/{player.maxHealth}"
-
-    if player.health / player.maxHealth < 0.4:
-        hpStatus = c.criticalHealth(hpStatus)
-    elif player.health / player.maxHealth < 0.8:
-        hpStatus = c.lowHealth(hpStatus)
-    else:
-        hpStatus = c.fullHealth(hpStatus)
-    
-    print(f"You have {hpStatus} HP, {player.armorClass} AC")
+    print(f"You have {healthStatus(player.health, player.maxHealth)} HP, {player.armorClass} AC")
     
     print_effects(player)
     
@@ -116,7 +117,7 @@ class Battle:
         print()
 
         for creature in self.enemies:
-            print(f"{creature.name.upper()} : {creature.health}/{creature.maxHealth} HP, {creature.armorClass} AC")
+            print(f"{c.threat(creature.name.upper())} : {healthStatus(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
             
             print_effects(creature)
 
@@ -160,30 +161,31 @@ class Floor:
             return True
     def print_map(self):
         # prepares a list with the proper characters
-        lines = [''] * len(self.map)
+        lines = []
         for i in range(len(self.map)):
+            lines.append([])
             for I in range(len(self.map)):
                 # player is represented as 'o'
                 if i == self.posY and I == self.posX:
-                    lines[i] += 'o'
+                    lines[i].append(c.player('o'))
                 # unkown is represented as '?'
                 elif self.map[i][I] == '?':
-                    lines[i] += '?'
+                    lines[i].append('?')
                 # walls are represented as ' '
                 elif type(self.map[i][I]) == Wall and self.map[i][I].blocked:
-                    lines[i] += ' '
+                    lines[i].append(' ')
                 # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "descend stairs":
-                    lines[i] += '↓'
+                    lines[i].append('↓')
                 # enemies are represented as !
                 elif self.map[i][I].check_detection():
-                    lines[i] += '!'
+                    lines[i].append(c.threat('!'))
                 # locked rooms appear as locks
                 elif type(self.map[i][I]) == LockedRoom and self.map[i][I].blocked:
-                    lines[i] += 'x'
+                    lines[i].append('x')
                 # rooms are represented as '+'
                 else:
-                    lines[i] += '+'
+                    lines[i].append('+')
 
         # prints the map
         for line in lines:
@@ -239,14 +241,12 @@ class Floor:
         if self.layout[newY][newX].blocked:
             if self.layout[newY][newX].unblock():
                 self.layout[newY][newX].blocked = False
-                return True
             else:
                 return False
         # updates players position
-        else:
-            self.posY = newY
-            self.posX = newX
-            return True
+        self.posY = newY
+        self.posX = newX
+        return True
 
     def get_room(self):
     # retunrs the room that the player is in
@@ -267,24 +267,24 @@ class Floor:
             options.append("unequip")
             
         if room.loot != []:
-            options.append("take item")
+            options.append(c.loot("take item"))
             # prints items
             if len(room.loot) == 1:
-                print(f"\nthere is a {c.loot(room.loot[0].get_name().upper())} here")
+                print(f"\nthere is a {c.loot(room.loot[0].get_name())} here")
             else:
                 # gets a list of item names
                 names = []
                 for item in room.loot:
-                    names.append(c.loot(item.get_name().upper()))
+                    names.append(c.loot(item.get_name()))
                     
                 print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
 
         # presents options to player and gathers input
         if room.specialAction != "":
-            options.append(room.specialAction)
+            options.append(c.special(room.specialAction))
 
         if room.threats != []:
-            options.append("surprise attack")
+            options.append(c.threat("surprise attack"))
             # prints enemies
             if len(room.threats) == 1:
                 print(f"\nthere is a {c.threat(room.threats[0].name.upper())} here!")
@@ -358,6 +358,12 @@ class Floor:
                 print(f"you have {player.gold} gold")
         print()
 
+        print("You have:")
+        for item in item_list():
+            print(item)
+
+        print()
+
     def action_use_item(self):
     # called when player uses an item
         options = ["cancel"] + item_list()
@@ -388,6 +394,9 @@ class Floor:
             # moves item to inventory
             player.inventory.append(room.loot.pop(chosenItem))
             print(f"you pickup the {options[chosenItem + 1]}")
+            print()
+            player.inventory[-1].inspect()
+            print()
     
             sort_inventory()
 
@@ -413,7 +422,7 @@ class Floor:
         room = self.get_room()
 
         # gathers all options
-        inspectableItems = [player.inventory] + [room.loot]
+        inspectableItems = player.inventory + room.loot
 
         if player.armor != None:
             inspectableItems.append(player.armor)
@@ -430,13 +439,20 @@ class Floor:
         chosenItem = gather_input("What do you inspect?", options) - 1
 
         if chosenItem > -1: # -1 is cancel 
+            item = inspectableItems[chosenItem]
+            
             # inspects chosen item
-            inspectableItems[chosenItem].inspect()
-            cost = inspectableItems[chosenItem].get_price()
+            print(item.get_name())
+            item.inspect()
+
+            # displays the cost
+            cost = item.get_price()
             if player.appraisal > cost:
-                print("this item is worth " + cost + " gold")
+                print(f"this item is worth {cost} gold")
             else:
                 print("you are unable to appriase the price of the item")
+
+            print()
 
     def action_unequip(self):
     # called when player unequips something
@@ -588,9 +604,9 @@ class Floor:
             actions = {
                 "move":self.action_move, "wait":self.action_wait, 
                 "view stats":self.action_view_stats, "use item":self.action_use_item, 
-                "take item":self.action_take_item, "drop item":self.action_drop_item,
+                c.loot("take item"):self.action_take_item, "drop item":self.action_drop_item,
                 "inspect item":self.action_inspect_item, "unequip":self.action_unequip, 
-                "surprise attack":self.action_surprise, "shop":self.action_shop
+                c.threat("surprise attack"):self.action_surprise, c.special("shop"):self.action_shop
             }
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
@@ -599,7 +615,7 @@ class Floor:
             elif playerInput == "debug : reveal map":
                 self.map = self.layout
 
-            elif playerInput == "descend stairs":
+            elif playerInput == c.special("descend stairs"):
                 break
 
 class Room:
@@ -626,7 +642,7 @@ class Room:
 class Wall(Room):
     blocked = True
     description = "you are in a tunnel, there is rubble everywhere"
-    specialAction = None
+    specialAction = ""
 
     def __init__(self):
         self.loot = []
@@ -683,7 +699,7 @@ class LockedRoom(Room):
 
 class Stairs(Room):
     blocked = False
-    description = "there are stairs here that lead down"
+    description = "there are " + c.special("stairs") + " here that lead down"
     specialAction = "descend stairs"
     
     def __init__(self):
@@ -692,7 +708,7 @@ class Stairs(Room):
 
 class Shop(Room):
     blocked = False
-    description = "you stumble upon the SHOPKEEPER, a golem made of stone"
+    description = "you stumble upon the " + c.special("SHOPKEEPER") + ", a golem made of stone"
     specialAction = "shop"
 
     def __init__(self, depth):
