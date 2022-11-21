@@ -295,7 +295,7 @@ class Floor:
                 for enemy in room.threats:
                     names.append(c.threat(enemy.name.upper()))
                     
-                print(f"\nthere is a {', '.join(names[0:-1]).upper()}, and a {names[-1].upper()} here!")
+                print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here!")
                 
             print("they do not notice you")
     
@@ -576,6 +576,16 @@ class Floor:
 
                             print(f"you trade the {tradedItem.get_name()} for the {chosenItem.get_name()}")
                             break
+
+    def action_unlock_chest(self):
+    # called when player uses an item
+        room = self.get_room()
+        
+        options = ["cancel"] + item_list()
+        itemUsed = gather_input("what do you use to unlock the chest?", options) - 1
+
+        if itemUsed > -1: # -1 is cancel
+            room.unlock_chest(inventory[itemUsed])
         
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
@@ -607,7 +617,8 @@ class Floor:
                 "view stats":self.action_view_stats, "use item":self.action_use_item, 
                 c.loot("take item"):self.action_take_item, "drop item":self.action_drop_item,
                 "inspect item":self.action_inspect_item, "unequip":self.action_unequip, 
-                c.threat("surprise attack"):self.action_surprise, c.special("shop"):self.action_shop
+                c.threat("surprise attack"):self.action_surprise, c.special("shop"):self.action_shop,
+                c.special("unlock chest"):self.action_unlock_chest
             }
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
@@ -639,6 +650,25 @@ class Room:
                 detected = True
 
         return detected
+
+class Chest(Room):
+    blocked = False
+    description = "there is a " + c.special("chest") + " here with a " + c.special("gold lock")
+    specialAction = "unlock chest"
+
+    def __init__(self):
+        self.loot = []
+        self.threats = []
+        self.lock = "gold"
+        self.hiddenLoot = [items.gen_loot()]
+
+    def unlock_chest(self, key):
+        if not key.unlock(self.lock):
+            return
+
+        self.loot.extend(self.hiddenLoot)
+        print("you unlock the chest")
+        self.description = ""
 
 class Wall(Room):
     blocked = True
@@ -857,11 +887,11 @@ class Generator:
             
         # spawns enemies
         for i in range(randint(self.size - 2, self.size)):
-            self.spawn_random_enemy(self.depth - (i // 2))
+            self.spawn_random_enemy((self.depth % 3) * 2 - (i // 2))
 
         if self.modifier == "dangerous":
             for i in range(2):
-                self.spawn_random_enemy(self.depth + 1)
+                self.spawn_random_enemy((self.depth % 3) * 2 + 1)
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -1057,7 +1087,7 @@ class Generator:
             room = choice(self.rooms)
         
         if self.layoutRooms[room[0]][room[1]].threats != []:
-            threat -= 5
+            threat -= 6
 
         enemy = entities.gen_enemy(self.area, threat)
 

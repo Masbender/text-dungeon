@@ -14,14 +14,22 @@ dungeon.sort_inventory()
 #battle = dungeon.Battle([entities.Ogre()])
 #battle.start_battle()
 
+goldKeyLocation = randint(0, 2)
+
 floors = []
 
 for i in range(3):
     generator = dungeon.Generator()
     generator.gen_floor("prison", i, 4 + ((i + 2) // 3))
 
-    if i % 3 == 2: # adds shops
+    if i == goldKeyLocation: # adds gold key
+        generator.spawn_item(items.Key(1))
+    
+    if i % 3 == 1: # adds shops
         generator.add_room(dungeon.Shop(i))
+
+    elif i % 3 == 2: # adds gold chest
+        generator.add_room(dungeon.Chest())
 
     floors.append(dungeon.Floor(generator.layoutRooms, generator.startY, generator.startX, generator.entryMessage))
 

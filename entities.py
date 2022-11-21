@@ -177,7 +177,7 @@ class Player(Creature):
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
             self.affect(Burned, 6 - self.ring.enchantment)
-            print(f"Your ring of inferno {c.harm('BURNS')} you!")
+            print(f"Your ring of rage {c.harm('BURNS')} you!")
 
         return damageDealt
 
@@ -368,6 +368,7 @@ class Burned(Effect):
 
 class OnFire(Effect):
 # does 2 damage per turn
+# also applies burned
     name = "on fire"
     natural = True
     level = 3
@@ -377,6 +378,7 @@ class OnFire(Effect):
         self.target = target
 
     def update(self):
+        target.affect(Burned, 5)
         self.target.health -= 2
 
 class Poisoned(Effect):

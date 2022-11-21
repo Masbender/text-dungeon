@@ -847,10 +847,10 @@ class Key(Item):
     def unlock(self, lockType):
         if self.type == lockType:
             player.inventory.remove(self)
-            print("the door opens")
+            print("the lock opens")
             return True
         else:
-            print("they key doesn't fit")
+            print("the key doesn't fit")
             return False
 
 
@@ -893,12 +893,38 @@ class KnowledgeBook(Item):
         player.inventory.remove(self)
         return True
 
+class SeeingOrb(Item):
+# reveals the whole map, requires a scroll of repair
+    def __init__(self):
+        super().__init__("seeing orb", 85, 1)
+
+    def status(self):
+        if self.uses == 0:
+            return "uncharged"
+        else:
+            return "charged"
+
+    def consume(self, floor):
+        if self.uses == 0:
+            print("the orb needs to be charged with a scroll of repair before using it again")
+            return False
+
+        self.uses -= 1
+
+        floor.map = floor.layout
+        print("you gaze into the orb, the whole floor has been revealed")
+        
+        return True
+
+    def inspect(self, floor):
+        print("Looking into the orb will reveal the entire layout of the floor.")
+        print("Once used, it requires a scroll of repair to recharge it.")
 
 standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak, InfernoRing, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, JudgementSword, SeeingOrb]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
