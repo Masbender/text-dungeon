@@ -916,7 +916,7 @@ class SeeingOrb(Item):
         
         return True
 
-    def inspect(self, floor):
+    def inspect(self):
         print("Looking into the orb will reveal the entire layout of the floor.")
         print("Once used, it requires a scroll of repair to recharge it.")
 

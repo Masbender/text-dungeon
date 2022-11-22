@@ -585,7 +585,7 @@ class Floor:
         itemUsed = gather_input("what do you use to unlock the chest?", options) - 1
 
         if itemUsed > -1: # -1 is cancel
-            room.unlock_chest(inventory[itemUsed])
+            room.unlock_chest(player.inventory[itemUsed])
         
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
@@ -772,12 +772,6 @@ def gen_room(area, depth, type):
                 room.description = "it appears that you are in what used to be an armory"
             elif roomDesc == 3:
                 room.description = "you are in a large empty room"
-        
-        if randint(1, 3) == 1:
-            loot.append(items.gen_item(depth))
-    
-        if randint(1, 3) == 1:
-            threats.append(entities.gen_enemy(area, depth % 3))
 
     # secret room
     elif type == 3:
@@ -886,12 +880,10 @@ class Generator:
             self.spawn_item(randomItem)
             
         # spawns enemies
-        for i in range(randint(self.size - 2, self.size)):
-            self.spawn_random_enemy((self.depth % 3) * 2 - (i // 2))
-
         if self.modifier == "dangerous":
-            for i in range(2):
-                self.spawn_random_enemy((self.depth % 3) * 2 + 1)
+            self.spawn_random_enemies(self.depth % 3 + 2)
+        else:
+            self.spawn_random_enemies(self.depth % 3)
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -1078,13 +1070,33 @@ class Generator:
 
     def spawn_enemy(self, enemy):
         room = choice(self.rooms)
-        self.layoutRooms[room[0]][room[1]].threats.append(enemy)
 
-    def spawn_random_enemy(self, threat):
-        room = choice(self.rooms)
-
+        # doesn't want to overcrowd the room
         while len(self.layoutRooms[room[0]][room[1]].threats) > 3:
             room = choice(self.rooms)
+        
+        self.layoutRooms[room[0]][room[1]].threats.append(enemy)
+
+    def spawn_random_enemies(self, threat):
+        validRooms = self.rooms + self.sideRooms
+        enemies = entities.gen_enemies(self.area, self.size, self.depth, threat)
+        
+        for i in range(len(enemies)):
+            coords = choice(validRooms)
+            room = self.layoutRooms[coords[0]][coords[1]]
+
+            # spawns enemy
+            room.threats.append(enemies[i])
+
+            # if multiple enemies are there the room shouldn't have more
+            if len(room.threats) > 1:
+                validRooms.remove(coords)
+                # lowers the health of the last enemy
+                room.threats[-1].maxHealth -= randint(2, 5)
+                room.threats[-1].health = room.threats[-1].maxHealth
+            
+        """
+        
         
         if self.layoutRooms[room[0]][room[1]].threats != []:
             threat -= 6
@@ -1097,3 +1109,4 @@ class Generator:
         enemy.health = enemy.maxHealth
         
         self.layoutRooms[room[0]][room[1]].threats.append(enemy)
+        """

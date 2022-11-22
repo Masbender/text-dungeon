@@ -378,7 +378,7 @@ class OnFire(Effect):
         self.target = target
 
     def update(self):
-        target.affect(Burned, 5)
+        self.target.affect(Burned, 5)
         self.target.health -= 2
 
 class Poisoned(Effect):
@@ -401,18 +401,29 @@ class Poisoned(Effect):
 
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
-# a tankier enemy who can inflict bleeding
+# starts with armor but it degrades when hurt
+# can inflict bleeding
     undead = True
     
     def __init__(self):
-        super().__init__("draugr", 18, 20, 2, 3)
+        super().__init__("draugr", 17, 20, 2, 3)
         self.resistance = 2
-        self.armorClass = 1
+        self.armorClass = 2
+
+    def hurt(self, damageTaken, attackerStrength, message, armorPiercing):
+        damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
+
+        if randint(1, 2) or damageDealt > 3:
+            self.resistance -= 1
+            self.armorClass -= 1
+            print("the DRAUGR's armor degrades")
+        
+        return damageDealt
 
     def attack(self, enemies):
         message = "the DRAUGR hits you with their axe for _ damage"
         if randint(1, 4) == 1:
-            player.affect(Bleeding, 5)
+            player.affect(Bleeding, 4)
             player.hurt(3, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
         else:
             player.hurt(5, self.strength, message + "!")
@@ -423,7 +434,7 @@ class Ghoul(Enemy):
     undead = True
     
     def __init__(self):
-        super().__init__("ghoul", 16, 16, 4, 2)
+        super().__init__("ghoul", 16, 11, 2, 2)
         self.dodge = 10
         
         self.warning = "you smell a foul stench"
@@ -442,7 +453,7 @@ class Skeleton(Enemy):
     undead = True
     
     def __init__(self):
-        super().__init__("skeleton", 16, 8, 1, 0)
+        super().__init__("skeleton", 15, 8, 1, 0)
         self.immuneTo = [Bleeding, Burned]
         self.damage = 3
         self.staggerChance = 2 # _ in 6
@@ -485,6 +496,7 @@ class Skeleton(Enemy):
 
 class ArmoredSkeleton(Skeleton):
 # has some AC and staggers more, always has a mace
+# currently unused
     def __init__(self):
         super().__init__()
         self.gold = 10
@@ -515,7 +527,7 @@ class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
     def __init__(self):
-        super().__init__("thief", 18, 10, 4, 4)
+        super().__init__("thief", 18, 14, 2, 4)
         self.warning = "you sense that someone is watching you"
 
         self.time = 0
@@ -589,24 +601,51 @@ class Ogre(Boss):
             message = "the OGRE hits you with their club for _ damage"
             if player.affect(Bleeding, 3):
                 message += ", leaving you BLEEDING"
-            player.hurt(5, self.strength, message + "!", 0)
-        
+            player.hurt(5, self.strength, message + "!", 0)    
+
 enemyPool = {
-    "prison":[(Skeleton, 5), (ArmoredSkeleton, 6), (Thief, 9), (Draugr, 10), (Ghoul, 12), (SkeletonGuard, 14)]
-}
+    "prison":[(Skeleton, 6), (Thief, 4), (Ghoul, 2)],
+} # each number means _ in 12 chance
+# enemies are ordered weakest to strongest
 
-# numbers higher than 12 will only spawn with increased danger
-# the actual chance to spawn is (current) number - previous number) in 12
-# same as item randomness except the highest number is 12
-# numbers higher than 12 only show up when danger is increased
-# lower numbers are less likely when danger is increased
-            
-def gen_enemy(area, danger):
-    enemyNum = randint(1, 12) + danger
-    # enemyNum is less than highest spawn chance
-    if enemyNum > enemyPool[area][-1][1]:
-        enemyNum = 12
+specialEnemyPool = {
+    "prison":[(SkeletonGuard, 9), (Draugr, 3)]
+} # special enemies are stronger and less common
 
-    for enemy in enemyPool[area]:
-        if enemyNum <= enemy[1]:
-            return enemy[0]()
+def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
+    enemies = []
+
+    while len(enemies) < normalEnemies:
+        # enemies with higher numbers are stronger
+        enemyNum = randint(1, 12) + dangerModifier
+
+        # compares enemyNum to the number in each tuple
+        for enemy in enemyPool[area]:
+            # checks if the number is small enough or it is the last enemy
+            if enemyNum <= enemy[1] or enemyPool[area].index(enemy) == len(enemyPool[area]) - 1:
+                # only adds the enemy if the ratio of that enemy to total enemies is <= double the chance of the enemy to spawn
+                if enemies.count(enemy[0]) <= (enemy[1] / 12) * normalEnemies * 2:
+                    enemies.append(enemy[0])
+
+                break
+            # prepares enemyNum for next iteration
+            else:
+                enemyNum -= enemy[1]
+
+    # same as above except with special enemies
+    for i in range(specialEnemies):
+        enemyNum = randint(1, 12)
+
+        for enemy in specialEnemyPool[area]:
+            if enemyNum <= enemy[1] or specialEnemyPool[area].index(enemy) == len(specialEnemyPool[area]) - 1:
+                # doesn't care about balance, too few specials to matter
+                enemies.append(enemy[0])
+                break
+            else:
+                enemyNum -= enemy[1]
+
+    # turns the list of classes into a list of objects
+    for i in range(len(enemies)):
+        enemies[i] = enemies[i]()
+
+    return enemies
