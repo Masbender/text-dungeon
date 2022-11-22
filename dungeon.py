@@ -865,19 +865,7 @@ class Generator:
         self.spawn_item(items.KnowledgeBook())
         self.spawn_item(items.Key(0))
 
-        # spawns items
-        chosenItems = []
-        for i in range(randint(self.size - 1, self.size)):
-            randomItem = items.gen_gear(self.depth)
-            
-            while type(randomItem) in chosenItems:
-                 randomItem = items.gen_gear(self.depth)
-
-            if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
-                randomItem.enchantment -= 1
-
-            chosenItems.append(type(randomItem))
-            self.spawn_item(randomItem)
+        self.spawn_random_items(self.depth + randint(0, 1), self.depth - randint(0, 1))
             
         # spawns enemies
         if self.modifier == "dangerous":
@@ -1059,15 +1047,62 @@ class Generator:
 
     def add_room(self, room):
         if len(self.sideRooms) != 0:
-            location = choice(self.sideRooms)
-            self.layoutRooms[location[0]][location[1]] = room
+            location = choice(self.sideRooms) # chooses random room
             self.sideRooms.remove(location)
             self.rooms.remove(location)
+
+            # makes sure that items and enemies are relocated
+            removedRoom = self.layoutRooms[location[0]][location[1]]
+            
+            for enemy in removedRoom.threats:
+                self.spawn_enemy(enemy)
+
+            for item in removedRoom.loot:
+                self.spawn_item(item)
+
+            # replaces the room
+            self.layoutRooms[location[0]][location[1]] = room
 
     def spawn_item(self, item):
         room = choice(self.rooms)
         self.layoutRooms[room[0]][room[1]].loot.append(item)
 
+    def spawn_random_items(self, gearAmount, itemAmount):
+        options = self.rooms + self.sideRooms * 2
+        spawnedItems = []
+        
+        # spawns gear
+        chosenGear = []
+        for i in range(gearAmount):
+            randomItem = items.gen_gear(self.depth)
+
+            # can't have more than 2 of the same item per floor
+            while chosenGear.count(type(randomItem)) > 1:
+                 randomItem = items.gen_gear(self.depth)
+
+            # cursed modifier has a 1 in 3 chance to degrade every item
+            if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
+                randomItem.enchantment -= 1
+
+            chosenGear.append(type(randomItem))
+            spawnedItems.append(randomItem)
+
+        # spawns items
+        chosenItems = []
+        for i in range(itemAmount):
+            randomItem = items.gen_item(self.depth)
+            
+            while type(randomItem) in chosenItems:
+                 randomItem = items.gen_item(self.depth)
+
+            chosenItems.append(type(randomItem))
+            spawnedItems.append(randomItem)
+
+        for item in spawnedItems:
+            room = choice(options)
+            options.remove(room)
+            self.layoutRooms[room[0]][room[1]].loot.append(item)
+            
     def spawn_enemy(self, enemy):
         room = choice(self.rooms)
 
@@ -1094,19 +1129,3 @@ class Generator:
                 # lowers the health of the last enemy
                 room.threats[-1].maxHealth -= randint(2, 5)
                 room.threats[-1].health = room.threats[-1].maxHealth
-            
-        """
-        
-        
-        if self.layoutRooms[room[0]][room[1]].threats != []:
-            threat -= 6
-
-        enemy = entities.gen_enemy(self.area, threat)
-
-        # lowers enemy health if there are too many already there
-        enemyCount = len(self.layoutRooms[room[0]][room[1]].threats)
-        enemy.maxHealth = int(enemy.maxHealth * (1 - (randint(enemyCount, enemyCount * 3) / 10)))
-        enemy.health = enemy.maxHealth
-        
-        self.layoutRooms[room[0]][room[1]].threats.append(enemy)
-        """

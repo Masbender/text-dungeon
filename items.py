@@ -871,8 +871,11 @@ class KnowledgeBook(Item):
     def consume(self, floor):
         print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
         
-        options = ["STR", "CON", "DEX", "PER", "INT"]
+        options = ["cancel", "STR", "CON", "DEX", "PER", "INT"]
         chosenStat = gather_input("What stat do you improve?", options, False)
+
+        if chosenStat == "cancel":
+            return False
 
         if chosenStat == "STR":
             player.update_strength(1)
