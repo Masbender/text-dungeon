@@ -865,7 +865,7 @@ class Generator:
         self.spawn_item(items.KnowledgeBook())
         self.spawn_item(items.Key(0))
 
-        self.spawn_random_items(self.depth + randint(0, 1), self.depth - randint(0, 1))
+        self.spawn_random_items(self.size + randint(0, 1), self.size - randint(0, 1))
             
         # spawns enemies
         if self.modifier == "dangerous":

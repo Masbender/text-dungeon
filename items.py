@@ -154,6 +154,18 @@ class Weapon(Item):
 
         return f"{suffix}"
 
+    def attack(self, enemies):
+        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
+
+        options = [] # gets a list of enemy names
+        for enemy in enemies:
+            options.append(enemy.name)
+
+        # gets player input
+        target = enemies[gather_input("Who do you attack?", options)]
+        
+        return damageDealt, target
+
 class JudgementSword(Weapon):
 # similar to a steel sword, sets undead on fire
     def __init__(self):
@@ -176,14 +188,7 @@ class JudgementSword(Weapon):
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
-        damageDealt = 6 - 2 * int(self.uses <= 0) + self.enchantment
-
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        damageDealt, target = super().attack(enemies)
 
         # applies bleeding
         bleedingApplied = False
@@ -203,7 +208,40 @@ class JudgementSword(Weapon):
 
         self.degrade() # degrade is called when the item does something
         return True
+
+class EbonyDagger(Dagger):
+# same as a dagger, but gain max health per kill
+    def __init__(self):
+        super().__init__(1)
+        self.name = "ebony dagger"
+        self.price = int(self.price * 1.5)
+        self.maxUses -= 5
+        self.uses -= 5
+        self.firstHitDamage += 1
+
+    def inspect(self):
+        super().inspect()
+        print("The ebony dagger increases your maximum health for every kill")
+
+    def attack(self, enemies):
+        damageDealt, target = super().attack(enemies)
         
+        # applies first hit damage
+        if target.health == target.maxHealth and self.uses > 0:
+            damageDealt += self.firstHitDamage
+
+        # does damage and prints message
+        message = f"You stab {target.name} with your dagger for _ damage!"
+        target.hurt(damageDealt, player.dexterity, message)
+
+        # applies ebony dagger's effect
+        if target.health <= 0:
+            player.maxHealth += 1
+            print("you absorb the " + target.name + "'s power")
+        
+        self.degrade() # degrade is called when the item does something
+        return True
+    
 class Sword(Weapon):
 # does damage to target and can inflict bleeding
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
@@ -232,14 +270,7 @@ class Sword(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
-        
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        damageDealt, target = super().attack(enemies)
         
         # applies bleeding
         bleedingApplied = False
@@ -276,14 +307,7 @@ class Spear(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
-
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        damageDealt, target = super().attack(enemies)
 
         # does damage and prints message, armor piercing has some randomness
         message = f"You stab the {target.name} with your spear for _ damage!"
@@ -312,14 +336,7 @@ class Mace(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
-        
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        damageDealt, target = super().attack(enemies)
         
         # applies stun
         stunApplied = False
@@ -357,14 +374,7 @@ class Dagger(Weapon):
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
-        damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
-        
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        damageDealt, target = super().attack(enemies)
         
         # applies first hit damage
         if target.health == target.maxHealth and self.uses > 0:
