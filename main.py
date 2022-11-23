@@ -6,7 +6,7 @@ from random import randint
 
 player = entities.player
 
-player.inventory.extend([items.JudgementSword(), items.EbonyDagger(), items.Rations(), items.Bomb()])
+player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb()])
 player.set_stats(1, 0, 1, 1, 0)
 
 dungeon.sort_inventory()
@@ -23,15 +23,15 @@ for i in range(3):
     generator.gen_floor("prison", i, 4 + ((i + 2) // 3))
 
     if i == goldKeyLocation: # adds gold key
-        generator.spawn_item(items.Key(1))
+        generator.addItems.append(items.Key(1))
     
     if i % 3 == 1: # adds shops
-        generator.add_room(dungeon.Shop(i))
+        generator.addRooms.append(dungeon.Shop(i))
 
     elif i % 3 == 2: # adds gold chest
-        generator.add_room(dungeon.Chest())
+        generator.addRooms.append(dungeon.Chest())
 
-    floors.append(dungeon.Floor(generator.layoutRooms, generator.startY, generator.startX, generator.entryMessage))
+    floors.append(generator.finish_floor())
 
     if i % 3 == 2: # adds boss
         floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Wall()]], 0, 0))

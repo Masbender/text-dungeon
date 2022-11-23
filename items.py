@@ -214,7 +214,7 @@ class Sword(Weapon):
 class JudgementSword(Sword):
 # same as sword but extra damage and burning against undead
     def __init__(self):
-        super().__init(1)
+        super().__init__(1)
         self.name = "sword of judgement" 
         self.value *= 2
         self.bleedChance += 1
@@ -302,10 +302,10 @@ class Mace(Weapon):
         self.degrade() # degrade is called when the item does something
         return True
 
-class FlamingMace(Weapon):
+class FlamingMace(Mace):
 # same as mace can set enemies on fire
     def __init__(self):
-        super().__init(1)
+        super().__init__(1)
         self.name = "flaming mace"
         self.value *= 2
         self.maxUses -= 5

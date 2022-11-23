@@ -604,12 +604,12 @@ class Ogre(Boss):
             player.hurt(5, self.strength, message + "!", 0)    
 
 enemyPool = {
-    "prison":[(Skeleton, 6), (Thief, 4), (Ghoul, 2)],
+    "prison":[([Skeleton], 6), ([Thief], 4), ([Ghoul], 2)],
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
 specialEnemyPool = {
-    "prison":[(SkeletonGuard, 9), (Draugr, 3)]
+    "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
@@ -620,32 +620,34 @@ def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
         enemyNum = randint(1, 12) + dangerModifier
 
         # compares enemyNum to the number in each tuple
-        for enemy in enemyPool[area]:
+        for fight in enemyPool[area]:
             # checks if the number is small enough or it is the last enemy
-            if enemyNum <= enemy[1] or enemyPool[area].index(enemy) == len(enemyPool[area]) - 1:
-                # only adds the enemy if the ratio of that enemy to total enemies is <= double the chance of the enemy to spawn
-                if enemies.count(enemy[0]) <= (enemy[1] / 12) * normalEnemies * 2:
-                    enemies.append(enemy[0])
+            if enemyNum <= fight[1] or enemyPool[area].index(fight) == len(enemyPool[area]) - 1:
+                addedEnemies = []
+                for enemy in fight[0]:
+                    addedEnemies.append(enemy())
+
+                enemies.append(addedEnemies)
 
                 break
             # prepares enemyNum for next iteration
             else:
-                enemyNum -= enemy[1]
+                enemyNum -= fight[1]
 
     # same as above except with special enemies
     for i in range(specialEnemies):
         enemyNum = randint(1, 12)
 
-        for enemy in specialEnemyPool[area]:
-            if enemyNum <= enemy[1] or specialEnemyPool[area].index(enemy) == len(specialEnemyPool[area]) - 1:
-                # doesn't care about balance, too few specials to matter
-                enemies.append(enemy[0])
+        for fight in specialEnemyPool[area]:
+            if enemyNum <= fight[1] or specialEnemyPool[area].index(fight) == len(specialEnemyPool[area]) - 1:
+                addedEnemies = []
+                for enemy in fight[0]:
+                    addedEnemies.append(enemy())
+
+                enemies.append(addedEnemies)
+
                 break
             else:
-                enemyNum -= enemy[1]
-
-    # turns the list of classes into a list of objects
-    for i in range(len(enemies)):
-        enemies[i] = enemies[i]()
+                enemyNum -= fight[1]
 
     return enemies

@@ -457,6 +457,8 @@ class Floor:
 
     def action_unequip(self):
     # called when player unequips something
+        room = self.get_room()
+
         # forms options
         options = ["cancel"]
         if player.armor != None:
@@ -809,6 +811,11 @@ class Generator:
         self.adjacentWalls = []
         self.hiddenWalls = []
         self.sideRooms = []
+
+        # adds these features before finishing generation
+        self.addRooms = [LockedRoom("iron", self.depth)]
+        self.addItems = [items.Key(0), items.KnowledgeBook(), items.Rations()]
+        self.addEnemies = []
         
         # assigns modifier
         if self.size > 4 and randint(0, 1):
@@ -858,20 +865,13 @@ class Generator:
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        # adds consistent encounters (loot, rooms, & enemies)
-        self.add_room(LockedRoom("iron", self.depth))
+        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(0, 1)))
         
-        self.spawn_item(items.Rations())
-        self.spawn_item(items.KnowledgeBook())
-        self.spawn_item(items.Key(0))
-
-        self.spawn_random_items(self.size + randint(0, 1), self.size - randint(0, 1))
-            
         # spawns enemies
         if self.modifier == "dangerous":
-            self.spawn_random_enemies(self.depth % 3 + 2)
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3 + 2))
         else:
-            self.spawn_random_enemies(self.depth % 3)
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3))
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -1045,30 +1045,7 @@ class Generator:
                             self.adjacentWalls.append(i)
                             self.hiddenWalls.remove(i)
 
-    def add_room(self, room):
-        if len(self.sideRooms) != 0:
-            location = choice(self.sideRooms) # chooses random room
-            self.sideRooms.remove(location)
-            self.rooms.remove(location)
-
-            # makes sure that items and enemies are relocated
-            removedRoom = self.layoutRooms[location[0]][location[1]]
-            
-            for enemy in removedRoom.threats:
-                self.spawn_enemy(enemy)
-
-            for item in removedRoom.loot:
-                self.spawn_item(item)
-
-            # replaces the room
-            self.layoutRooms[location[0]][location[1]] = room
-
-    def spawn_item(self, item):
-        room = choice(self.rooms)
-        self.layoutRooms[room[0]][room[1]].loot.append(item)
-
-    def spawn_random_items(self, gearAmount, itemAmount):
-        options = self.rooms + self.sideRooms * 2
+    def gen_random_items(self, gearAmount, itemAmount):
         spawnedItems = []
         
         # spawns gear
@@ -1098,34 +1075,51 @@ class Generator:
             chosenItems.append(type(randomItem))
             spawnedItems.append(randomItem)
 
-        for item in spawnedItems:
-            room = choice(options)
-            options.remove(room)
-            self.layoutRooms[room[0]][room[1]].loot.append(item)
-            
-    def spawn_enemy(self, enemy):
-        room = choice(self.rooms)
+        return spawnedItems
 
-        # doesn't want to overcrowd the room
-        while len(self.layoutRooms[room[0]][room[1]].threats) > 3:
-            room = choice(self.rooms)
+    def spawn_enemies(self):
+        validRooms = self.rooms
         
-        self.layoutRooms[room[0]][room[1]].threats.append(enemy)
-
-    def spawn_random_enemies(self, threat):
-        validRooms = self.rooms + self.sideRooms
-        enemies = entities.gen_enemies(self.area, self.size, self.depth, threat)
-        
-        for i in range(len(enemies)):
+        for enemy in self.addEnemies:
             coords = choice(validRooms)
             room = self.layoutRooms[coords[0]][coords[1]]
 
             # spawns enemy
-            room.threats.append(enemies[i])
+            room.threats.extend(enemy)
 
-            # if multiple enemies are there the room shouldn't have more
-            if len(room.threats) > 1:
-                validRooms.remove(coords)
-                # lowers the health of the last enemy
-                room.threats[-1].maxHealth -= randint(2, 5)
-                room.threats[-1].health = room.threats[-1].maxHealth
+            validRooms.remove(coords)
+
+    def spawn_rooms(self):
+        for room in self.addRooms:
+            # prefers side rooms
+            if len(self.sideRooms) > 0:
+                chosenSpot = choice(self.sideRooms)
+                self.sideRooms.remove(chosenSpot)
+                self.rooms.remove(chosenSpot)
+                self.layoutRooms[chosenSpot[0]][chosenSpot[1]] = room
+            else:
+                chosenSpot = choice(self.rooms)
+                self.rooms.remove(chosenSpot)
+                self.layoutRooms[chosenSpot[0]][chosenSpot[1]] = room
+    
+    def spawn_items(self):
+        validRooms = self.rooms + self.sideRooms # favors side rooms (they are included in rooms)
+        
+        for item in self.addItems:
+            if len(validRooms) == 0:
+                validRooms = self.rooms + self.sideRooms # resets valid rooms if there aren't enough
+
+            coords = choice(validRooms)
+            room = self.layoutRooms[coords[0]][coords[1]]
+
+            # spawns enemy
+            room.loot.append(item)
+
+            validRooms.remove(coords)
+
+    def finish_floor(self):
+        self.spawn_rooms()
+        self.spawn_items()
+        self.spawn_enemies()
+
+        return Floor(self.layoutRooms, self.startY, self.startX, self.entryMessage)
