@@ -827,7 +827,13 @@ class Bomb(Item):
 
     def attack(self, enemies):
         for enemy in enemies:
-            enemy.hurt(15, 0, f"The bomb does _ damage to {enemy.name}!")
+            damage = 15
+
+            # does less damage against bosses (discourages spamming bombs)
+            if issubclass(type(enemy), entities.Boss):
+                damage = 8
+
+            enemy.hurt(damage, 0, f"The bomb does _ damage to {enemy.name}!")
 
         player.inventory.remove(self)
         return True
