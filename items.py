@@ -162,86 +162,10 @@ class Weapon(Item):
             options.append(enemy.name)
 
         # gets player input
-        target = enemies[gather_input("Who do you attack?", options)]
+        self.target = enemies[gather_input("Who do you attack?", options)]
         
-        return damageDealt, target
+        return damageDealt
 
-class JudgementSword(Weapon):
-# similar to a steel sword, sets undead on fire
-    def __init__(self):
-        self.name = "sword of judgement" 
-        self.value = 85
-        self.uses = 22
-        self.maxUses = 22
-        self.damage = 5
-
-    def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, with a 2 in 3 chance to inflict bleeding for 5 turns.")
-        print(f"Sets undead enemies on fire.")
-        
-        if self.uses < 0:
-            print("Because it's broken it does less damage and cannot inflict bleeding.")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
-
-    def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
-
-        # applies bleeding
-        bleedingApplied = False
-        if randint(0, 3) < 2 and self.uses > 0:
-            bleedingApplied = target.affect(entities.Bleeding, 5)
-
-        # sets undead on fire
-        if target.undead:
-            target.affect(entities.OnFire, 3)
-
-        # does damage and prints message
-        message = f"You swing the sword of judgement at the {target.name} for _ damage"
-        if bleedingApplied:
-            target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
-        else:
-            target.hurt(damageDealt, player.strength, message)
-
-        self.degrade() # degrade is called when the item does something
-        return True
-
-class EbonyDagger(Dagger):
-# same as a dagger, but gain max health per kill
-    def __init__(self):
-        super().__init__(1)
-        self.name = "ebony dagger"
-        self.price = int(self.price * 1.5)
-        self.maxUses -= 5
-        self.uses -= 5
-        self.firstHitDamage += 1
-
-    def inspect(self):
-        super().inspect()
-        print("The ebony dagger increases your maximum health for every kill")
-
-    def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
-        
-        # applies first hit damage
-        if target.health == target.maxHealth and self.uses > 0:
-            damageDealt += self.firstHitDamage
-
-        # does damage and prints message
-        message = f"You stab {target.name} with your dagger for _ damage!"
-        target.hurt(damageDealt, player.dexterity, message)
-
-        # applies ebony dagger's effect
-        if target.health <= 0:
-            player.maxHealth += 1
-            print("you absorb the " + target.name + "'s power")
-        
-        self.degrade() # degrade is called when the item does something
-        return True
-    
 class Sword(Weapon):
 # does damage to target and can inflict bleeding
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
@@ -270,21 +194,45 @@ class Sword(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
+        damageDealt = super().attack(enemies)
         
         # applies bleeding
         bleedingApplied = False
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            bleedingApplied = target.affect(entities.Bleeding, self.bleedDuration)
+            bleedingApplied = self.target.affect(entities.Bleeding, self.bleedDuration)
 
         # does damage and prints message
-        message = f"You swing your sword at the {target.name} for _ damage"
+        message = f"You swing the {self.name} at the {self.target.name} for _ damage"
         if bleedingApplied:
-            target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
+            self.target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
         else:
-            target.hurt(damageDealt, player.strength, message + "!")
+            self.target.hurt(damageDealt, player.strength, message + "!")
 
         self.degrade() # degrade is called when the item does something
+        return True
+
+class JudgementSword(Sword):
+# same as sword but extra damage and burning against undead
+    def __init__(self):
+        super().__init(1)
+        self.name = "sword of judgement" 
+        self.value *= 2
+        self.bleedChance += 1
+        self.bleedDuration += 1
+
+    def inspect(self):
+        super().inspect()
+        print("Stronger against undead enemies")
+
+    def attack(self, enemies):
+        super().attack(enemies)
+
+        # sets undead on fire
+        if self.target.undead:
+            self.target.affect(entities.Burned, 4)
+            self.target.health -= 3
+            print(f"{self.target.name} is burned by the sword, taking 4 extra damage")
+    
         return True
 
 class Spear(Weapon):
@@ -307,11 +255,11 @@ class Spear(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
+        damageDealt = super().attack(enemies)
 
         # does damage and prints message, armor piercing has some randomness
-        message = f"You stab the {target.name} with your spear for _ damage!"
-        target.hurt(damageDealt, player.strength, message, (self.armorPiercing - randint(0, 1)) * int(self.uses > 0))
+        message = f"You stab the {self.target.name} with the {self.name} for _ damage!"
+        self.target.hurt(damageDealt, player.strength, message, (self.armorPiercing - randint(0, 1)) * int(self.uses > 0))
 
         self.degrade() # degrade is called when the item does something
         return True
@@ -336,24 +284,46 @@ class Mace(Weapon):
             print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
+        damageDealt = super().attack(enemies)
         
         # applies stun
         stunApplied = False
         if randint(0, 11) < self.stunChance and self.uses > 0:
             stunApplied = True
-            target.stunned = True
+            self.target.stunned = True
 
         # does damage and prints message
-        message = f"You hit the {target.name} with your mace for _ damage"
+        message = f"You hit the {self.target.name} with your {self.name} for _ damage"
         if stunApplied:
-            target.hurt(damageDealt, player.strength, message + ", leaving them stunned")
+            self.target.hurt(damageDealt, player.strength, message + ", leaving them stunned")
         else:
-            target.hurt(damageDealt, player.strength, message + "!")
+            self.target.hurt(damageDealt, player.strength, message + "!")
 
         self.degrade() # degrade is called when the item does something
         return True
 
+class FlamingMace(Weapon):
+# same as mace can set enemies on fire
+    def __init__(self):
+        super().__init(1)
+        self.name = "flaming mace"
+        self.value *= 2
+        self.maxUses -= 5
+        self.uses -= 5
+        self.stunChance += 1
+
+    def inspect(self):
+        super().inspect()
+        print("It also sets enemies on fire.")
+
+    def attack(self, enemies):
+        super().attack(enemies)
+
+        if self.target.affect(entities.OnFire, randint(2, 3)):
+            print(f"The {self.target.name} is set on fire")
+
+        return True
+        
 class Dagger(Weapon):
 # does damage to target but uses DEX not STR, strong vs full hp enemies
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
@@ -374,19 +344,43 @@ class Dagger(Weapon):
             print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
-        damageDealt, target = super().attack(enemies)
+        damageDealt = super().attack(enemies)
         
         # applies first hit damage
-        if target.health == target.maxHealth and self.uses > 0:
+        if self.target.health == self.target.maxHealth and self.uses > 0:
             damageDealt += self.firstHitDamage
 
         # does damage and prints message
-        message = f"You stab {target.name} with your dagger for _ damage!"
-        target.hurt(damageDealt, player.dexterity, message)
+        message = f"You stab {self.target.name} with your {self.name} for _ damage!"
+        self.target.hurt(damageDealt, player.dexterity, message)
 
         self.degrade() # degrade is called when the item does something
         return True
 
+class EbonyDagger(Dagger):
+# same as a dagger, but gain max health per kill
+    def __init__(self):
+        super().__init__(1)
+        self.name = "ebony dagger"
+        self.value *= 2
+        self.maxUses -= 5
+        self.uses -= 5
+        self.firstHitDamage += 1
+
+    def inspect(self):
+        super().inspect()
+        print("The ebony dagger increases your maximum health for every kill")
+
+    def attack(self, enemies):
+        super().attack(enemies)
+
+        # applies ebony dagger's effect
+        if self.target.health <= 0:
+            player.maxHealth += 1
+            print("you absorb the " + self.target.name + "'s power")
+        
+        return True
+    
 class Armor(Item):
     enchantable = True
     
@@ -937,7 +931,7 @@ standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCur
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak, InfernoRing, JudgementSword, SeeingOrb]
+rareLoot = [ShadowCloak, InfernoRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
