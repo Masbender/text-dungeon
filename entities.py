@@ -410,7 +410,7 @@ class Draugr(Enemy):
         self.resistance = 2
         self.armorClass = 2
 
-    def hurt(self, damageTaken, attackerStrength, message, armorPiercing):
+    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
         damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
 
         if randint(1, 2) or damageDealt > 3:
