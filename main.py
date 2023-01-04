@@ -20,7 +20,7 @@ floors = []
 
 for i in range(3):
     generator = dungeon.Generator()
-    generator.gen_floor("prison", i, 4 + ((i + 2) // 3))
+    generator.gen_floor("prison", i, 4 + ((i + 3) // 4))
 
     if i == goldKeyLocation: # adds gold key
         generator.addItems.append(items.Key(1))
