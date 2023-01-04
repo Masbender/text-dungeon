@@ -345,26 +345,21 @@ class Floor:
         print(f"awareness : {player.awareness} | detects enemies on the map")
         print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
         print()
-        # prints out what you are wearing
-        if player.armor != None or player.ring != None:
-            equipmentMessage = "you are wearing "
-            if player.armor != None:
-                equipmentMessage += player.armor.get_name()
-                # if both are there it adds "and"
-                if player.ring != None:
-                    equipmentMessage += " and "
-            if player.ring != None:
-                equipmentMessage += "a " + player.ring.get_name()
-            print(equipmentMessage)
+        
         if player.gold > 0:
-                print(f"you have {player.gold} gold")
-        print()
+                print(f"you have {player.gold} gold\n")
 
-        print("You have:")
-        for item in item_list():
-            print(item)
+        # prints effects
+        for i in range(len(player.effects)):
+            effect = player.effects[i]
 
-        print()
+            title = effect.color(effect.name.upper())
+            if not effect.permanent:
+                title += f" ({player.effectDurations[i]} turns remaining)"
+            print(title)
+
+            effect.inspect()
+            print()
 
     def action_use_item(self):
     # called when player uses an item

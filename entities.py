@@ -29,12 +29,10 @@ class Creature:
         self.intelligence = 0
         self.perception = 0
 
-    
     def update_strength(self, increase):
     # strength is added to damage dealt
         self.strength += increase
 
-    
     def update_dexterity(self, increase):
     # dexterity improves stealth and dodge
         self.dexterity += increase
@@ -42,7 +40,6 @@ class Creature:
         self.stealth += increase
         self.dodge += 5 * increase
 
-    
     def update_constitution(self, increase):
     # constitution improves health and resistance
         self.constitution += increase
@@ -51,7 +48,6 @@ class Creature:
         self.maxHealth += 2 * increase
         self.health += 2 * increase
 
-    
     def update_intelligence(self, increase):
     # intelligence is how likely a used item or armor is to not break
         self.intelligence += increase
@@ -236,6 +232,10 @@ class Effect:
     # called when effect is removed
         pass
 
+    def inspect(self):
+    # tells the player what the effect does
+        print("This is an effect.")
+
 class Bleeding(Effect):
 # does 1 damage per turn
     name = "bleeding"
@@ -250,6 +250,9 @@ class Bleeding(Effect):
         # lowers health by 1 every turn
         self.target.health -= 1
 
+    def inspect(self):
+        print("Deals 1 damage every turn.")
+
 class Regeneration(Effect):
 # heals 1 hp per turn
     name = "regeneration"
@@ -261,6 +264,9 @@ class Regeneration(Effect):
     def update(self):
         self.target.heal(1)
 
+    def inspect(self):
+        print("Heals 1 health every turn.")
+
 class WellFed(Effect):
 # heals 2 health per turn
     name = "well fed"
@@ -271,6 +277,9 @@ class WellFed(Effect):
 
     def update(self):
         self.target.heal(2)
+
+    def inspect(self):
+        print("Heals 2 health every turn.")
         
 class Dazed(Effect):
 # lowers DEX
@@ -287,6 +296,9 @@ class Dazed(Effect):
     def reverse(self):
         self.target.update_dexterity(1)
 
+    def inspect(self):
+        print("Lowers DEX by 1, reducing your stealth and dodge chance.")
+
 class Surprised(Effect):
 # lowers DEX and AC
     name = "surprised"
@@ -301,6 +313,9 @@ class Surprised(Effect):
     def reverse(self):
         self.target.update_dexterity(2)
         self.target.armorClass += 1
+
+    def inspect(self):
+        print("Lowers armor class by 1 and DEX by 2.")
 
 class Decay(Effect):
 # lowers CON, gets stronger over time
@@ -329,6 +344,10 @@ class Decay(Effect):
     def reverse(self):
         self.target.update_constitution(self.decayLevel)
 
+    def inspect(self):
+        print(f"Lowers your CON by {self.decayLevel}.")
+        print(f"This effect becomse stronger in {turnsToProgress} turns.")
+
 class BrokenBones(Effect):
 # lowers DEX, STR, permanent
 # instantly kills skeletons
@@ -352,6 +371,9 @@ class BrokenBones(Effect):
         self.target.update_dexterity(4)
         self.target.update_strength(1)
 
+    def inspect(self):
+        print("Lowers DEX by 4 and STR by 1.")
+
 class Burned(Effect):
 # lowers AC by 1
     name = "burned"
@@ -367,6 +389,9 @@ class Burned(Effect):
     def reverse(self):
         self.target.armorClass += 1
 
+    def inspect(self):
+        print("Lowers armor class by 1.")
+
 class OnFire(Effect):
 # does 2 damage per turn
 # also applies burned
@@ -381,6 +406,10 @@ class OnFire(Effect):
     def update(self):
         self.target.affect(Burned, 5)
         self.target.health -= 2
+
+    def inspect(self):
+        print("Deals 2 damage every turn.")
+        print("Applies burned.")
 
 class Poisoned(Effect):
 # does 1 damage per turn and lowers STR
@@ -399,6 +428,10 @@ class Poisoned(Effect):
 
     def reverse(self):
         self.target.strength +=1 
+
+    def inspect(self):
+        print("Lowers STR by 1.")
+        print("Deals 1 damage every turn.")
 
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors

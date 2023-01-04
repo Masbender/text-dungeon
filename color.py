@@ -16,14 +16,17 @@ def effectNeutral(effect, text):
 def effectBad(effect, text):
     return warning + text + regular
 
-def threat(text):
-    return warning + text + regular
 
-def harm(text):
+def threat(text):
     return warning + text + regular
 
 def loot(text):
     return notification + text + regular
+
+
+def harm(text):
+    return warning + text + regular
+
 
 def criticalHealth(text):
     return warning + text + regular
@@ -34,11 +37,13 @@ def lowHealth(text):
 def fullHealth(text):
     return good + text + regular
 
+
 def player(text):
     return good + text + regular
 
 def special(text):
     return notification + text + regular
+
 
 def blessed(text):
     return good + text + regular
