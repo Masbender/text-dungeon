@@ -186,6 +186,7 @@ player = Player() # creates the one and only instance of player
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     undead = False
+    isSpecial = False # determines if the game should give a warning with this enemy
     
     def __init__(self, name, health, gold, awareness, stealth):
         super().__init__(name, health, (gold * randint(8, 12)) // 10)
@@ -404,9 +405,10 @@ class Draugr(Enemy):
 # starts with armor but it degrades when hurt
 # can inflict bleeding
     undead = True
+    isSpecial = True
     
     def __init__(self):
-        super().__init__("draugr", 17, 20, 2, 3)
+        super().__init__("draugr", 18, 20, 5, 3)
         self.resistance = 2
         self.armorClass = 2
 
@@ -416,15 +418,16 @@ class Draugr(Enemy):
         if randint(1, 2) or damageDealt > 3:
             self.resistance -= 1
             self.armorClass -= 1
+            self.maxHealth -= 1
             print("the DRAUGR's armor degrades")
         
         return damageDealt
-
+        
     def attack(self, enemies):
         message = "the DRAUGR hits you with their axe for _ damage"
-        if randint(1, 4) == 1:
+        if randint(1, 3) == 1:
             player.affect(Bleeding, 4)
-            player.hurt(3, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
+            player.hurt(4, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
         else:
             player.hurt(5, self.strength, message + "!")
 
@@ -453,7 +456,7 @@ class Skeleton(Enemy):
     undead = True
     
     def __init__(self):
-        super().__init__("skeleton", 15, 8, 1, 0)
+        super().__init__("skeleton", 15, 8, 2, 1)
         self.immuneTo = [Bleeding, Burned]
         self.damage = 3
         self.staggerChance = 2 # _ in 6
@@ -510,6 +513,8 @@ class ArmoredSkeleton(Skeleton):
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
+    isSpecial = True
+    
     def __init__(self):
         super().__init__()
         self.gold = 15
@@ -527,7 +532,7 @@ class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
     def __init__(self):
-        super().__init__("thief", 18, 14, 2, 4)
+        super().__init__("thief", 18, 14, 4, 4)
         self.warning = "you sense that someone is watching you"
 
         self.time = 0

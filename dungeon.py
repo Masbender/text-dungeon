@@ -118,7 +118,7 @@ class Battle:
         print()
 
         for creature in self.enemies:
-            print(f"{c.threat(creature.name.upper())} : {healthStatus(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
+            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name.upper())} : {healthStatus(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
             
             print_effects(creature)
 
@@ -258,11 +258,12 @@ class Floor:
         room = self.get_room()
 
         options = ["move", "wait", "view stats"]
-        if room.loot != [] or player.inventory != []:
-            options.append("inspect item")
+        #if room.loot != [] or player.inventory != []:
+         #   options.append("inspect item")
 
         if player.inventory != []:
-            options.extend(["use item", "drop item"])
+            #options.extend(["use item", "drop item"])
+            options.append("inventory")
 
         if player.ring != None or player.armor != None:
             options.append("unequip")
@@ -455,6 +456,69 @@ class Floor:
 
             print()
 
+    def action_inventory(self):
+        options = ["cancel"] + item_list()
+
+        if player.armor != None:
+            options.append(player.armor.get_name() + " (equipped)")
+
+        if player.ring != None:
+            options.appemd(player.ring.get_name() + " (equipped)")
+        
+        playerInput = gather_input("Select an item:", options) - 1
+
+        if playerInput > -1: # -1 is cancel
+            # figures out what item was selected and prepares options
+            options = ["cancel"]
+            chosenItem = None
+
+            if playerInput < player.inventorySize:
+                chosenItem = player.inventory[playerInput]
+                options.append("use")
+                    
+            else:
+                if player.armor != None and playerInput == player.inventorySize:
+                    chosenItem = player.armor
+                else:
+                    chosenItem = player.ring
+                options.append("unequip")
+
+            # prints info about the item
+            print(chosenItem.get_name().upper())
+            chosenItem.inspect()
+            print()
+
+            if chosenItem.enchantment < 0:
+                print("This item is cursed, and cannot be dropped.")
+            else:
+                options.append("drop")
+
+            # asks for input
+            playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
+
+            if playerInput == "use":
+                chosenItem.consume(self)
+
+            elif playerInput == "drop":
+                chosenItem.discard()
+                self.get_room().loot.append(chosenItem)
+                player.inventory.remove(chosenItem)
+
+            elif playerInput == "unequip":
+                chosenItem.unequip()
+
+                if len(player.inventory) < player.inventorySize:
+                    player.inventory.append(chosenItem)
+                    print("You unequip the " + chosenItem.get_name())
+                else:
+                    self.get_room().append(chosenItem)
+                    print("You don't have enough space in your inventory, so you drop the " + chosenItem.get_name())
+
+                if chosenItem == player.armor:
+                    player.armor = None
+                else:
+                    player.ring = None
+        
     def action_unequip(self):
     # called when player unequips something
         room = self.get_room()
@@ -615,7 +679,7 @@ class Floor:
             playerInput = gather_input("\nWhat do you do?", options, False)
 
             actions = {
-                "move":self.action_move, "wait":self.action_wait, 
+                "move":self.action_move, "wait":self.action_wait, "inventory":self.action_inventory,
                 "view stats":self.action_view_stats, "use item":self.action_use_item, 
                 c.loot("take item"):self.action_take_item, "drop item":self.action_drop_item,
                 "inspect item":self.action_inspect_item, "unequip":self.action_unequip, 
@@ -865,7 +929,7 @@ class Generator:
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(0, 1)))
+        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(1, 2)))
         
         # spawns enemies
         if self.modifier == "dangerous":

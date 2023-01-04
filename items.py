@@ -87,7 +87,7 @@ class Item:
         return False
 
     def pickup(self):
-    # runs when an item is added to inventory, switches passive variables
+    # runs when an item is added to inventory
         return False
 
     def discard(self):
@@ -747,27 +747,28 @@ class ScrollEnchant(Scroll):
 
     def inspect(self):
         print("This scroll will bless one of your items.")
-        print("It's effect becomes stronger at higher levels of intelligence.")
+        print("It cannot be used on items with a higher level than your intelligence (INT).")
 
     def consume(self, floor):
-        power = player.intelligence // 2 # intelligence boosts effectiveness
-        if power < 0: # power cannot be negative
-            power = 0
-
         # gathers input
         options = ["cancel"]
         for item in player.inventory:
             options.append(item.get_name())
 
-        chosenItem = gather_input("What item do you upgrade?", options)
+        chosenItem = gather_input("What item do you bless?", options)
 
         if chosenItem == 0: # 0 cancels
             return False
         else:
             chosenItem -= 1 # converts to proper index
+
+            if player.inventory[chosenItem].enchantment > player.intelligence: # checks intelligence
+                print("that item is too high of a level for your intelligence")
+                return False
+            
             if player.inventory[chosenItem].enchantable: # checks if item is valid
-                player.inventory[chosenItem].enchantment += power + 1
-                print(player.inventory[chosenItem].name + " has been improved")
+                player.inventory[chosenItem].enchantment += 1
+                print(player.inventory[chosenItem].name + " has been blessed")
                 self.degrade()
                 return True
             else:
@@ -781,7 +782,7 @@ class ScrollRepair(Scroll):
 
     def inspect(self):
         print("This scroll will fully restore the uses of one item.")
-        print("You intelligence (INT) can increase or decrease the item's durability.")
+        print("Your intelligence (INT) can increase or decrease the item's durability.")
 
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
@@ -798,7 +799,7 @@ class ScrollRepair(Scroll):
         else:
             chosenItem -= 1
             item = player.inventory[chosenItem]
-            if item.maxUses > 1:
+            if item.maxUses > 1 or type(item) == SeeingOrb:
                 item.maxUses += int(item.maxUses * power / 10)
                 if power > 0:
                     print(item.name + " is more durable now")
@@ -933,11 +934,11 @@ class SeeingOrb(Item):
         print("Looking into the orb will reveal the entire layout of the floor.")
         print("Once used, it requires a scroll of repair to recharge it.")
 
-standardLoot = [(Rations, 6), (Bandage, 8), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
+standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak, InfernoRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, SeeingOrb, EbonyDagger, FlamingMace]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
