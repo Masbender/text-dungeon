@@ -6,14 +6,14 @@ warning = "\033[1;31m"
 notification = "\033[1;33m"
 good = "\033[1;92m"
 
-# effect____ has effect as an argument because python tries to input self into them
-def effectGood(effect, text):
+# effect has effect as an argument because python tries to input self into them
+def effect_good(effect, text):
     return good + text + regular
 
-def effectNeutral(effect, text):
+def effect_neutral(effect, text):
     return notification + text + regular
 
-def effectBad(effect, text):
+def effect_bad(effect, text):
     return warning + text + regular
 
 
@@ -28,15 +28,24 @@ def harm(text):
     return warning + text + regular
 
 
-def criticalHealth(text):
+def critical_health(text):
     return warning + text + regular
 
-def lowHealth(text):
+def low_health(text):
     return notification + text + regular
 
-def fullHealth(text):
+def full_health(text):
     return good + text + regular
 
+def health_status(health, maxHealth):
+# returns green, yellow, or red depending on health
+    text = f"{health}/{maxHealth}"
+    if health / maxHealth < 0.4:
+        return critical_health(text)
+    elif health / maxHealth < 0.8:
+        return low_health(text)
+    else:
+        return full_health(text)
 
 def player(text):
     return good + text + regular

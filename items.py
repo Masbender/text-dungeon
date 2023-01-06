@@ -686,6 +686,7 @@ class Bandage(Medicine):
     def inspect(self):
         print(f"It heals around 4 HP and heals an addition 1 HP per turn for 4 turns.")
         print(f"Cures bleeding.")
+        print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
 # see gen_enemy() in entities.py for explanation
 class Rations(Medicine):
@@ -699,6 +700,7 @@ class Rations(Medicine):
     def inspect(self):
         print("Eating the rations will heal around 7 health, and 8 more health over 4 turns.")
         print("You don't have enough time to eat this during combat.")
+        print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
     def attack(self, enemies):
         print("you don't have enough time to eat!")

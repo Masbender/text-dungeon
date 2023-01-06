@@ -63,19 +63,11 @@ def print_effects(creature):
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
 
-def healthStatus(health, maxHealth):
-# returns green, yellow, or red depending on health
-    text = f"{health}/{maxHealth}"
-    if health / maxHealth < 0.4:
-        return c.criticalHealth(text)
-    elif health / maxHealth < 0.8:
-        return c.lowHealth(text)
-    else:
-        return c.fullHealth(text)
+
 
 def print_player_info():
 # prints player health, effects, stats, and equipment
-    print(f"You have {healthStatus(player.health, player.maxHealth)} HP, {player.armorClass} AC")
+    print(f"You have {c.health_status(player.health, player.maxHealth)} HP, {player.armorClass} AC")
     
     print_effects(player)
     
@@ -88,7 +80,13 @@ class Battle:
 
     def start_battle(self):
         clear_console()
-        print("You are ATTACKED!")
+
+        # prints message
+        if len(self.enemies[0].attackMessages) > 0:
+            print(choice(self.enemies[0].attackMessages))
+        else:
+            print(f"You are attacked by a {self.enemies[0].name.upper()}!")
+        
         while not self.battleOver:
             self.print_battle()
             self.player_turn()
@@ -118,7 +116,7 @@ class Battle:
         print()
 
         for creature in self.enemies:
-            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name.upper())} : {healthStatus(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
+            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name.upper())} : {c.health_status(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
             
             print_effects(creature)
 
@@ -265,8 +263,8 @@ class Floor:
             #options.extend(["use item", "drop item"])
             options.append("inventory")
 
-        if player.ring != None or player.armor != None:
-            options.append("unequip")
+        #if player.ring != None or player.armor != None:
+         #   options.append("unequip")
             
         if room.loot != []:
             options.append(c.loot("take item"))
@@ -452,19 +450,23 @@ class Floor:
             print()
 
     def action_inventory(self):
-        options = ["cancel"] + item_list()
+        while True:
+            options = ["back"] + item_list()
+    
+            if player.armor != None:
+                options.append(player.armor.get_name() + " (equipped)")
+    
+            if player.ring != None:
+                options.append(player.ring.get_name() + " (equipped)")
+            
+            playerInput = gather_input("\nSelect an item:", options) - 1
 
-        if player.armor != None:
-            options.append(player.armor.get_name() + " (equipped)")
-
-        if player.ring != None:
-            options.appemd(player.ring.get_name() + " (equipped)")
-        
-        playerInput = gather_input("Select an item:", options) - 1
-
-        if playerInput > -1: # -1 is cancel
+            # exits the loop if player selects "back"
+            if playerInput == -1:
+                break
+            
             # figures out what item was selected and prepares options
-            options = ["cancel"]
+            options = ["back"]
             chosenItem = None
 
             if playerInput < player.inventorySize:

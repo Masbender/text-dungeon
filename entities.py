@@ -4,30 +4,41 @@ import color
 c = color
 
 class Creature:
-    def __init__(self, name, health, gold):
-        self.name = name
-        self.gold = gold
-        
-        self.stealth = 0 # compared with opponents awareness in stealth checks
-        self.dodge = 0 # percent chance to dodge
-        self.resistance = 0 # resistance to some effects
-        self.maxHealth = health # amount of possible damage taken before death
-        self.awareness = 0 # compared with opponents stealth in awareness checks
-        self.appraisal = 50 # highest value item that the value can be identified
+    # identifying information (such as name or dialogue)
+    name = "creature"
 
-        self.immuneTo = [] # effects that cannot be applied
-        self.armorClass = 0 # reduced from incoming damage
+    # the most basic stats
+    maxHealth = 20
+    gold = 0
+    stealth = 0 # compared with opponents awareness in stealth checks
+    awareness = 0 # compared with opponents stealth in awareness checks
 
-        self.effects = [] #
+    # other basic stats, not always modified by subclasses
+    immuneTo = None # effects that cannot be applied
+    armorClass = 0 # reduced from incoming damage
+    dodge = 0 # percent chance to dodge
+    resistance = 0 # resistance to some effects
+    appraisal = 50 # highest value item that the value can be identified
+
+    # these are mainly used for the player, mostly modify basic stats
+    strength = 0 # increases damage
+    dexterity = 0 # +dodge +stealth
+    constitution = 0 # +maxHeatlh +resistance
+    intelligence = 0 # increases gear durability and scroll effectiveness
+    perception = 0 # +awareness +appraisal
+
+    # temporary stats that keep track of combat status
+    health = 0
+    effects = None
+    effectDurations = None
+    stunned = False
+
+    def __init__(self):
+        self.health = self.maxHealth
+
+        self.immuneTo = []
+        self.effects = []
         self.effectDurations = []
-        self.health = health
-        self.stunned = False
-        
-        self.strength = 0
-        self.dexterity = 0
-        self.constitution = 0
-        self.intelligence = 0
-        self.perception = 0
 
     def update_strength(self, increase):
     # strength is added to damage dealt
@@ -152,16 +163,16 @@ class Creature:
 
 class Player(Creature):
 # has inventory and equipment slots
-    def __init__(self):
-        super().__init__("you", 20, 0)
+    name = "you"
+    maxHealth = 20
 
-        self.inventorySize = 10
-        self.inventory = []
-        self.ring = None
-        self.armor = None
+    inventorySize = 10
+    inventory = []
+    ring = None
+    armor = None
 
-        # stats for different items
-        self.infernoRing = False
+    # various stats for unusual effects
+    infernoRing = False
 
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
     # damages armor
@@ -181,14 +192,18 @@ player = Player() # creates the one and only instance of player
 
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
+    # more identifying information
+    stealthMessages = []
+    attackMessages = []
+    warning = "you feel uneasy"
     undead = False
-    isSpecial = False # determines if the game should give a warning with this enemy
+    isSpecial = False # determines if the game should give a (!) with this enemy
     
-    def __init__(self, name, health, gold, awareness, stealth):
-        super().__init__(name, health, (gold * randint(8, 12)) // 10)
-        self.warning = "you feel uneasy" # printed when player detects enemy
-        self.awareness = awareness + randint(-1, 1)
-        self.stealth = stealth + randint(-1, 1)
+    def __init__(self):
+        super().__init__()
+        self.gold = (self.gold * randint(8, 12)) // 10
+        self.awareness += randint(-1, 1)
+        self.stealth += randint(-1, 1)
 
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield
@@ -199,8 +214,10 @@ class Enemy(Creature):
             self.attack(enemies)
 
 class Boss(Enemy):
-    def __init__(self, name, health):
-        super().__init__(name, health, 100, 50, 50)
+    awareness = 100
+    stealth = -100
+
+    isSpecial = True
 
     def do_turn(self, enemies):
     # less likely to be stunned
@@ -219,7 +236,7 @@ class Effect:
     natural = False
     level = 0
     permanent = False
-    color = c.effectNeutral
+    color = c.effect_neutral
     
     def __init__(self, target):
         self.target = target
@@ -241,7 +258,7 @@ class Bleeding(Effect):
     name = "bleeding"
     natural = True
     level = 0
-    color = c.effectBad
+    color = c.effect_bad
     
     def __init__(self, target):
         self.target = target
@@ -256,7 +273,7 @@ class Bleeding(Effect):
 class Regeneration(Effect):
 # heals 1 hp per turn
     name = "regeneration"
-    color = c.effectGood
+    color = c.effect_good
     
     def __init__(self, target):
         self.target = target
@@ -270,7 +287,7 @@ class Regeneration(Effect):
 class WellFed(Effect):
 # heals 2 health per turn
     name = "well fed"
-    color = c.effectGood
+    color = c.effect_good
     
     def __init__(self, target):
         self.target = target
@@ -286,7 +303,7 @@ class Dazed(Effect):
     name = "dazed"
     natural = True
     level = 1
-    color = c.effectBad
+    color = c.effect_bad
     
     def __init__(self, target):
         self.target = target
@@ -302,7 +319,7 @@ class Dazed(Effect):
 class Surprised(Effect):
 # lowers DEX and AC
     name = "surprised"
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -320,7 +337,7 @@ class Surprised(Effect):
 class Decay(Effect):
 # lowers CON, gets stronger over time
     name = "decay"
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -346,7 +363,7 @@ class Decay(Effect):
 
     def inspect(self):
         print(f"Lowers your CON by {self.decayLevel}.")
-        print(f"This effect becomse stronger in {turnsToProgress} turns.")
+        print(f"This effect becomse stronger in {self.turnsToProgress} turns.")
 
 class BrokenBones(Effect):
 # lowers DEX, STR, permanent
@@ -355,7 +372,7 @@ class BrokenBones(Effect):
     natural = True
     level = 3
     permanent = True
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -379,7 +396,7 @@ class Burned(Effect):
     name = "burned"
     natural = True
     level = -2
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -398,7 +415,7 @@ class OnFire(Effect):
     name = "on fire"
     natural = True
     level = 3
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -416,7 +433,7 @@ class Poisoned(Effect):
     name = "poisoned"
     natural = True
     level = -1
-    color = c.effectBad
+    color = c.effect_bad
 
     def __init__(self, target):
         self.target = target
@@ -437,18 +454,24 @@ class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # starts with armor but it degrades when hurt
 # can inflict bleeding
+    name = "draugr"
+    attackMessages = ["A DRAUGR attacks you! Unlike most creatures, it appears to have armor, although it's brittle.",
+                     "A DRAUGR spots you, and charges at you with it's axe!"]
     undead = True
     isSpecial = True
+
+    maxHealth = 18
+    gold = 20
+    awareness = 5
+    stealth = 3
     
-    def __init__(self):
-        super().__init__("draugr", 18, 20, 5, 3)
-        self.resistance = 2
-        self.armorClass = 2
+    resistance = 2
+    armorClass = 2
 
     def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
         damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
 
-        if randint(1, 2) or damageDealt > 3:
+        if randint(1, 2) or damageDealt > 4:
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
@@ -467,13 +490,18 @@ class Draugr(Enemy):
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
 # can dodge attacks and inflicts decay
+    name = "ghoul"
+    warning = "you smell a foul stench"
+    attackMessages = ["You are attacked by a GHOUL, a foul, agile beast!",
+                     "A GHOUL attacks you! It can barely see but is rather agile."]
     undead = True
+
+    maxHealth = 16
+    gold = 11
+    awareness = 1
+    stealth = 2
     
-    def __init__(self):
-        super().__init__("ghoul", 16, 11, 2, 2)
-        self.dodge = 10
-        
-        self.warning = "you smell a foul stench"
+    dodge = 10
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
@@ -486,16 +514,25 @@ class Ghoul(Enemy):
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
 # is immune to most natural effects and often staggers instead of attacking
+    name = "skeleton"
+    warning = "you hear bones moving around"
     undead = True
+
+    maxHealth = 15
+    gold = 8
+    awareness = 2
+    stealth = 1
+    
+    damage = 3
+    staggerChance = 2 # _ in 6
     
     def __init__(self):
-        super().__init__("skeleton", 15, 8, 2, 1)
-        self.immuneTo = [Bleeding, Burned]
-        self.damage = 3
-        self.staggerChance = 2 # _ in 6
-        
-        self.warning = "you hear bones moving around"
-        self.weapon = choice(["sword", "spear", "mace"])
+        super().__init__()
+        self.immuneTo.extend([Bleeding, Burned])
+
+        if self.name == "skeleton": # doesn't apply to subclasses
+            self.weapon = choice(["sword", "spear", "mace"])
+            self.attackMessages = [f"You are attacked by a SKELETON, who wields a {self.weapon}!"]
 
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
@@ -530,45 +567,40 @@ class Skeleton(Enemy):
         else:
             player.hurt(self.damage, self.strength, message + "!", armorPiercing)
 
-class ArmoredSkeleton(Skeleton):
-# has some AC and staggers more, always has a mace
-# currently unused
-    def __init__(self):
-        super().__init__()
-        self.gold = 10
-        
-        self.staggerChance = 3
-        self.armorClass = 1
-        
-        self.weapon = "mace"
-        self.name = "armored skeleton"
-        self.warning = "you hear the clanking of bones and metal"
-
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
+    name = "skeleton guard"
+    warning = "you hear the clanking of bones and metal"
+    attackMessages = ["You are attacked by a SKELETON GUARD, who wields a spear and a shield!",
+                    "You are caught by a SKELETON GUARD!"]
+    undead = True
     isSpecial = True
-    
-    def __init__(self):
-        super().__init__()
-        self.gold = 15
-        
-        self.staggerChance = 1
-        self.armorClass = 2
-        self.awareness = 4
-        self.stealth = -1
 
-        self.weapon = "spear"
-        self.name = "skeleton guard"
-        self.warning = "you hear the clanking of bones and metal"
+    maxHealth = 15
+    gold = 16
+    awareness = 4
+    stealth = -1
+
+    armorClass = 2
+    immuneTo = [Bleeding, Burned]
+
+    staggerChance = 1 # _ in 6
+    weapon = "spear"
 
 class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
-    def __init__(self):
-        super().__init__("thief", 18, 14, 4, 4)
-        self.warning = "you sense that someone is watching you"
+    name = "thief"
+    warning = "you are being watched"
+    attackMessages = ["You are surprised by a THIEF!",
+                     "You encounter a THIEF, who is armed with darts and a dagger!"]
 
-        self.time = 0
+    maxHealth = 18
+    gold = 14
+    awareness = 4
+    stealth = 4
+
+    time = 0
 
     def do_turn(self, enemies):
     # as time goes on, they are more likely to run away
@@ -589,16 +621,21 @@ class Thief(Enemy):
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
-    def __init__(self):
-        super().__init__("ogre", 35)
-        self.strength = 1
-        self.armorClass = 1
-        self.resistance = 2
-        self.dodge = -10
-        
-        self.isRaged = False
-        self.isCharging = False
-        self.previousMove = "heavy"
+    name = "ogre"
+    attackMessages = ["You encounter an OGRE, a beast that's at least 20 feet tall and wields a large club!",
+                     "\"Long time it's been since human dared wander down here, you make good snacks.\""]
+
+    maxHealth = 35
+    gold = 60
+    
+    strength = 1
+    armorClass = 1
+    resistance = 2
+    dodge = -10
+
+    isRaged = False
+    isCharging = False
+    previousMove = "heavy"
 
     def attack(self, enemies):
         # becomes stronger when below 20 HP
