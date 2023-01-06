@@ -472,6 +472,9 @@ class Floor:
             if playerInput < player.inventorySize:
                 chosenItem = player.inventory[playerInput]
                 options.append("use")
+
+                if chosenItem.enchantment >= 0:
+                    options.append("drop")
                     
             else:
                 if player.armor != None and playerInput == player.inventorySize:
@@ -487,8 +490,6 @@ class Floor:
 
             if chosenItem.enchantment < 0:
                 print("This item is cursed, and cannot be dropped.")
-            else:
-                options.append("drop")
 
             # asks for input
             playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
@@ -508,7 +509,7 @@ class Floor:
                     player.inventory.append(chosenItem)
                     print("You unequip the " + chosenItem.get_name())
                 else:
-                    self.get_room().append(chosenItem)
+                    self.get_room().loot.append(chosenItem)
                     print("You don't have enough space in your inventory, so you drop the " + chosenItem.get_name())
 
                 if chosenItem == player.armor:
