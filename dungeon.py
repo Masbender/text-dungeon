@@ -452,12 +452,6 @@ class Floor:
     def action_inventory(self):
         while True:
             options = ["back"] + item_list()
-    
-            if player.armor != None:
-                options.append(player.armor.get_name() + " (equipped)")
-    
-            if player.ring != None:
-                options.append(player.ring.get_name() + " (equipped)")
             
             playerInput = gather_input("\nSelect an item:", options) - 1
 
@@ -467,21 +461,16 @@ class Floor:
             
             # figures out what item was selected and prepares options
             options = ["back"]
-            chosenItem = None
+            chosenItem = player.inventory[playerInput]
 
-            if playerInput < player.inventorySize:
-                chosenItem = player.inventory[playerInput]
+            if chosenItem == player.ring or chosenItem == player.armor:
+                options.append("unequip")
+                
+            else:
                 options.append("use")
 
                 if chosenItem.enchantment >= 0:
                     options.append("drop")
-                    
-            else:
-                if player.armor != None and playerInput == player.inventorySize:
-                    chosenItem = player.armor
-                else:
-                    chosenItem = player.ring
-                options.append("unequip")
 
             # prints info about the item
             print(chosenItem.get_name().upper())
@@ -505,17 +494,12 @@ class Floor:
             elif playerInput == "unequip":
                 chosenItem.unequip()
 
-                if len(player.inventory) < player.inventorySize:
-                    player.inventory.append(chosenItem)
-                    print("You unequip the " + chosenItem.get_name())
-                else:
-                    self.get_room().loot.append(chosenItem)
-                    print("You don't have enough space in your inventory, so you drop the " + chosenItem.get_name())
-
                 if chosenItem == player.armor:
                     player.armor = None
                 else:
                     player.ring = None
+
+                print("You unequip the " + chosenItem.get_name())
         
     def action_unequip(self):
     # called when player unequips something

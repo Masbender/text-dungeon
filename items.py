@@ -393,12 +393,18 @@ class Armor(Item):
 
         return f"{suffix}"
 
+    def get_name(self):
+        if self == player.armor:
+            return super().get_name() + " (equipped)"
+            
+        return super().get_name()
+
     def equip(self):
         if player.armor != None:
-            player.inventory.append(player.armor)
+            #player.inventory.append(player.armor)
             player.armor.unequip()
         player.armor = self
-        player.inventory.remove(self)
+        #player.inventory.remove(self)
 
     def attack(self, enemies):
         return self.consume(None)
@@ -508,12 +514,18 @@ class Ring(Item):
     def status(self):
         return ""
 
+    def get_name(self):
+        if self == player.ring:
+            return super().get_name() + " (equipped)"
+            
+        return super().get_name()
+
     def equip(self):
         if player.ring != None:
-            player.inventory.append(player.ring)
+            #player.inventory.append(player.ring)
             player.ring.unequip()
         player.ring = self
-        player.inventory.remove(self)
+        #player.inventory.remove(self)
 
     def attack(self, enemies):
         return self.consume(None)
