@@ -464,8 +464,8 @@ class Draugr(Enemy):
 
     maxHealth = 18
     gold = 20
-    awareness = 5
-    stealth = 3
+    awareness = 2
+    stealth = 2
     
     resistance = 2
     armorClass = 2
@@ -495,16 +495,16 @@ class Ghoul(Enemy):
 # can dodge attacks and inflicts decay
     name = "ghoul"
     warning = "You smell a foul stench..."
-    attackMessages = ["You are attacked by GHOUL, a foul, agile beast!",
-                     "GHOUL attacks you! It can barely see but is rather agile."]
+    attackMessages = ["You confront GHOUL, a foul, agile beast!",
+                     "GHOUL smells your presence! It can barely see but is rather agile."]
     stealthMessages = [c.threat("GHOUL") + " is roaming.",
                       c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
 
     maxHealth = 16
     gold = 11
-    awareness = 1
-    stealth = 2
+    awareness = 2
+    stealth = 1
     
     dodge = 10
 
@@ -525,8 +525,8 @@ class Skeleton(Enemy):
 
     maxHealth = 15
     gold = 8
-    awareness = 2
-    stealth = 1
+    awareness = 1
+    stealth = 0
     
     damage = 3
     staggerChance = 2 # _ in 6
@@ -547,6 +547,7 @@ class Skeleton(Enemy):
             print(f"{self.name.upper()} staggers and misses their attack.")
         else:
             super().do_turn(enemies)
+        self.stunned = False
 
     def attack(self, enemies):
         message = f"{self.name.upper()} hits you with their {self.weapon} for _ damage"
@@ -581,7 +582,7 @@ class SkeletonGuard(Skeleton):
     attackMessages = ["SKELETON GUARD raises their shield!",
                     "SKELETON GUARD will not let it's training go to waste!"]
     stealthMessages = [c.threat("SKELETON GUARD") + " is alert, but has failed to notice you.",
-                      c.threat("SKELETON GUARD") + " is determined to let none pass, but it seems they have failed."]
+                      c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
     undead = True
     isSpecial = True
 
@@ -608,7 +609,7 @@ class Thief(Enemy):
 
     maxHealth = 16
     gold = 14
-    awareness = 4
+    awareness = 1
     stealth = 4
 
     time = 0
@@ -629,7 +630,7 @@ class Thief(Enemy):
         if player.health < player.maxHealth:
             player.hurt(4, self.strength, "THIEF stabs you for _ damage!", randint(1, 2))
         else:
-            print(f"the THIEF hits you with a dart, leaving you {c.harm('POISONED')}!")
+            print(f"THIEF hits you with a dart, inflicting {c.harm('POISONED')}!")
 
             player.affect(Poisoned, 6)
     

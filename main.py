@@ -16,6 +16,8 @@ if playerInput == "Thief":
     player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
     player.set_stats(0, -1, 1, 2, 1)
 
+player.inventory[1].consume(None)
+
 dungeon.sort_inventory()
 
 #battle = dungeon.Battle([entities.Ogre()])

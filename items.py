@@ -11,6 +11,8 @@ class Item:
     enchantable = False
     enchantment = 0
     
+    usePrompt = None # if this is None, then the inventory won't provide use as an options
+    
     def __init__(self, name, value, uses):
         self.name = name
         self.value = int(value * randint(9, 11) / 10) # 90% to 110% of value
@@ -349,7 +351,7 @@ class Dagger(Weapon):
         # applies stealth bonus damage
         for effect in self.target.effects:
             if isinstance(effect, entities.Surprised):
-                damageDealt += self.firstHitDamage
+                damageDealt += self.sneakBonus
                 break
 
         # does damage and prints message
@@ -385,6 +387,8 @@ class EbonyDagger(Dagger):
     
 class Armor(Item):
     enchantable = True
+
+    usePrompt = "equip"
     
     def status(self):
         suffix = ""
@@ -512,6 +516,8 @@ class ShadowCloak(Armor):
         
 class Ring(Item):
     enchantable = True
+
+    usePrompt = "equip"
     
     def status(self):
         return ""
@@ -640,6 +646,8 @@ class BuffRing(Ring):
             player.awareness -= 1 + enchantment
 
 class Medicine(Item): 
+    usePrompt = "use"
+
     def __init__(self, name, value, uses, healing, effectApplied = None, effectDuration = 0, effectsCured = []):
         super().__init__(name, value, uses)
         self.healing = healing
@@ -705,6 +713,8 @@ class Bandage(Medicine):
 # see gen_enemy() in entities.py for explanation
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
+    usePrompt = "consume"
+
     def __init__(self):
         super().__init__("rations", 20, 1, 7, entities.WellFed, 4)
 
@@ -722,6 +732,8 @@ class Rations(Medicine):
 
 class Scroll(Item):
 # one use item that is more powerful with higher intelligence
+    usePrompt = "read"
+
     def __init__(self, name, value):
         super().__init__(name, value, 1)
 
@@ -815,12 +827,15 @@ class ScrollRepair(Scroll):
         else:
             chosenItem -= 1
             item = player.inventory[chosenItem]
-            if item.maxUses > 1 or type(item) == SeeingOrb:
-                item.maxUses += int(item.maxUses * power / 10)
-                if power > 0:
-                    print(item.name + " is more durable now")
-                elif power < 0:
-                    print(item.name + " is less durable now")
+            if item.maxUses > 1 or item.uses < 1: # only works on items that have multiple max uses or have no uses remaining
+
+                if item.maxUses > 1: # only improves items with multiple uses
+                    item.maxUses += int(item.maxUses * power / 10)
+
+                    if power > 0:
+                        print(item.name + " is more durable now")
+                    elif power < 0:
+                        print(item.name + " is less durable now")
                     
                 item.uses = item.maxUses
                 print(item.name + " has been fully repaired")
@@ -886,6 +901,8 @@ class Key(Item):
 # there is a 8 in 16 chance for rations, 6 in 16 chance for bandage, and 2 in 16 for bomb
 class KnowledgeBook(Item):
 # improves one stat
+    usePrompt = "read"
+
     def __init__(self):
         super().__init__("book of knowledge", 70, 1)
 
@@ -925,6 +942,8 @@ class KnowledgeBook(Item):
 
 class SeeingOrb(Item):
 # reveals the whole map, requires a scroll of repair
+    usePrompt = "gaze"
+
     def __init__(self):
         super().__init__("seeing orb", 85, 1)
 
@@ -946,9 +965,16 @@ class SeeingOrb(Item):
         
         return True
 
+    def pickup(self):
+        player.update_perception(1)
+
+    def discard(self):
+        player.update_perception(-1)
+
     def inspect(self):
         print("Looking into the orb will reveal the entire layout of the floor.")
         print("Once used, it requires a scroll of repair to recharge it.")
+        print("Having this item increases your perception (PER) by 1.")
 
 standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 

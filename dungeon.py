@@ -408,7 +408,8 @@ class Floor:
                 options.append("unequip")
                 
             else:
-                options.append("use")
+                if chosenItem.usePrompt != None:
+                    options.append(chosenItem.usePrompt)
 
                 if chosenItem.enchantment >= 0:
                     options.append("drop")
@@ -424,7 +425,7 @@ class Floor:
             # asks for input
             playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
 
-            if playerInput == "use":
+            if playerInput == chosenItem.usePrompt:
                 chosenItem.consume(self)
 
             elif playerInput == "drop":
@@ -656,7 +657,7 @@ class LockedRoom(Room):
             self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
 
     def unblock(self): # requires a certain key
-        print(f"there is a {self.lockType} lock in the way")
+        print(f"this room is locked and requires a {self.lockType} key")
         
         # gathers input
         options = ["cancel"]
@@ -812,9 +813,9 @@ class Generator:
         
         # spawns enemies
         if self.modifier == "dangerous":
-            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3 + 2))
-        else:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3))
+        else:
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth, self.depth % 3))
     
     def gen_hall(self):
     # generates a snake-like hall
