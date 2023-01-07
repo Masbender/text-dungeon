@@ -325,17 +325,17 @@ class FlamingMace(Mace):
         return True
         
 class Dagger(Weapon):
-# does damage to target but uses DEX not STR, strong vs full hp enemies
+# does damage to target but uses DEX not STR, strong vs surprised enemies
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
         super().__init__("dagger", level)
 
         self.damage = 4 + level
-        self.firstHitDamage = (level + 3) // 2
+        self.sneakBonus = (level + 3) // 2
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, and {self.firstHitDamage} extra damage towards enemies with full health.")
-        print("Daggers add your dexterity to your attack, but ignore strength.")
+        print(f"It does {self.damage + self.enchantment} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
+        print("Daggers use dexterity (DEX) instead of strength (STR).")
         if self.uses < 0:
             print("Because it's broken it does less damage and doesn't gain bonus damage towards enemies with full health.")
         if self.enchantment < 0:
@@ -346,9 +346,11 @@ class Dagger(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
         
-        # applies first hit damage
-        if self.target.health == self.target.maxHealth and self.uses > 0:
-            damageDealt += self.firstHitDamage
+        # applies stealth bonus damage
+        for effect in self.target.effects:
+            if isinstance(effect, entities.Surprised):
+                damageDealt += self.firstHitDamage
+                break
 
         # does damage and prints message
         message = f"You stab {self.target.name} with your {self.name} for _ damage!"
@@ -365,7 +367,7 @@ class EbonyDagger(Dagger):
         self.value *= 2
         self.maxUses -= 5
         self.uses -= 5
-        self.firstHitDamage += 1
+        self.sneakBonus += 1
 
     def inspect(self):
         super().inspect()
@@ -982,7 +984,7 @@ def gen_gear(quality):
             chosenItem = None
 
             # quality improves the material of some items
-            if not item[0] in [Ring, Cloak]:
+            if not item[0] in [BuffRing, Cloak]:
                 # can be higher quality
                 if randint(1, 4) == 1:
                     quality += 1

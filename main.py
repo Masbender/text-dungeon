@@ -1,13 +1,20 @@
 import dungeon
 import entities
-from extra import clear_console
+from extra import clear_console, gather_input
 import items
 from random import randint
 
 player = entities.player
 
-player.inventory.extend([items.Sword(0), items.Rations(), items.Bomb()])
-player.set_stats(1, 0, 1, 1, 0)
+playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False)
+
+if playerInput == "Warrior":
+    player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
+    player.set_stats(1, 1, 0, 1, 0)
+
+if playerInput == "Thief":
+    player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
+    player.set_stats(0, -1, 1, 2, 1)
 
 dungeon.sort_inventory()
 

@@ -85,14 +85,23 @@ class Battle:
         if len(self.enemies[0].attackMessages) > 0:
             print(choice(self.enemies[0].attackMessages))
         else:
-            print(f"You are attacked by a {self.enemies[0].name.upper()}!")
+            print(f"You are noticed by a {self.enemies[0].name.upper()}!")
+
+        canRun = True
+        if self.enemies[0].isSpecial:
+            print(f"There is no escape from this fight.")
+            canRun = False
         
         while not self.battleOver:
             self.print_battle()
             self.player_turn()
 
+            allStunned = True
             updatedEnemies = []
             for enemy in self.enemies:
+                if not enemy.stunned: # tracks if any enemies are not stunned
+                    allStunned = False
+            
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
                     if enemy.health > 0: # checks if enemy died during thier turn
@@ -106,6 +115,9 @@ class Battle:
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
 
+            if allStunned and canRun:
+                self.run_prompt()
+            
         # detects if player won or lost
         if player.health > 0:
             return True
@@ -139,6 +151,11 @@ class Battle:
 
         update_effects(player)
 
+    def run_prompt(self): # if all enemies are stunned, the player can choose to run
+        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False)
+
+        if playerInput == "run":
+            self.battleOver = True
 
 class Floor:
     def __init__(self, layout, posY, posX, entryMessage = ""): # posY and posX are player's position
@@ -172,7 +189,7 @@ class Floor:
                     lines[i].append('?')
                 # walls are represented as ' '
                 elif type(self.map[i][I]) == Wall and self.map[i][I].blocked:
-                    lines[i].append(' ')
+                    lines[i].append('■')
                 # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "descend stairs":
                     lines[i].append('↓')
@@ -184,7 +201,7 @@ class Floor:
                     lines[i].append('x')
                 # rooms are represented as '+'
                 else:
-                    lines[i].append('+')
+                    lines[i].append(' ')
 
         # prints the map
         for line in lines:
@@ -256,15 +273,9 @@ class Floor:
         room = self.get_room()
 
         options = ["move", "wait", "view stats"]
-        #if room.loot != [] or player.inventory != []:
-         #   options.append("inspect item")
 
         if player.inventory != []:
-            #options.extend(["use item", "drop item"])
             options.append("inventory")
-
-        #if player.ring != None or player.armor != None:
-         #   options.append("unequip")
             
         if room.loot != []:
             options.append(c.loot("take item"))
@@ -285,18 +296,10 @@ class Floor:
 
         if room.threats != []:
             options.append(c.threat("surprise attack"))
-            # prints enemies
-            if len(room.threats) == 1:
-                print(f"\nthere is a {c.threat(room.threats[0].name.upper())} here!")
-            else:
-                # gets a list of uppercase enemy names
-                names = []
-                for enemy in room.threats:
-                    names.append(c.threat(enemy.name.upper()))
-                    
-                print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here!")
-                
-            print("they do not notice you")
+            
+            print()
+            for enemy in room.threats:
+                print(choice(enemy.stealthMessages))
     
         return options
 
@@ -327,7 +330,7 @@ class Floor:
                     battle = Battle(room.threats)
                     battle.start_battle()
     
-                    room.threats = []
+                    room.threats = battle.enemies
 
     def action_wait(self):
     # called when player chooses to wait
@@ -359,14 +362,6 @@ class Floor:
             effect.inspect()
             print()
 
-    def action_use_item(self):
-    # called when player uses an item
-        options = ["cancel"] + item_list()
-        itemUsed = gather_input("what do you use?", options) - 1
-
-        if itemUsed > -1: # -1 is cancel
-            player.inventory[itemUsed].consume(self)
-
     def action_take_item(self):
     # called when player takes an item
         room = self.get_room()
@@ -390,64 +385,10 @@ class Floor:
             player.inventory.append(room.loot.pop(chosenItem))
             print(f"you pickup the {options[chosenItem + 1]}")
             print()
-            player.inventory[-1].inspect()
+            #player.inventory[-1].inspect()
             print()
     
             sort_inventory()
-
-    def action_drop_item(self):
-    # called when player drops an item
-        room = self.get_room()
-        
-        options = ["cancel"] + item_list()
-
-        chosenItem = gather_input("What do you drop?", options) - 1
-
-        if chosenItem > -1: # -1 is cancel
-            # removes item to inventory, leaving it in the room
-            if player.inventory[chosenItem].enchantment < 0: # checks if item is cursed
-                print(f"the {options[chosenItem + 1]} is cursed and cannot be dropped")
-            else: # drops item
-                player.inventory[chosenItem].discard()
-                room.loot.append(player.inventory.pop(chosenItem))
-                print(f"you drop the {options[chosenItem + 1]}")
-
-    def action_inspect_item(self):
-    # called when player inspects an item
-        room = self.get_room()
-
-        # gathers all options
-        inspectableItems = player.inventory + room.loot
-
-        if player.armor != None:
-            inspectableItems.append(player.armor)
-            
-        if player.ring != None:
-            inspectableItems.append(player.ring)
-
-        # gathers the names of all options
-        options = ["cancel"]
-        for item in inspectableItems:
-            options.append(item.get_name())
-
-        # gathers input
-        chosenItem = gather_input("What do you inspect?", options) - 1
-
-        if chosenItem > -1: # -1 is cancel 
-            item = inspectableItems[chosenItem]
-            
-            # inspects chosen item
-            print(item.get_name())
-            item.inspect()
-
-            # displays the cost
-            cost = item.get_price()
-            if player.appraisal > cost:
-                print(f"this item is worth {cost} gold")
-            else:
-                print("you are unable to appriase the price of the item")
-
-            print()
 
     def action_inventory(self):
         while True:
@@ -473,7 +414,7 @@ class Floor:
                     options.append("drop")
 
             # prints info about the item
-            print(chosenItem.get_name().upper())
+            print(chosenItem.get_name())
             chosenItem.inspect()
             print()
 
@@ -501,60 +442,6 @@ class Floor:
 
                 print("You unequip the " + chosenItem.get_name())
         
-    def action_unequip(self):
-    # called when player unequips something
-        room = self.get_room()
-
-        # forms options
-        options = ["cancel"]
-        if player.armor != None:
-            options.append("armor")
-        if player.ring != None:
-            options.append("ring")
-
-        # gathers input
-        chosenOption = gather_input("What do you unequip?", options, False)
-
-        if chosenOption == "armor": # unquips armor
-            player.armor.unequip()
-            if len(player.inventory) < player.inventorySize:
-                print("you take off the " + player.armor.name)
-                player.inventory.append(player.armor)
-                player.armor = None
-                sort_inventory()
-            else: # drops instead if inventory is full
-                print("you drop the " + player.armor.name + " because your inventory is full")
-                room.loot.append(player.armor)
-                player.armor.discard()
-                player.armor = None
-
-        elif chosenOption == "ring": # unequips ring
-            player.ring.unequip()
-            if len(player.inventory) < player.inventorySize:
-                print("you take off the " + player.ring.name)
-                player.inventory.append(player.ring)
-                player.ring = None
-                sort_inventory()
-            else: # drops instead if inventory is full
-                print("you drop the " + player.ring.name + " because your inventory is full")
-                room.loot.append(player.ring)
-                player.ring.discard()
-                player.ring = None
-
-    def action_surprise(self):
-    # called when player does surprise attack
-        room = self.get_room()
-        
-        for enemy in room.threats: # makes sure all enemies are surprised and stunned
-            enemy.affect(entities.Surprised, 2)
-            enemy.stunned = True
-
-        # starts the battle
-        battle = Battle(room.threats)
-        battle.start_battle()
-
-        room.threats = []
-
     def action_shop(self):
     # called when the player talks to the shopkeeper
         room = self.get_room()
@@ -615,7 +502,7 @@ class Floor:
 
                         tradedItem = player.inventory[playerInput]
                         if tradedItem.get_price(False) < chosenItem.get_price(True):
-                            print(f"{tradedItem.get_name} isn't worth enough to trade")
+                            print(f"{tradedItem.get_name()} isn't worth enough to trade")
 
                         else:
                             player.inventory.remove(tradedItem)
@@ -634,6 +521,18 @@ class Floor:
 
         if itemUsed > -1: # -1 is cancel
             room.unlock_chest(player.inventory[itemUsed])
+
+    def action_surprise(self):
+        room = self.get_room()
+        
+        for enemy in room.threats: # makes sure all enemies are surprised and stunned
+            enemy.affect(entities.Surprised, 1)
+            enemy.stunned = True
+
+        battle = Battle(room.threats)
+        battle.start_battle()
+
+        room.threats = battle.enemies
         
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
@@ -661,12 +560,10 @@ class Floor:
             playerInput = gather_input("\nWhat do you do?", options, False)
 
             actions = {
-                "move":self.action_move, "wait":self.action_wait, "inventory":self.action_inventory,
-                "view stats":self.action_view_stats, "use item":self.action_use_item, 
-                c.loot("take item"):self.action_take_item, "drop item":self.action_drop_item,
-                "inspect item":self.action_inspect_item, "unequip":self.action_unequip, 
-                c.threat("surprise attack"):self.action_surprise, c.special("shop"):self.action_shop,
-                c.special("unlock chest"):self.action_unlock_chest
+                "move":self.action_move, "wait":self.action_wait, 
+                "view stats":self.action_view_stats, "inventory":self.action_inventory,
+                c.loot("take item"):self.action_take_item, c.special("shop"):self.action_shop,
+                c.special("unlock chest"):self.action_unlock_chest, c.threat("surprise attack"):self.action_surprise
             }
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
@@ -869,8 +766,8 @@ class Generator:
 
             self.entryMessage = {
                 "dangerous":"You feel unsafe, watch your back.",
-                "large":"You hear your footsteps echo across the floor",
-                "cursed":"A malevolent energy is lurking here"
+                "large":"You hear your footsteps echo across the floor.",
+                "cursed":"A malevolent energy is lurking here."
             }[self.modifier]
 
             if self.modifier == "large":
@@ -1060,7 +957,7 @@ class Generator:
                             if self.layoutNums[i[0]][i[1]] != 0:
                                 self.adjacentWalls.append([y, x])
                                 adjacentToRoom = True
-                                break;
+                                break
 
                     # checks if viable for secret room
                     if not adjacentToRoom:

@@ -193,9 +193,9 @@ player = Player() # creates the one and only instance of player
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     # more identifying information
-    stealthMessages = []
-    attackMessages = []
-    warning = "you feel uneasy"
+    attackMessages = ["ENEMY notices you!"] # note that ENEMY is only colored in stealth due to the need to alert the player
+    stealthMessages = [c.threat("ENEMY") + " not notice you"]
+    warning = "You feel uneasy..."
     undead = False
     isSpecial = False # determines if the game should give a (!) with this enemy
     
@@ -208,7 +208,7 @@ class Enemy(Creature):
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield
         if self.stunned:
-            print(f"{self.name} is stunned and unable to fight")
+            print(f"{self.name.upper()} is stunned and unable to fight")
             self.stunned = False
         else:
             self.attack(enemies)
@@ -223,10 +223,10 @@ class Boss(Enemy):
     # less likely to be stunned
         if self.stunned:
             if randint(0, 1):
-                print(f"{self.name} is stunned and unable to fight")
+                print(f"{self.name.upper()} is stunned and unable to fight")
                 self.stunned = False
             else:
-                print(f"{self.name} resisted the stun")
+                print(f"{self.name.upper()} resisted the stun")
                 self.stunned = False
                 self.attack(enemies)
         else:
@@ -455,8 +455,10 @@ class Draugr(Enemy):
 # starts with armor but it degrades when hurt
 # can inflict bleeding
     name = "draugr"
-    attackMessages = ["A DRAUGR attacks you! Unlike most creatures, it appears to have armor, although it's brittle.",
-                     "A DRAUGR spots you, and charges at you with it's axe!"]
+    attackMessages = ["DRAUGR readies their axe with malicious intent!",
+                     "DRAUGR charges at you with their axe!"]
+    stealthMessages = [c.threat("DRAUGR") + " is on the hunt for human.",
+                      c.threat("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
     undead = True
     isSpecial = True
 
@@ -475,25 +477,28 @@ class Draugr(Enemy):
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
-            print("the DRAUGR's armor degrades")
+            print("DRAUGR's armor degrades.")
         
         return damageDealt
         
     def attack(self, enemies):
-        message = "the DRAUGR hits you with their axe for _ damage"
+        message = "DRAUGR hits you with their axe for _ damage"
         if randint(1, 3) == 1:
-            player.affect(Bleeding, 4)
-            player.hurt(4, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
-        else:
-            player.hurt(5, self.strength, message + "!")
+            if player.affect(Bleeding, 4):
+                player.hurt(4, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
+                return
+        
+        player.hurt(5, self.strength, message + "!")
 
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
 # can dodge attacks and inflicts decay
     name = "ghoul"
-    warning = "you smell a foul stench"
-    attackMessages = ["You are attacked by a GHOUL, a foul, agile beast!",
-                     "A GHOUL attacks you! It can barely see but is rather agile."]
+    warning = "You smell a foul stench..."
+    attackMessages = ["You are attacked by GHOUL, a foul, agile beast!",
+                     "GHOUL attacks you! It can barely see but is rather agile."]
+    stealthMessages = [c.threat("GHOUL") + " is roaming.",
+                      c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
 
     maxHealth = 16
@@ -505,17 +510,17 @@ class Ghoul(Enemy):
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            print(f"the GHOUL curses you with {c.harm('DECAY')}, lowering your CON over time")
+            print(f"GHOUL curses you with {c.harm('DECAY')}!")
 
             player.affect(Decay, 6)
         else:
-            player.hurt(4, self.strength, "the GHOUL attacks you for _ damage!")
+            player.hurt(4, self.strength, "GHOUL bites you for _ damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
 # is immune to most natural effects and often staggers instead of attacking
     name = "skeleton"
-    warning = "you hear bones moving around"
+    warning = "You hear the shuffling of bones..."
     undead = True
 
     maxHealth = 15
@@ -532,19 +537,21 @@ class Skeleton(Enemy):
 
         if self.name == "skeleton": # doesn't apply to subclasses
             self.weapon = choice(["sword", "spear", "mace"])
-            self.attackMessages = [f"You are attacked by a SKELETON, who wields a {self.weapon}!"]
+            self.attackMessages = [f"SKELETON grips their {self.weapon}!",
+                                  "SKELETON finally gets to see some action!"]
+            self.stealthMessages = [c.threat("SKELETON") + f" is holding a {self.weapon}, and is searching for a target."]
 
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
         if randint(0, 5) < self.staggerChance:
-            print(f"{self.name.upper()} staggers and misses their attack")
+            print(f"{self.name.upper()} staggers and misses their attack.")
         else:
             super().do_turn(enemies)
 
     def attack(self, enemies):
-        message = f"the {self.name.upper()} hits you with their {self.weapon} for _ damage"
+        message = f"{self.name.upper()} hits you with their {self.weapon} for _ damage"
 
-        # spears  have armor piercing
+        # spears have armor piercing
         armorPiercing = 1
         if self.weapon == "spear" and randint(1, 3) < 3:
             armorPiercing += 1
@@ -570,9 +577,11 @@ class Skeleton(Enemy):
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
     name = "skeleton guard"
-    warning = "you hear the clanking of bones and metal"
-    attackMessages = ["You are attacked by a SKELETON GUARD, who wields a spear and a shield!",
-                    "You are caught by a SKELETON GUARD!"]
+    warning = "You hear the clanking of bones and metal..."
+    attackMessages = ["SKELETON GUARD raises their shield!",
+                    "SKELETON GUARD will not let it's training go to waste!"]
+    stealthMessages = [c.threat("SKELETON GUARD") + " is alert, but has failed to notice you.",
+                      c.threat("SKELETON GUARD") + " is determined to let none pass, but it seems they have failed."]
     undead = True
     isSpecial = True
 
@@ -591,11 +600,13 @@ class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
     name = "thief"
-    warning = "you are being watched"
-    attackMessages = ["You are surprised by a THIEF!",
-                     "You encounter a THIEF, who is armed with darts and a dagger!"]
+    warning = "You are being watched..."
+    attackMessages = ["THIEF prepares a poison dart!",
+                     "THIEF eyes your gold pouch!"]
+    stealthMessages = [c.threat("THIEF") + " is looking for a victim.",
+                      c.threat("THIEF") + " is preparing poisons, and is unaware of your presence."]
 
-    maxHealth = 18
+    maxHealth = 16
     gold = 14
     awareness = 4
     stealth = 4
@@ -609,11 +620,14 @@ class Thief(Enemy):
         self.time += 1
         if randint(1, 4) < self.time:
             self.health = 0
-            print("the THIEF runs away")
+            print("THIEF runs away!")
+            
+        elif self.time == 3:
+            print(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
 
     def attack(self, enemies):
         if player.health < player.maxHealth:
-            player.hurt(4, self.strength, "the THIEF stabs you for _ damage!", randint(1, 2))
+            player.hurt(4, self.strength, "THIEF stabs you for _ damage!", randint(1, 2))
         else:
             print(f"the THIEF hits you with a dart, leaving you {c.harm('POISONED')}!")
 
@@ -622,8 +636,8 @@ class Thief(Enemy):
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "ogre"
-    attackMessages = ["You encounter an OGRE, a beast that's at least 20 feet tall and wields a large club!",
-                     "\"Long time it's been since human dared wander down here, you make good snacks.\""]
+    warning = "You hear sounds that can only belong to a massive beast..."
+    attackMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 
     maxHealth = 35
     gold = 60
@@ -642,7 +656,7 @@ class Ogre(Boss):
         if self.health < 20 and not self.isRaged:
             self.isRaged = True
             self.strength += 3
-            print("the OGRE is enraged, increasing their damage")
+            print("OGRE is enraged!")
         
         # choses move, can't do the same twice in a row
         choices = ["heavy", "slam", "attack"]
@@ -654,32 +668,32 @@ class Ogre(Boss):
 
         if self.isCharging:
             self.isCharging = False
-            message = "the OGRE hits you with a devastating blow, dealing _ damage!"
+            message = "OGRE hits you with a devastating blow, dealing _ damage!"
             player.dodge -= 15 # attack is less likely to be dodge
             damageDealt = player.hurt(8, self.strength, message, 2)
             player.dodge += 15
             # if enough damage is dealt, it breaks bones
             if damageDealt > 8:
                 if player.affect(BrokenBones, 1):
-                    print("you have BROKEN BONES")
+                    print("you have " + c.harm("BROKEN BONES"))
             
         elif chosenMove == "heavy":
-            print("the OGRE is charging up a swing")
+            print("OGRE prepares a heavy swing!")
             self.isCharging = True
 
         elif chosenMove == "slam":
-            message = "the OGRE slams the ground, dealing _ damage and leaving you DAZED!"
+            message = f"OGRE slams the ground, dealing _ damage and leaving you {c.harm('DAZED')}!"
             player.hurt(3, self.strength, message, 1)
             player.affect(Dazed, 2)
 
         else:
-            message = "the OGRE hits you with their club for _ damage"
+            message = "OGRE hits you with their club for _ damage"
             if player.affect(Bleeding, 3):
-                message += ", leaving you BLEEDING"
+                message += ", leaving you " + c.harm("BLEEDING")
             player.hurt(5, self.strength, message + "!", 0)    
 
 enemyPool = {
-    "prison":[([Skeleton], 6), ([Thief], 4), ([Ghoul], 2)],
+    "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
