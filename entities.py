@@ -5,7 +5,7 @@ c = color
 
 class Creature:
     # identifying information (such as name or dialogue)
-    name = "creature"
+    name = "CREATURE"
 
     # the most basic stats
     maxHealth = 20
@@ -163,7 +163,7 @@ class Creature:
 
 class Player(Creature):
 # has inventory and equipment slots
-    name = "you"
+    name = "YOU"
     maxHealth = 20
 
     inventorySize = 10
@@ -208,7 +208,7 @@ class Enemy(Creature):
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield
         if self.stunned:
-            print(f"{self.name.upper()} is stunned and unable to fight")
+            print(f"{self.name} is stunned and unable to fight")
             self.stunned = False
         else:
             self.attack(enemies)
@@ -223,10 +223,10 @@ class Boss(Enemy):
     # less likely to be stunned
         if self.stunned:
             if randint(0, 1):
-                print(f"{self.name.upper()} is stunned and unable to fight")
+                print(f"{self.name} is stunned and unable to fight")
                 self.stunned = False
             else:
-                print(f"{self.name.upper()} resisted the stun")
+                print(f"{self.name} resisted the stun")
                 self.stunned = False
                 self.attack(enemies)
         else:
@@ -454,7 +454,7 @@ class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # starts with armor but it degrades when hurt
 # can inflict bleeding
-    name = "draugr"
+    name = "DRAUGR"
     attackMessages = ["DRAUGR readies their axe with malicious intent!",
                      "DRAUGR charges at you with their axe!"]
     stealthMessages = [c.threat("DRAUGR") + " is on the hunt for human.",
@@ -493,10 +493,10 @@ class Draugr(Enemy):
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
 # can dodge attacks and inflicts decay
-    name = "ghoul"
+    name = "GHOUL"
     warning = "You smell a foul stench..."
     attackMessages = ["You confront GHOUL, a foul, agile beast!",
-                     "GHOUL smells your presence! It can barely see but is rather agile."]
+                     "GHOUL detects your presence! It can barely see but has developed an excellent sense of smell."]
     stealthMessages = [c.threat("GHOUL") + " is roaming.",
                       c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
@@ -519,7 +519,7 @@ class Ghoul(Enemy):
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
 # is immune to most natural effects and often staggers instead of attacking
-    name = "skeleton"
+    name = "SKELETON"
     warning = "You hear the shuffling of bones..."
     undead = True
 
@@ -535,7 +535,7 @@ class Skeleton(Enemy):
         super().__init__()
         self.immuneTo.extend([Bleeding, Burned])
 
-        if self.name == "skeleton": # doesn't apply to subclasses
+        if self.name == "SKELETON": # doesn't apply to subclasses
             self.weapon = choice(["sword", "spear", "mace"])
             self.attackMessages = [f"SKELETON grips their {self.weapon}!",
                                   "SKELETON finally gets to see some action!"]
@@ -544,13 +544,13 @@ class Skeleton(Enemy):
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
         if randint(0, 5) < self.staggerChance:
-            print(f"{self.name.upper()} staggers and misses their attack.")
+            print(f"{self.name} staggers and misses their attack.")
         else:
             super().do_turn(enemies)
         self.stunned = False
 
     def attack(self, enemies):
-        message = f"{self.name.upper()} hits you with their {self.weapon} for _ damage"
+        message = f"{self.name} hits you with their {self.weapon} for _ damage"
 
         # spears have armor piercing
         armorPiercing = 1
@@ -577,7 +577,7 @@ class Skeleton(Enemy):
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
-    name = "skeleton guard"
+    name = "SKELETON GUARD"
     warning = "You hear the clanking of bones and metal..."
     attackMessages = ["SKELETON GUARD raises their shield!",
                     "SKELETON GUARD will not let it's training go to waste!"]
@@ -600,7 +600,7 @@ class SkeletonGuard(Skeleton):
 class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
-    name = "thief"
+    name = "THIEF"
     warning = "You are being watched..."
     attackMessages = ["THIEF prepares a poison dart!",
                      "THIEF eyes your gold pouch!"]
@@ -636,7 +636,7 @@ class Thief(Enemy):
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
-    name = "ogre"
+    name = "OGRE"
     warning = "You hear sounds that can only belong to a massive beast..."
     attackMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 

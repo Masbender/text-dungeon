@@ -141,7 +141,7 @@ class Weapon(Item):
         if self.uses == 0:
             # if it is reusable it says when it breaks
             if self.maxUses > 1:
-                print(self.name + " has broken, it is much weaker now")
+                print(self.name + " has broken, it is much weaker now.")
                 self.uses -= 1 # prevents intelligence making this message appear again, doesn't break though
         return True
     
@@ -189,11 +189,6 @@ class Sword(Weapon):
         print(f"It does {self.damage + self.enchantment} damage, with a {self.bleedChance} in 6 chance to inflict bleeding for {self.bleedDuration} turns.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot inflict bleeding.")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
@@ -217,14 +212,14 @@ class JudgementSword(Sword):
 # same as sword but extra damage and burning against undead
     def __init__(self):
         super().__init__(1)
-        self.name = "sword of judgement" 
+        self.name = "Bane of the Undead" 
         self.value *= 2
         self.bleedChance += 1
         self.bleedDuration += 1
 
     def inspect(self):
         super().inspect()
-        print("Stronger against undead enemies")
+        print("Stronger against undead enemies.")
 
     def attack(self, enemies):
         super().attack(enemies)
@@ -233,7 +228,7 @@ class JudgementSword(Sword):
         if self.target.undead:
             self.target.affect(entities.Burned, 4)
             self.target.health -= 3
-            print(f"{self.target.name} is burned by the sword, taking 4 extra damage")
+            print(f"{self.target.name} is burned by the sword, taking 4 extra damage.")
     
         return True
 
@@ -250,11 +245,6 @@ class Spear(Weapon):
         print(f"It does {self.damage + self.enchantment} damage and pierces {self.armorPiercing - 1} to {self.armorPiercing} points of armor.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot pierce armor.")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
@@ -279,11 +269,6 @@ class Mace(Weapon):
         print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to inflict stun.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot stun.")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
     
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
@@ -308,7 +293,7 @@ class FlamingMace(Mace):
 # same as mace can set enemies on fire
     def __init__(self):
         super().__init__(1)
-        self.name = "flaming mace"
+        self.name = "Flaming Mace"
         self.value *= 2
         self.maxUses -= 5
         self.uses -= 5
@@ -322,7 +307,7 @@ class FlamingMace(Mace):
         super().attack(enemies)
 
         if self.target.affect(entities.OnFire, randint(2, 3)):
-            print(f"The {self.target.name} is set on fire")
+            print(f"{self.target.name} is set on fire.")
 
         return True
         
@@ -340,10 +325,6 @@ class Dagger(Weapon):
         print("Daggers use dexterity (DEX) instead of strength (STR).")
         if self.uses < 0:
             print("Because it's broken it does less damage and doesn't gain bonus damage towards enemies with full health.")
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
 
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
@@ -365,7 +346,7 @@ class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
     def __init__(self):
         super().__init__(1)
-        self.name = "ebony dagger"
+        self.name = "Ebony Dagger"
         self.value *= 2
         self.maxUses -= 5
         self.uses -= 5
@@ -373,7 +354,7 @@ class EbonyDagger(Dagger):
 
     def inspect(self):
         super().inspect()
-        print("The ebony dagger increases your maximum health for every kill")
+        print("The Ebony Dagger increases your maximum health for every kill.")
 
     def attack(self, enemies):
         super().attack(enemies)
@@ -381,7 +362,7 @@ class EbonyDagger(Dagger):
         # applies ebony dagger's effect
         if self.target.health <= 0:
             player.maxHealth += 1
-            print("you absorb the " + self.target.name + "'s power")
+            print("You absorb " + self.target.name + "'s power.")
         
         return True
     
@@ -433,11 +414,6 @@ class HeavyArmor(Armor):
     def inspect(self):
         print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
 
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
-
     def consume(self, floor):
         self.equip()
 
@@ -445,7 +421,7 @@ class HeavyArmor(Armor):
         player.armorClass += self.armorClass + self.enchantment
         player.update_dexterity(-self.dexLoss)
 
-        print("You put on the " + self.name)
+        print("You put on the " + self.name + ".")
         return True
 
     def unequip(self):
@@ -459,7 +435,7 @@ class Cloak(Armor):
         super().__init__("cloak", 40, 25)
 
     def inspect(self):
-        print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1")
+        print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
 
     def consume(self, floor):
         self.equip()
@@ -468,7 +444,7 @@ class Cloak(Armor):
         player.armorClass += self.enchantment
         player.stealth += 1
 
-        print("You put on the cloak")
+        print("You put on the cloak.")
         return True
 
     def unequip(self):
@@ -479,7 +455,7 @@ class ShadowCloak(Armor):
 # same as cloak, but enchantments affect stealth, not armor
 # starts enchanted
     def __init__(self):
-        super().__init__("cloak of shadows", 70, 30)
+        super().__init__("Cloak of Shadows", 70, 30)
         self.enchantment += 1
 
     def inspect(self):
@@ -487,12 +463,7 @@ class ShadowCloak(Armor):
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
             
-        print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
+        print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}.")
 
     def consume(self, floor):
         self.equip()
@@ -504,7 +475,7 @@ class ShadowCloak(Armor):
         # applies stats
         player.stealth += 1 + enchantment
 
-        print("You put on the cloak")
+        print("You put on the Cloak of Shadows.")
         return True
 
     def unequip(self):
@@ -546,16 +517,12 @@ class InfernoRing(Ring):
     enchantable = True
 
     def __init__(self):
-        super().__init__("ring of rage", 65, 1)
+        super().__init__("Ring of Rage", 65, 1)
 
     def inspect(self):
-        print("Increases your strength (STR) by 2")
-        print("When you are attacked, you might be burned (-1 AC)")
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed, burning is more severe")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed, burning is less severe")
+        print("Increases your strength (STR) by 2.")
+        print("When you are attacked, you might be burned (-1 AC).")
+        print("The duration of burned depends on this items enchantment level.")
 
     def consume(self, floor):
         self.equip()
@@ -586,17 +553,12 @@ class BuffRing(Ring):
             enchantment -= 1
 
         print([
-            f"Increases your stealth by {1 + enchantment} level(s)",
-            f"Increases your chance to dodge by {5 + 5 * enchantment}%",
-            f"Increases your health by {2 + 2 * enchantment}",
-            f"Increases your resistance to disease and injury by {1 + enchantment} level(s)",
-            f"Increases your awareness of nearby threats by {1 + enchantment} level(s)"
+            f"Increases your stealth by {1 + enchantment} level(s).",
+            f"Increases your chance to dodge by {5 + 5 * enchantment}%.",
+            f"Increases your health by {2 + 2 * enchantment}.",
+            f"Increases your resistance to disease and injury by {1 + enchantment} level(s).",
+            f"Increases your awareness of nearby threats by {1 + enchantment} level(s)."
         ][self.statID])
-
-        if self.enchantment < 0:
-            print(f"The {self.name} is cursed")
-        elif self.enchantment > 0:
-            print(f"The {self.name} is blessed")
 
     def consume(self, floor):
         self.equip()
@@ -682,7 +644,7 @@ class Medicine(Item):
             player.effectDurations.pop(i)
 
         # prints out a message based on healing and removed effects
-        message = f"the {self.name} restores {healingDone} health"
+        message = f"The {self.name} restores {healingDone} health"
         if removedEffects != []:
             message += " and cures "
             if len(removedEffects) == 1:
@@ -696,7 +658,7 @@ class Medicine(Item):
 
                     message += removedEffects[i]
 
-        print(message)
+        print(message + ".")
 
         return True
 
@@ -727,7 +689,7 @@ class Rations(Medicine):
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
     def attack(self, enemies):
-        print("you don't have enough time to eat!")
+        print("You don't have enough time to eat!")
         return False
 
 class Scroll(Item):
@@ -750,8 +712,8 @@ class ScrollRemoveCurse(Scroll):
         super().__init__("scroll of remove curse", 40)
 
     def inspect(self):
-        print("Reverses every curse into blessings on all of your items")
-        print("With higher levels of intelligence (INT), it might make them even stronger")
+        print("Reverses every curse into blessings on all of your items.")
+        print("With higher levels of intelligence (INT), it might make them even stronger.")
     
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
@@ -762,10 +724,10 @@ class ScrollRemoveCurse(Scroll):
 
                 if randint(0, 3) < power: # can improve item
                     item.enchantment += 1
-                    print(f"{item.name} has been improved")
+                    print(f"{item.name} has been improved.")
 
         self.degrade()
-        print("all of your items have been uncursed")
+        print("All of your items have been uncursed.")
         return True
 
 class ScrollEnchant(Scroll):
@@ -791,16 +753,16 @@ class ScrollEnchant(Scroll):
             chosenItem -= 1 # converts to proper index
 
             if player.inventory[chosenItem].enchantment > player.intelligence: # checks intelligence
-                print("that item is too high of a level for your intelligence")
+                print("That item is too high of a level for your intelligence.")
                 return False
             
             if player.inventory[chosenItem].enchantable: # checks if item is valid
                 player.inventory[chosenItem].enchantment += 1
-                print(player.inventory[chosenItem].name + " has been blessed")
+                print(player.inventory[chosenItem].name + " has been blessed.")
                 self.degrade()
                 return True
             else:
-                print(player.inventory[chosenItem].name + " cannot be enchanted")
+                print(player.inventory[chosenItem].name + " cannot be enchanted.")
                 return False
 
 class ScrollRepair(Scroll):
@@ -910,7 +872,7 @@ class KnowledgeBook(Item):
         return ""
 
     def inspect(self):
-        print("This will let you improve one stat when you read it.")
+        print("Reading this will let you level up one stat.")
 
     def consume(self, floor):
         print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
@@ -923,19 +885,19 @@ class KnowledgeBook(Item):
 
         if chosenStat == "STR":
             player.update_strength(1)
-            print("your attacks are stronger now")
+            print("Your attacks are stronger now.")
         elif chosenStat == "CON":
             player.update_constitution(1)
-            print("your health and resistance to injury and disease has increased")
+            print("Your health has been increased, diseases and injuries heal quicker.")
         elif chosenStat == "DEX":
             player.update_dexterity(1)
-            print("your ability to dodge and go unnoticed has increased")
+            print("You are stealthier, you are better at dodging.")
         elif chosenStat == "PER":
             player.update_perception(1)
-            print("your ability to detect scams and enemies has increased")
+            print("You're more aware, you are a better at bargaining.")
         elif chosenStat == "INT":
             player.update_intelligence(1)
-            print("the effectivenes of scrolls and durability of all items has increased")
+            print("Your items break less, scrolls are stronger.")
         
         player.inventory.remove(self)
         return True
@@ -945,7 +907,7 @@ class SeeingOrb(Item):
     usePrompt = "gaze"
 
     def __init__(self):
-        super().__init__("seeing orb", 85, 1)
+        super().__init__("Seeing Orb", 85, 1)
 
     def status(self):
         if self.uses == 0:
@@ -955,13 +917,13 @@ class SeeingOrb(Item):
 
     def consume(self, floor):
         if self.uses == 0:
-            print("the orb needs to be charged with a scroll of repair before using it again")
+            print("The orb needs to be charged with a scroll of repair before using it again.")
             return False
 
         self.uses -= 1
 
         floor.map = floor.layout
-        print("you gaze into the orb, the whole floor has been revealed")
+        print("You gaze into the orb, the whole floor has been revealed.")
         
         return True
 

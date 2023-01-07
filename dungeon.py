@@ -74,26 +74,23 @@ def print_player_info():
     print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
                 
 class Battle:
-    def __init__(self, enemies):
+    def __init__(self, enemies, isSurprise = False):
         self.battleOver = False
         self.enemies = enemies
+        self.isSurpriseAttack = isSurprise
 
     def start_battle(self):
         clear_console()
 
         # prints message
-        if len(self.enemies[0].attackMessages) > 0:
-            print(choice(self.enemies[0].attackMessages))
-        else:
-            print(f"You are noticed by a {self.enemies[0].name.upper()}!")
+        print(c.desc(choice(self.enemies[0].attackMessages)))
 
         canRun = True
         if self.enemies[0].isSpecial:
-            print(f"There is no escape from this fight.")
+            print.text((f"There is no escape from this fight."))
             canRun = False
         
         while not self.battleOver:
-            self.print_battle()
             self.player_turn()
 
             allStunned = True
@@ -107,7 +104,7 @@ class Battle:
                     if enemy.health > 0: # checks if enemy died during thier turn
                         updatedEnemies.append(enemy)
                 if enemy.health <= 0:
-                    print(f"{enemy.name} drops {enemy.gold} gold")
+                    print(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
                         
             self.enemies = updatedEnemies
@@ -115,8 +112,11 @@ class Battle:
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
 
-            if allStunned and canRun:
+            # handles escaping, cannot escape on the first turn of a sneak attack
+            if allStunned and canRun and not self.isSurpriseAttack:
                 self.run_prompt()
+
+            self.isSurpriseAttack = False
             
         # detects if player won or lost
         if player.health > 0:
@@ -128,7 +128,7 @@ class Battle:
         print()
 
         for creature in self.enemies:
-            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name.upper())} : {c.health_status(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
+            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name)} : {c.health_status(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
             
             print_effects(creature)
 
@@ -145,6 +145,8 @@ class Battle:
     def player_turn(self):
         turnOver = False
         while not turnOver:
+            self.print_battle()
+
             itemUsed = gather_input("What do you use?", item_list())
 
             turnOver = player.inventory[itemUsed].attack(self.enemies)
@@ -156,6 +158,10 @@ class Battle:
 
         if playerInput == "run":
             self.battleOver = True
+
+            # heals the enemies a bit to make running less powerful
+            for enemy in self.enemies:
+                enemy.heal(5)
 
 class Floor:
     def __init__(self, layout, posY, posX, entryMessage = ""): # posY and posX are player's position
@@ -184,7 +190,7 @@ class Floor:
                 # player is represented as 'o'
                 if i == self.posY and I == self.posX:
                     lines[i].append(c.player('o'))
-                # unkown is represented as '?'
+                # unknown is represented as '?'
                 elif self.map[i][I] == '?':
                     lines[i].append('?')
                 # walls are represented as ' '
@@ -193,7 +199,10 @@ class Floor:
                 # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "descend stairs":
                     lines[i].append('↓')
-                # enemies are represented as !
+                # shops are represented as yellow !
+                elif self.map[i][I].specialAction == "shop":
+                    lines[i].append(c.special('!'))
+                # enemies are represented as red !
                 elif self.map[i][I].check_detection():
                     lines[i].append(c.threat('!'))
                 # locked rooms appear as locks
@@ -250,7 +259,7 @@ class Floor:
 
         # checks if new position is too big or small
         if not (self.check_pos(newY) and self.check_pos(newX)):
-            print("there is a wall there, it is protected by magic and is indestructible")
+            print("The wall here is protected by magic and is indestructible.")
             return False
 
         # checks if new tile is a wall
@@ -281,14 +290,14 @@ class Floor:
             options.append(c.loot("take item"))
             # prints items
             if len(room.loot) == 1:
-                print(f"\nthere is a {c.loot(room.loot[0].get_name())} here")
+                print(f"\nThere is a {c.loot(room.loot[0].get_name())} here.")
             else:
                 # gets a list of item names
                 names = []
                 for item in room.loot:
                     names.append(c.loot(item.get_name()))
                     
-                print(f"\nthere is a {', '.join(names[0:-1])}, and a {names[-1]} here")
+                print(f"\nThere is a {', '.join(names[0:-1])}, and a {names[-1]} here.")
 
         # presents options to player and gathers input
         if room.specialAction != "":
@@ -299,7 +308,7 @@ class Floor:
             
             print()
             for enemy in room.threats:
-                print(choice(enemy.stealthMessages))
+                print(c.desc(choice(enemy.stealthMessages)))
     
         return options
 
@@ -336,19 +345,19 @@ class Floor:
     # called when player chooses to wait
         self.update_map()
         update_effects(player)
-        print("you wait")
+        print(choice(["You wait.", "You take a moment to enjoy your surroundings.", "You ponder existence.", "You fall asleep for an unknown amount of time."]))
         
     def action_view_stats(self):
     # called when player decides to view stats
-        print(f"resistance : {player.resistance} | decreases the severity of poisons and injuries")
-        print(f"dodge : {player.dodge}% | chance to avoid damage")
+        print(f"resistance : {player.resistance} | decreases the duration of poisons and injuries")
+        print(f"dodge : {player.dodge}% | chance to avoid attacks")
         print(f"stealth : {player.stealth} | your ability to be unnoticed")
         print(f"awareness : {player.awareness} | detects enemies on the map")
-        print(f"appraisal : {player.appraisal} gold | allows you to determine the prices of items")
+        print(f"appraisal : {player.appraisal} gold | helps you detect fair prices")
         print()
         
         if player.gold > 0:
-                print(f"you have {player.gold} gold\n")
+            print(f"You have {c.loot(player.gold)} gold.\n")
 
         # prints effects
         for i in range(len(player.effects)):
@@ -367,7 +376,7 @@ class Floor:
         room = self.get_room()
         
         if len(player.inventory) >= player.inventorySize: # checks if inventory has space
-            print(f"you are carrying too much, you can only have {player.inventorySize} items")
+            print(f"You are carrying too much, you can only have {player.inventorySize} items.")
             return
 
         # decides options
@@ -378,12 +387,12 @@ class Floor:
         # gathers input if more than one item
         chosenItem = 0
         if len(room.loot) > 1:
-            chosenItem = gather_input("What do you pick up?", options) - 1
+            chosenItem = gather_input("What do you pickup?", options) - 1
 
         if chosenItem > -1: # -1 is cancel
             # moves item to inventory
             player.inventory.append(room.loot.pop(chosenItem))
-            print(f"you pickup the {options[chosenItem + 1]}")
+            print(f"You take the {options[chosenItem + 1]}.")
             print()
             #player.inventory[-1].inspect()
             print()
@@ -417,10 +426,11 @@ class Floor:
             # prints info about the item
             print(chosenItem.get_name())
             chosenItem.inspect()
+            if chosenItem.enchantment > 0:
+                print(f"This item is {c.blessed('blessed')}.")
+            elif chosenItem.enchantment < 0:
+                print(f"This item is {c.cursed('cursed')}, and cannot be dropped.")
             print()
-
-            if chosenItem.enchantment < 0:
-                print("This item is cursed, and cannot be dropped.")
 
             # asks for input
             playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
@@ -441,13 +451,13 @@ class Floor:
                 else:
                     player.ring = None
 
-                print("You unequip the " + chosenItem.get_name())
+                print("You unequip the " + chosenItem.get_name() + ".")
         
     def action_shop(self):
     # called when the player talks to the shopkeeper
         room = self.get_room()
         
-        print("you can't tell if the golem is alive, but you approach it anyways\n")
+        print("You can't tell if the golem is alive, but you approach it anyways.\n")
 
         options = ["cancel"]
         # displays items and forms options
@@ -518,7 +528,7 @@ class Floor:
         room = self.get_room()
         
         options = ["cancel"] + item_list()
-        itemUsed = gather_input("what do you use to unlock the chest?", options) - 1
+        itemUsed = gather_input("What do you use to unlock the chest?", options) - 1
 
         if itemUsed > -1: # -1 is cancel
             room.unlock_chest(player.inventory[itemUsed])
@@ -526,14 +536,23 @@ class Floor:
     def action_surprise(self):
         room = self.get_room()
         
-        for enemy in room.threats: # makes sure all enemies are surprised and stunned
-            enemy.affect(entities.Surprised, 1)
-            enemy.stunned = True
+        if room.areEnemiesAware:
+            print("You have already fought these enemies, they will not be surprised.")
+            playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"])
 
-        battle = Battle(room.threats)
+            if playerInput == 0:
+                return
+
+        else:
+            for enemy in room.threats: # makes sure all enemies are surprised and stunned
+                enemy.affect(entities.Surprised, 1)
+                enemy.stunned = True
+
+        battle = Battle(room.threats, True)
         battle.start_battle()
 
         room.threats = battle.enemies
+        room.areEnemiesAware = True
         
     def enter_floor(self):
     # starts when player enters the floor, ends when they exit
@@ -580,6 +599,8 @@ class Room:
     blocked = False # determines if it counts as a wall or not
     description = ""
     specialAction = ""
+
+    areEnemiesAware = False # once a combat is over, this is set to True, these enemies cannot be surprised if it's True
     
     def __init__(self, loot = [], threats = [], description = ""):
         self.loot = loot
@@ -599,7 +620,7 @@ class Room:
 
 class Chest(Room):
     blocked = False
-    description = "there is a " + c.special("chest") + " here with a " + c.special("gold lock")
+    description = "There is a " + c.special("chest") + " here with a " + c.special("gold lock") + "."
     specialAction = "unlock chest"
 
     def __init__(self):
@@ -613,12 +634,13 @@ class Chest(Room):
             return
 
         self.loot.extend(self.hiddenLoot)
-        print("you unlock the chest")
+        print("You unlock the chest.")
         self.description = ""
+        self.specialAction = ""
 
 class Wall(Room):
     blocked = True
-    description = "you are in a tunnel, there is rubble everywhere"
+    description = "You are in a tunnel, there is rubble everywhere."
     specialAction = ""
 
     def __init__(self):
@@ -626,7 +648,7 @@ class Wall(Room):
         self.threats = []
 
     def unblock(self): # requires a bomb or pickaxe
-        print("there is a wall in the way")
+        print("There is a wall in the way.")
         
         # gathers input
         options = ["cancel"]
@@ -657,7 +679,7 @@ class LockedRoom(Room):
             self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
 
     def unblock(self): # requires a certain key
-        print(f"this room is locked and requires a {self.lockType} key")
+        print(f"This room is locked and requires a {self.lockType} key.")
         
         # gathers input
         options = ["cancel"]
@@ -676,7 +698,7 @@ class LockedRoom(Room):
 
 class Stairs(Room):
     blocked = False
-    description = "there are " + c.special("stairs") + " here that lead down"
+    description = "There are " + c.special("stairs") + " here that lead down."
     specialAction = "descend stairs"
     
     def __init__(self):
@@ -685,7 +707,7 @@ class Stairs(Room):
 
 class Shop(Room):
     blocked = False
-    description = "you stumble upon the " + c.special("SHOPKEEPER") + ", a golem made of stone"
+    description = "You stumble upon the " + c.special("SHOPKEEPER") + ", an ancient stone golem."
     specialAction = "shop"
 
     def __init__(self, depth):
@@ -706,22 +728,22 @@ def gen_room(area, depth, type):
     if type == 1:
         if area == "prison":
             if randint(1, 3) == 1:
-                room.description = "you are in an empty prison cell"
+                room.description = "You are in an empty prison cell."
 
     # special room
     elif type == 2:
         if area == "prison":
             roomDesc = randint(1, 6)
             if roomDesc == 1:
-                room.description = "you are in a storage room"
+                room.description = "You are in an old storage room."
             elif roomDesc == 2:
-                room.description = "it appears that you are in what used to be an armory"
+                room.description = "You are in what used to be an armory."
             elif roomDesc == 3:
-                room.description = "you are in a large empty room"
+                room.description = "You are in a large, empty room."
 
     # secret room
     elif type == 3:
-        room.description = "this is a secret room"
+        room.description = "This is a secret room."
         
         loot.append(items.gen_loot())
         
@@ -766,9 +788,9 @@ class Generator:
             self.modifier = choice(["dangerous", "large", "cursed"])
 
             self.entryMessage = {
-                "dangerous":"You feel unsafe, watch your back.",
-                "large":"You hear your footsteps echo across the floor.",
-                "cursed":"A malevolent energy is lurking here."
+                "dangerous":c.desc("You feel unsafe, watch your back."),
+                "large":c.desc("You hear your footsteps echo across the floor."),
+                "cursed":c.desc("A malevolent energy is lurking here.")
             }[self.modifier]
 
             if self.modifier == "large":

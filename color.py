@@ -6,6 +6,8 @@ warning = "\033[1;31m"
 notification = "\033[1;33m"
 good = "\033[1;92m"
 
+cool = "\033[1;36m"
+
 # effect has effect as an argument because python tries to input self into them
 def effect_good(effect, text):
     return good + text + regular
@@ -59,3 +61,6 @@ def blessed(text):
 
 def cursed(text):
     return warning + text + regular
+
+def desc(text): # description
+    return cool + text + regular
