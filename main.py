@@ -1,7 +1,8 @@
 import dungeon
 import entities
-from extra import clear_console, gather_input
-import items hihihihihihihi
+from extra import clear_console
+from extra import gather_input
+import items
 from random import randint
 
 player = entities.player
@@ -20,8 +21,8 @@ player.inventory[1].consume(None)
 
 dungeon.sort_inventory()
 
-#battle = dungeon.Battle([entities.Ogre()])
-#battle.start_battle()
+# battle = dungeon.Battle([entities.Ogre()])
+# battle.start_battle()
 
 goldKeyLocation = randint(0, 2)
 
