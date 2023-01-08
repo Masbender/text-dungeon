@@ -7,6 +7,7 @@ from random import randint
 
 player = entities.player
 
+# placeholder character selection
 playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False)
 
 if playerInput == "Warrior":
@@ -17,19 +18,19 @@ if playerInput == "Thief":
     player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
     player.set_stats(0, -1, 1, 2, 1)
 
+# equips warriors armor or thief's cloak
 player.inventory[1].consume(None)
 
 dungeon.sort_inventory()
 
-# battle = dungeon.Battle([entities.Ogre()])
-# battle.start_battle()
-
+# GENERATION START
 goldKeyLocation = randint(0, 2)
 
 floors = []
 
 for i in range(3):
     generator = dungeon.Generator()
+
     generator.gen_floor("prison", i, 4 + ((i + 3) // 4))
 
     if i == goldKeyLocation: # adds gold key
@@ -45,6 +46,7 @@ for i in range(3):
 
     if i % 3 == 2: # adds boss
         floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Wall()]], 0, 0))
+# GENERATION END
 
 floor = 0
 while True:

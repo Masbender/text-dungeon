@@ -8,7 +8,7 @@ good = "\033[1;92m"
 
 cool = "\033[1;36m"
 
-# effect has effect as an argument because python tries to input self into them
+# effect colors has effect as an argument because python tries to input self into them
 def effect_good(effect, text):
     return good + text + regular
 

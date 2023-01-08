@@ -85,7 +85,7 @@ class Battle:
 
         canRun = True
         if self.enemies[0].isSpecial:
-            print(c.text(f"There is no escape from this fight."))
+            print(c.harm(f"There is no escape from this fight."))
             canRun = False
         
         while not self.battleOver:
@@ -390,6 +390,7 @@ class Floor:
 
         if chosenItem > -1: # -1 is cancel
             # moves item to inventory
+            room.loot[chosenItem].pickup()
             player.inventory.append(room.loot.pop(chosenItem))
             print(f"You take the {options[chosenItem + 1]}.")
             print()
@@ -520,6 +521,9 @@ class Floor:
 
                         if len(player.inventory) < player.inventorySize:
                             player.inventory.append(golemsDeal)
+                            golemsDeal.pickup
+
+                            sort_inventory()
                         else:
                             print("You drop the item because you are carrying too many things!")
                             room.loot.append(golemsDeal)
@@ -536,6 +540,8 @@ class Floor:
 
                         removedItem.pickup()
                         player.inventory.append(removedItem)
+
+                        sort_inventory()
 
                         playersDeal.pop(-1)
                     else:

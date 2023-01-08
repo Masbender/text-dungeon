@@ -48,7 +48,7 @@ class Item:
         return True
 
     def status(self):
-        return f"({self.uses})"
+        return f"({self.uses} uses)"
 
     def get_name(self):
         message = ""
@@ -669,6 +669,14 @@ class Bandage(Medicine):
         print(f"Cures bleeding.")
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
+    def get_name(self):
+        message = self.name
+
+        if self.status() != "":
+            message += " " + self.status()
+
+        return message
+
 # see gen_enemy() in entities.py for explanation
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
@@ -915,9 +923,9 @@ class SeeingOrb(Item):
 
     def status(self):
         if self.uses == 0:
-            return "uncharged"
+            return "(uncharged)"
         else:
-            return "charged"
+            return ""
 
     def consume(self, floor):
         if self.uses == 0:
