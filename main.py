@@ -1,7 +1,7 @@
 import dungeon
 import entities
 from extra import clear_console, gather_input
-import items
+import items hihihihihihihi
 from random import randint
 
 player = entities.player
