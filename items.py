@@ -386,7 +386,7 @@ class Armor(Item):
             
         return super().get_name()
 
-    def equip(self):
+    def put_on(self):
         if player.armor != None:
             #player.inventory.append(player.armor)
             player.armor.unequip()
@@ -416,13 +416,11 @@ class HeavyArmor(Armor):
 
     def consume(self, floor):
         self.equip()
+        self.put_on()
 
-        # applies stats
+    def equip(self):
         player.armorClass += self.armorClass + self.enchantment
         player.update_dexterity(-self.dexLoss)
-
-        print("You put on the " + self.name + ".")
-        return True
 
     def unequip(self):
         # this is where it unequips
@@ -439,13 +437,12 @@ class Cloak(Armor):
 
     def consume(self, floor):
         self.equip()
+        self.put_on()
 
+    def equip(self):
         # applies stats
         player.armorClass += self.enchantment
         player.stealth += 1
-
-        print("You put on the cloak.")
-        return True
 
     def unequip(self):
         player.armorClass -= self.enchantment
@@ -467,16 +464,15 @@ class ShadowCloak(Armor):
 
     def consume(self, floor):
         self.equip()
+        self.put_on()
 
+    def equip(self):
         enchantment = self.enchantment
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
 
         # applies stats
         player.stealth += 1 + enchantment
-
-        print("You put on the Cloak of Shadows.")
-        return True
 
     def unequip(self):
         enchantment = self.enchantment
@@ -499,7 +495,7 @@ class Ring(Item):
             
         return super().get_name()
 
-    def equip(self):
+    def put_on(self):
         if player.ring != None:
             #player.inventory.append(player.ring)
             player.ring.unequip()
@@ -526,7 +522,9 @@ class InfernoRing(Ring):
 
     def consume(self, floor):
         self.equip()
+        self.put_on()
 
+    def equip(self):
         player.strength += 2
         player.infernoRing = True
 
@@ -562,7 +560,9 @@ class BuffRing(Ring):
 
     def consume(self, floor):
         self.equip()
-        
+        self.put_on()
+
+    def equip(self):
         enchantment = self.enchantment
         if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
             enchantment -= 1
@@ -582,9 +582,6 @@ class BuffRing(Ring):
 
         elif self.stat == "awareness":
             player.awareness += 1 + enchantment
-        
-        print("You put on the " + self.name)
-        return True
 
     def unequip(self):
         enchantment = self.enchantment
@@ -745,24 +742,31 @@ class ScrollEnchant(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        chosenItem = gather_input("What item do you bless?", options)
+        itemIndex = gather_input("What item do you bless?", options)
 
-        if chosenItem == 0: # 0 cancels
+        if itemIndex == 0: # 0 cancels
             return False
         else:
-            chosenItem -= 1 # converts to proper index
+            itemIndex -= 1 # converts to proper index
+            chosenItem = player.inventory[itemIndex]
 
-            if player.inventory[chosenItem].enchantment > player.intelligence: # checks intelligence
+            if chosenItem.enchantment > player.intelligence: # checks intelligence
                 print("That item is too high of a level for your intelligence.")
                 return False
             
-            if player.inventory[chosenItem].enchantable: # checks if item is valid
-                player.inventory[chosenItem].enchantment += 1
-                print(player.inventory[chosenItem].name + " has been blessed.")
+            if chosenItem.enchantable: # checks if item is valid
+                if chosenItem == player.armor or chosenItem == player.ring:
+                    chosenItem.unequip()
+
+                chosenItem.enchantment += 1
+                print(chosenItem.name + " has been blessed.")
                 self.degrade()
+
+                if chosenItem == player.armor or chosenItem == player.ring:
+                    chosenItem.equip()
                 return True
             else:
-                print(player.inventory[chosenItem].name + " cannot be enchanted.")
+                print(chosenItem.name + " cannot be enchanted.")
                 return False
 
 class ScrollRepair(Scroll):

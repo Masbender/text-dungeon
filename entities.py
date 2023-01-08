@@ -496,7 +496,7 @@ class Ghoul(Enemy):
     name = "GHOUL"
     warning = "You smell a foul stench..."
     attackMessages = ["You confront GHOUL, a foul, agile beast!",
-                     "GHOUL detects your presence! It can barely see but has developed an excellent sense of smell."]
+                     "GHOUL detects your presence! It can barely see but has an excellent sense of smell."]
     stealthMessages = [c.threat("GHOUL") + " is roaming.",
                       c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
