@@ -757,7 +757,9 @@ class Shop(Room):
         self.loot = []
         self.threats = []
 
-        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5)]
+        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot()]
+        if self.stock[0].enchantable:
+            self.stock[0].enchantment += 1
         
         if self.stock[1].enchantable:
             self.stock[1].enchantment += randint(1, 2)
