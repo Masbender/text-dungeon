@@ -610,6 +610,7 @@ class Floor:
                 print()
 
             print_player_info()
+            print(f"Your inventory contains {len(player.inventory)}/{player.inventorySize} items.")
 
             options = self.get_options()
             
