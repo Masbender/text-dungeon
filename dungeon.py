@@ -68,8 +68,16 @@ def print_player_info():
     print(f"You have {c.health_status(player.health, player.maxHealth)} HP, {player.armorClass} AC")
     
     print_effects(player)
+
+    statsDisplay = ""
+
+    statsDisplay += f"{c.compare(player.strength, player.baseSTR)} STR | "
+    statsDisplay += f"{c.compare(player.constitution, player.baseCON)} CON | "
+    statsDisplay += f"{c.compare(player.dexterity, player.baseDEX)} DEX | "
+    statsDisplay += f"{c.compare(player.perception, player.basePER)} PER | "
+    statsDisplay += f"{c.compare(player.intelligence, player.baseINT)} INT"
     
-    print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
+    print(statsDisplay)
                 
 class Battle:
     def __init__(self, enemies, isSurprise = False):

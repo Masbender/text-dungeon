@@ -2,7 +2,7 @@
 
 regular = "\033[0m"
 
-warning = "\033[1;31m"
+bad = "\033[1;31m"
 notification = "\033[1;33m"
 good = "\033[1;92m"
 
@@ -16,28 +16,37 @@ def effect_neutral(effect, text):
     return notification + text + regular
 
 def effect_bad(effect, text):
-    return warning + text + regular
+    return bad + text + regular
+
+
+def compare(actual, base):
+    if actual < base:
+        return bad + str(actual) + regular
+    elif actual > base:
+        return good + str(actual) + regular
+    else:
+        return str(actual)
 
 
 def threat(text):
-    return warning + text + regular
+    return bad + text + regular
 
 def loot(text):
     return notification + text + regular
 
 
 def damage(text):
-    return warning + str(text) + regular
+    return bad + str(text) + regular
 
 def effect(eff):
     return eff.color(eff, eff.name.upper())
 
 def harm(text):
-    return warning + text + regular
+    return bad + text + regular
 
 
 def critical_health(text):
-    return warning + text + regular
+    return bad + text + regular
 
 def low_health(text):
     return notification + text + regular
@@ -66,7 +75,7 @@ def blessed(text):
     return good + text + regular
 
 def cursed(text):
-    return warning + text + regular
+    return bad + text + regular
 
 def desc(text): # description
     return cool + text + regular

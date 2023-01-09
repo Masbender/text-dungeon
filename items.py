@@ -928,18 +928,23 @@ class KnowledgeBook(Item):
 
         if chosenStat == "STR":
             player.update_strength(1)
+            player.baseSTR += 1
             print("Your attacks are stronger now.")
         elif chosenStat == "CON":
             player.update_constitution(1)
+            player.baseCON += 1
             print("Your health has been increased, diseases and injuries heal quicker.")
         elif chosenStat == "DEX":
             player.update_dexterity(1)
+            player.baseDEX += 1
             print("You are stealthier, you are better at dodging.")
         elif chosenStat == "PER":
             player.update_perception(1)
+            player.basePER += 1
             print("You're more aware, you are a better at bargaining.")
         elif chosenStat == "INT":
             player.update_intelligence(1)
+            player.baseINT += 1
             print("Your items break less, scrolls are stronger.")
         
         player.inventory.remove(self)

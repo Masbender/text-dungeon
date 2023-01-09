@@ -160,9 +160,23 @@ class Player(Creature):
     ring = None
     armor = None
 
+    baseSTR = 0
+    baseCON = 0
+    baseDEX = 0
+    basePER = 0
+    baseINT = 0
+
     # various stats for unusual effects
     infernoRing = False
     illusionRing = False
+
+    def set_stats(self, str, con, dex, per, int):
+        super().set_stats(str, con, dex, per, int)
+        self.baseSTR = str
+        self.baseCON = con
+        self.baseDEX = dex
+        self.basePER = per
+        self.baseINT = int
 
     def dodge(self, attacker):
         dodged = super().dodge(attacker)
