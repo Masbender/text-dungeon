@@ -198,8 +198,8 @@ class Floor:
                 # stairs are represented as ↓ or ↑
                 elif self.map[i][I].specialAction == "descend stairs":
                     lines[i].append('↓')
-                # shops are represented as yellow !
-                elif self.map[i][I].specialAction == "shop":
+                # shops and chests are represented as yellow !
+                elif self.map[i][I].specialAction == "shop" or self.map[i][I].specialAction == "unlock chest":
                     lines[i].append(c.special('!'))
                 # enemies are represented as red !
                 elif self.map[i][I].check_detection():
@@ -349,7 +349,7 @@ class Floor:
     def action_view_stats(self):
     # called when player decides to view stats
         print(f"resistance : {player.resistance} | decreases the duration of poisons and injuries")
-        print(f"dodge : {player.dodge}% | chance to avoid attacks")
+        print(f"dodge : {player.dodgeChance}% | chance to avoid attacks")
         print(f"stealth : {player.stealth} | your ability to be unnoticed")
         print(f"awareness : {player.awareness} | detects enemies on the map")
         print(f"appraisal : {player.appraisal} gold | helps you detect fair prices")

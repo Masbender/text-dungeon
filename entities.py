@@ -16,7 +16,7 @@ class Creature:
     # other basic stats, not always modified by subclasses
     immuneTo = None # effects that cannot be applied
     armorClass = 0 # reduced from incoming damage
-    dodge = 0 # percent chance to dodge
+    dodgeChance = 0 # percent chance to dodge
     resistance = 0 # resistance to some effects
     appraisal = 50 # highest value item that the value can be identified
 
@@ -49,7 +49,7 @@ class Creature:
         self.dexterity += increase
 
         self.stealth += increase
-        self.dodge += 5 * increase
+        self.dodgeChance += 5 * increase
 
     def update_constitution(self, increase):
     # constitution improves health and resistance
@@ -78,50 +78,39 @@ class Creature:
         self.update_intelligence(int - self.intelligence)
         self.update_perception(per - self.perception)
 
-    
-    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
-    # lowers health but applies armor class and dodge        
+    def dodge(self):
+        number = randint(0, 99)
+        return self.dodgeChance > number
+
+    def hurt(self, attacker, damage, piercing = 0, strength = None):
+    # lowers health but applies armor class and strength
+        # uses attackers strength as default
+        if strength == None:
+            strength = attacker.strength
+
+        finalDamage = damage
+
         # applies strength
-        if attackerStrength > 0:
-            damageTaken += randint(attackerStrength // 2, attackerStrength)
-        elif attackerStrength < 0: # prevents error from randint
-            damageTaken += randint(attackerStrength // -2, attackerStrength * -1) * -1
-        
-        # applies armor piercing to armor class
+        if strength > 0:
+            finalDamage += randint(strength // 2, strength)
+        elif strength < 0:
+            finalDamage += randint(strength, strength // 2)
+
+        # applies piercing
         damageReduction = self.armorClass
         if damageReduction > 0:
-            damageReduction -= armorPiercing
+            damageReduction -= piercing
             if damageReduction < 0:
                 damageReduction = 0
 
-        # applies armor class and randomness to damage
-        finalDamageTaken = damageTaken + randint(-1, 1) - damageReduction
-        if finalDamageTaken < 0:
-            finalDamageTaken = 0
+        # applies armor class and randomnes
+        finalDamage += + randint(-1, 1) - damageReduction 
+        if finalDamage < 0:
+            finalDamage = 0
 
-        # applies dodge
-        elif self.dodge > 0:
-            if randint(0, 99) < self.dodge:
-                finalDamageTaken = 0
-                message += " The attack was dodged!"
-        # if dodge is negative the attack may be critical
-        elif self.dodge < 0:
-            if randint(0, 99) < (self.dodge) * -1:
-                finalDamageTaken = int(finalDamageTaken * 1.5) + attackerStrength
-                message += " The attack was a critical hit!"
-
-        self.health -= finalDamageTaken
-
-        # applies color to finalDamageTaken
-        damageMessage = ""
-        if type(self) == Player:
-            damageMessage = c.harm(str(finalDamageTaken))
-        else:
-            damageMessage = c.player(str(finalDamageTaken))
-        
-        message = message.replace("_", damageMessage)
-        print(message)
-        return finalDamageTaken
+        # applies damage
+        self.health -= finalDamage
+        return finalDamage
 
     def heal(self, healthRestored):
     # heals health but makes sure it doesn't exceed max health
@@ -132,7 +121,7 @@ class Creature:
         self.health += finalHealthRestored
         return finalHealthRestored
 
-    def affect(self, effect, duration):
+    def affect(self, effect, duration = 0):
     # applies resistance and immunities to an effect
         # applies resistance
         if effect.natural and self.resistance > effect.level:
@@ -174,9 +163,9 @@ class Player(Creature):
     # various stats for unusual effects
     infernoRing = False
 
-    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
+    def hurt(self, attacker, damage, piercing = 0, strength = None):
     # damages armor
-        damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
+        damageDealt = super().hurt(attacker, damage, piercing, strength)
 
         if self.armor != None:
             self.armor.degrade()
@@ -470,10 +459,10 @@ class Draugr(Enemy):
     resistance = 2
     armorClass = 2
 
-    def hurt(self, damageTaken, attackerStrength, message, armorPiercing = 0):
-        damageDealt = super().hurt(damageTaken, attackerStrength, message, armorPiercing)
+    def hurt(self, attacker, damage, piercing = 0, strength = None):
+        damageDealt = super().hurt(attacker, damage, piercing, strength)
 
-        if randint(1, 2) or damageDealt > 4:
+        if randint(0, 1) or damageDealt > 4:
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
@@ -482,13 +471,17 @@ class Draugr(Enemy):
         return damageDealt
         
     def attack(self, enemies):
-        message = "DRAUGR hits you with their axe for _ damage"
+        if player.dodge():
+            print(f"You dodge DRAUGR's attack.")
+            return
+
         if randint(1, 3) == 1:
             if player.affect(Bleeding, 4):
-                player.hurt(4, self.strength, message + f", leaving you {c.harm('BLEEDING')}!")
-                return
-        
-        player.hurt(5, self.strength, message + "!")
+                damage = player.hurt(self, 4)
+                print(f"DRAUGR hits you with their axe for {c.damage(damage)} damage, leaving you {c.effect(Bleeding)}!")
+        else:
+            damage = player.hurt(self, 5)
+            print(f"DRAUGR hits you with their axe for {c.damage(damage)} damage!")
 
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
@@ -506,15 +499,21 @@ class Ghoul(Enemy):
     awareness = 2
     stealth = 1
     
-    dodge = 10
+    dodgeChance = 10
+    strength = -1 # 4 damage felt like too much but 3 is too little, so this nerfs 4 a little bit
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            print(f"GHOUL curses you with {c.harm('DECAY')}!")
+            if player.affect(Decay, 6):
+                print(f"GHOUL curses you with {c.effect(Decay)}!")
+                return
+        
+        if player.dodge():
+            print("You dodge GHOUL's bite.")
+            return
 
-            player.affect(Decay, 6)
-        else:
-            player.hurt(4, self.strength, "GHOUL bites you for _ damage!")
+        damage = player.hurt(self, 4)
+        print(f"GHOUL bites you for {c.damage(damage)} damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -545,35 +544,42 @@ class Skeleton(Enemy):
     # there is a chance that skeletons stagger and don't attack
         if randint(0, 5) < self.staggerChance:
             print(f"{self.name} staggers and misses their attack.")
+            self.stunned = False
         else:
             super().do_turn(enemies)
-        self.stunned = False
 
     def attack(self, enemies):
-        message = f"{self.name} hits you with their {self.weapon} for _ damage"
+        # checks dodge
+        if player.dodge():
+            print(f"You dodge SKELETONS {self.weapon}.")
+            return
 
-        # spears have armor piercing
-        armorPiercing = 1
-        if self.weapon == "spear" and randint(1, 3) < 3:
-            armorPiercing += 1
+        piercing = 0
+        effect = None
 
-        # swords can inflict bleeding
-        inflictsBleeding = (randint(1, 4) == 1) and (self.weapon == "sword")
-        if inflictsBleeding:
-            inflictsBleeding = player.affect(Bleeding, 4)
+        # spears can pierce
+        if self.weapon == "spear" and randint(0, 1):
+            piercing = 1
 
-        # maces can inflict dazed
-        inflictsDazed = (randint(1, 4) == 1) and (self.weapon == "mace")
-        if inflictsDazed:
-            inflictsDazed = player.affect(Dazed, 1)
+        # some weapons can inflict effects
+        if randint(1, 4) == 1:
+            # swords inflict bleeding
+            if self.weapon == "sword":
+                if player.affect(Bleeding, 4):
+                    effect = Bleeding
 
+            # maces inflict dazed
+            if self.weapon == "mace":
+                if player.affect(Dazed, 2):
+                    effect = Dazed
+        
         # does damage
-        if inflictsBleeding:
-            player.hurt(self.damage, self.strength, message + f", leaving you {c.harm('BLEEDING')}!", armorPiercing)
-        elif inflictsDazed:
-            player.hurt(self.damage, self.strength, message + f", leaving you {c.harm('DAZED')}!", armorPiercing)
+        if effect == None:
+            damage = player.hurt(self, self.damage, piercing)
+            print(f"{self.name} attacks you with their {self.weapon} for {c.damage(damage)} damage!")
         else:
-            player.hurt(self.damage, self.strength, message + "!", armorPiercing)
+            damage = player.hurt(self, self.damage, piercing)
+            print(f"{self.name} attacks you with their {self.weapon} for {c.damage(damage)} damage, leaving you {c.effect(effect)}!")
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
@@ -583,7 +589,6 @@ class SkeletonGuard(Skeleton):
                     "SKELETON GUARD will not let it's training go to waste!"]
     stealthMessages = [c.threat("SKELETON GUARD") + " is alert, but has failed to notice you.",
                       c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
-    undead = True
     isSpecial = True
 
     maxHealth = 15
@@ -613,6 +618,7 @@ class Thief(Enemy):
     stealth = 4
 
     time = 0
+    hasDart = True
 
     def do_turn(self, enemies):
     # as time goes on, they are more likely to run away
@@ -627,12 +633,24 @@ class Thief(Enemy):
             print(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
 
     def attack(self, enemies):
-        if player.health < player.maxHealth:
-            player.hurt(4, self.strength, "THIEF stabs you for _ damage!", randint(1, 2))
-        else:
-            print(f"THIEF hits you with a dart, inflicting {c.harm('POISONED')}!")
+        if not self.hasDart:
+            if player.dodge():
+                print("You dodge THIEF's dagger.")
+                return
 
-            player.affect(Poisoned, 6)
+            damage = player.hurt(self, 4)
+            print(f"THIEF stabs you for {c.damage(damage)} damage!")
+        else:
+            self.hasDart = False
+            if player.dodge():
+                print("You dodge THIEF's dart.")
+                return
+            
+            if player.affect(Poisoned, 6):
+                print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
+            else:
+                player.health -= 1
+                print(f"THIEF hits you with a dart, but you resist it's poison.")
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
@@ -646,7 +664,7 @@ class Ogre(Boss):
     strength = 1
     armorClass = 1
     resistance = 2
-    dodge = -10
+    dodgeChance = -10
 
     isRaged = False
     isCharging = False
@@ -669,29 +687,46 @@ class Ogre(Boss):
 
         if self.isCharging:
             self.isCharging = False
-            message = "OGRE hits you with a devastating blow, dealing _ damage!"
-            player.dodge -= 15 # attack is less likely to be dodge
-            damageDealt = player.hurt(8, self.strength, message, 2)
-            player.dodge += 15
-            # if enough damage is dealt, it breaks bones
-            if damageDealt > 8:
+
+            if player.dodge():
+                print("You manage to dodge OGRE's heavy swing.")
+                return
+            
+            damage = player.hurt(self, 8, 1)
+
+            if damage > 8:
                 if player.affect(BrokenBones, 1):
-                    print("you have " + c.harm("BROKEN BONES"))
+                    print(f"OGRE hits you with a heavy strike, dealing {c.damage(damage)} and inflicting {c.effect(BrokenBones)}!")
+                    return
+            
+            print(f"OGRE hits you with a heavy strike, dealing {c.damage(damage)} damage!")
             
         elif chosenMove == "heavy":
             print("OGRE prepares a heavy swing!")
             self.isCharging = True
 
         elif chosenMove == "slam":
-            message = f"OGRE slams the ground, dealing _ damage and leaving you {c.harm('DAZED')}!"
-            player.hurt(3, self.strength, message, 1)
-            player.affect(Dazed, 2)
+            if player.dodge():
+                print("OGRE slams the ground, but you get out of the way.")
+                return
+
+            damage = player.hurt(self, 3, 3)
+            if player.affect(Dazed, 2):
+                print(f"OGRE slams the ground, dealing {c.damage(damage)} damage and leaving you {c.effect(Dazed)}!")
+            else:
+                print(f"OGRE slams the ground, dealing {c.damage(damage)}!")            
 
         else:
-            message = "OGRE hits you with their club for _ damage"
+            if player.dodge():
+                print("You dodge OGRE's club!")
+                return
+
+            damage = player.hurt(self, 5)
+
             if player.affect(Bleeding, 3):
-                message += ", leaving you " + c.harm("BLEEDING")
-            player.hurt(5, self.strength, message + "!", 0)    
+                print(f"OGRE hits you with their club, dealing {c.damage(damage)} damage, leaving you {c.effect(Bleeding)}!")
+            else:
+                print(f"OGRE hits you with their club, delaing {c.damage(damage)} damage!")
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],

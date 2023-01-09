@@ -26,6 +26,12 @@ def loot(text):
     return notification + text + regular
 
 
+def damage(text):
+    return warning + str(text) + regular
+
+def effect(eff):
+    return eff.color(eff, eff.name.upper())
+
 def harm(text):
     return warning + text + regular
 

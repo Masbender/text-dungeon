@@ -100,7 +100,7 @@ class Item:
     def get_price(self, shop = False, returnString = False):
     # returns value based on uses and enchantment
     # shop indicates if the item is yours or a vendors
-        price = int((self.value + (self.enchantValueMod)) * (self.uses / self.maxUses / 2 + 0.5))
+        price = int((self.value + (self.enchantValueMod * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
         # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
 
         if player.appraisal < price:
@@ -167,6 +167,8 @@ class Weapon(Item):
 
         # gets player input
         self.target = enemies[gather_input("Who do you attack?", options)]
+
+        self.degrade()
         
         return damageDealt
 
@@ -194,20 +196,19 @@ class Sword(Weapon):
     
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
-        
-        # applies bleeding
-        bleedingApplied = False
+
+        if self.target.dodge():
+            print(f"{self.target.name} dodges your attack!")
+            return True
+            
+        damageDealt = self.target.hurt(player, damageDealt)
+
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            bleedingApplied = self.target.affect(entities.Bleeding, self.bleedDuration)
+            if self.target.affect(entities.Bleeding, self.bleedDuration):
+                print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+                return True
 
-        # does damage and prints message
-        message = f"You swing the {self.name} at the {self.target.name} for _ damage"
-        if bleedingApplied:
-            self.target.hurt(damageDealt, player.strength, message + ", leaving them bleeding")
-        else:
-            self.target.hurt(damageDealt, player.strength, message + "!")
-
-        self.degrade() # degrade is called when the item does something
+        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
         return True
 
 class JudgementSword(Sword):
@@ -251,11 +252,13 @@ class Spear(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
 
-        # does damage and prints message, armor piercing has some randomness
-        message = f"You stab the {self.target.name} with the {self.name} for _ damage!"
-        self.target.hurt(damageDealt, player.strength, message, (self.armorPiercing - randint(0, 1)) * int(self.uses > 0))
+        if self.target.dodge():
+            print(f"{self.target.name} dodges your attack!")
+            return True
+            
+        damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        self.degrade() # degrade is called when the item does something
+        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
         return True
 
 class Mace(Weapon):
@@ -274,21 +277,19 @@ class Mace(Weapon):
     
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
-        
-        # applies stun
-        stunApplied = False
+
+        if self.target.dodge():
+            print(f"{self.target.name} dodges your attack!")
+            return True
+            
+        damageDealt = self.target.hurt(player, damageDealt)
+
         if randint(0, 11) < self.stunChance and self.uses > 0:
-            stunApplied = True
             self.target.stunned = True
+            print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage, leaving them stunned.")
+            return True
 
-        # does damage and prints message
-        message = f"You hit the {self.target.name} with your {self.name} for _ damage"
-        if stunApplied:
-            self.target.hurt(damageDealt, player.strength, message + ", leaving them stunned")
-        else:
-            self.target.hurt(damageDealt, player.strength, message + "!")
-
-        self.degrade() # degrade is called when the item does something
+        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -326,22 +327,23 @@ class Dagger(Weapon):
         print(f"It does {self.damage + self.enchantment} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
         print("Daggers use dexterity (DEX) instead of strength (STR).")
         if self.uses < 0:
-            print("Because it's broken it does less damage and doesn't gain bonus damage towards enemies with full health.")
+            print("Because it's broken it does less damage and doesn't gain bonus damage..")
 
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
-        
-        # applies stealth bonus damage
+
+        if self.target.dodge():
+            print(f"{self.target.name} dodges your attack!")
+            return True
+            
+        damageDealt = self.target.hurt(player, damageDealt)
+
         for effect in self.target.effects:
             if isinstance(effect, entities.Surprised):
                 damageDealt += self.sneakBonus
                 break
 
-        # does damage and prints message
-        message = f"You stab {self.target.name} with your {self.name} for _ damage!"
-        self.target.hurt(damageDealt, player.dexterity, message)
-
-        self.degrade() # degrade is called when the item does something
+        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
@@ -576,7 +578,7 @@ class BuffRing(Ring):
             player.stealth += 1 + enchantment
             
         elif self.stat == "dodge":
-            player.dodge += 5 + 5 * enchantment
+            player.dodgeChance += 5 + 5 * enchantment
             
         elif self.stat == "health":
             player.maxHealth += 2 + 2 * enchantment
@@ -597,7 +599,7 @@ class BuffRing(Ring):
             player.stealth -= 1 + enchantment
             
         elif self.stat == "dodge":
-            player.dodge -= 5 + 5 * enchantment
+            player.dodgeChance -= 5 + 5 * enchantment
             
         elif self.stat == "health":
             player.maxHealth -= 2 + 2 * enchantment
@@ -844,14 +846,15 @@ class Bomb(Item):
             if issubclass(type(enemy), entities.Boss):
                 damage = 8
 
-            enemy.hurt(damage, 0, f"The bomb does _ damage to {enemy.name}!")
+            damage = enemy.hurt(player, damage, 1)
+            print(f"The bomb does {c.damage(damage)} damage to {enemy.name}!")
 
         player.inventory.remove(self)
         return True
 
     def dig(self):
         player.inventory.remove(self)
-        print("the bomb explodes, after the rubble clears you see that the wall has collapsed")
+        print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
 class Key(Item):
