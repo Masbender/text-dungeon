@@ -103,11 +103,14 @@ class Item:
         price = int((self.value + (self.enchantValueMod * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
         # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
 
+        if shop:
+            price = int(price * 1.2) # 20% more expensive why buying
+        
         if player.appraisal < price:
             if shop:
-                price = int(price * 1.3)
+                price = int(price * 1.3) # 30% more expensive when buying if unappraised
             else:
-                price = int(price * 0.7)
+                price = int(price / 1.3) # 30% less expensive when selling if unappraised
 
             if returnString:
                 return str(price) + '?'
@@ -897,16 +900,6 @@ class Key(Item):
 
     def inspect(self):
         print(f"This key can open a {self.type} lock.")
-
-    def unlock(self, lockType):
-        if self.type == lockType:
-            player.inventory.remove(self)
-            print("the lock opens")
-            return True
-        else:
-            print("the key doesn't fit")
-            return False
-
 
 # number 1 through 16 is chosen
 # if standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]

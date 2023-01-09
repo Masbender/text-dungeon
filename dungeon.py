@@ -180,6 +180,7 @@ class Floor:
             return False
         else:
             return True
+
     def print_map(self):
         # prepares a list with the proper characters
         lines = []
@@ -569,11 +570,7 @@ class Floor:
     # called when player uses an item
         room = self.get_room()
         
-        options = ["cancel"] + item_list()
-        itemUsed = gather_input("What do you use to unlock the chest?", options) - 1
-
-        if itemUsed > -1: # -1 is cancel
-            room.unlock_chest(player.inventory[itemUsed])
+        room.unlock_chest()
 
     def action_surprise(self):
         room = self.get_room()
@@ -669,17 +666,30 @@ class Chest(Room):
     def __init__(self):
         self.loot = []
         self.threats = []
-        self.lock = "gold"
+        self.lockType = "gold"
         self.hiddenLoot = [items.gen_loot()]
 
-    def unlock_chest(self, key):
-        if not key.unlock(self.lock):
-            return
+    def unlock_chest(self):
+        keyIndex = -1
+        for item in player.inventory:
+            if type(item) == items.Key:
+                if item.type == self.lockType:
+                    keyIndex = player.inventory.index(item)
 
-        self.loot.extend(self.hiddenLoot)
-        print("You unlock the chest.")
-        self.description = ""
-        self.specialAction = ""
+        if keyIndex == -1:
+            print(f"You need a {self.lockType} key to unlock this.")
+        else:
+            options = ["cancel", "use key"]
+
+            playerInput = bool(gather_input(f"Do you use a {self.lockType} key?", options))
+
+            if playerInput:
+                player.inventory.pop(keyIndex)
+
+                self.loot.extend(self.hiddenLoot)
+                print("You unlock the chest.")
+                self.description = ""
+                self.specialAction = ""
 
 class Wall(Room):
     blocked = True
@@ -723,21 +733,26 @@ class LockedRoom(Room):
 
     def unblock(self): # requires a certain key
         print(f"This room is locked and requires a {self.lockType} key.")
-        
-        # gathers input
-        options = ["cancel"]
+
+        keyIndex = -1
         for item in player.inventory:
-            options.append(item.get_name())
-        
-        itemUsed = gather_input("How do you unlock it?", options)
+            if type(item) == items.Key:
+                if item.type == self.lockType:
+                    keyIndex = player.inventory.index(item)
 
-        # checks if item works then uses it
-        unlocked = False
-        if itemUsed > 0: # 0 is cancel
-            itemUsed -= 1 # reverts back to proper index
-            unlocked = player.inventory[itemUsed].unlock(self.lockType)
+        if keyIndex == -1:
+            return False
+        else:
+            options = ["cancel", "use key"]
 
-        return unlocked
+            playerInput = bool(gather_input(f"Do you use a {self.lockType} key?", options))
+
+            if playerInput:
+                player.inventory.pop(keyIndex)
+                print("You unlock the door.")
+                return True
+
+            return False
 
 class Stairs(Room):
     blocked = False
