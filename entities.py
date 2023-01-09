@@ -78,7 +78,7 @@ class Creature:
         self.update_intelligence(int - self.intelligence)
         self.update_perception(per - self.perception)
 
-    def dodge(self):
+    def dodge(self, attacker):
         number = randint(0, 99)
         return self.dodgeChance > number
 
@@ -162,6 +162,16 @@ class Player(Creature):
 
     # various stats for unusual effects
     infernoRing = False
+    illusionRing = False
+
+    def dodge(self, attacker):
+        dodged = super().dodge(attacker)
+
+        if dodged and self.illusionRing:
+            attacker.stunned = True
+            print(f"Your Ring of Illusion stuns {attacker.name}.")
+
+        return dodged
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
     # damages armor
@@ -471,7 +481,7 @@ class Draugr(Enemy):
         return damageDealt
         
     def attack(self, enemies):
-        if player.dodge():
+        if player.dodge(self):
             print(f"You dodge DRAUGR's attack.")
             return
 
@@ -508,7 +518,7 @@ class Ghoul(Enemy):
                 print(f"GHOUL curses you with {c.effect(Decay)}!")
                 return
         
-        if player.dodge():
+        if player.dodge(self):
             print("You dodge GHOUL's bite.")
             return
 
@@ -550,7 +560,7 @@ class Skeleton(Enemy):
 
     def attack(self, enemies):
         # checks dodge
-        if player.dodge():
+        if player.dodge(self):
             print(f"You dodge SKELETONS {self.weapon}.")
             return
 
@@ -634,7 +644,7 @@ class Thief(Enemy):
 
     def attack(self, enemies):
         if not self.hasDart:
-            if player.dodge():
+            if player.dodge(self):
                 print("You dodge THIEF's dagger.")
                 return
 
@@ -642,7 +652,7 @@ class Thief(Enemy):
             print(f"THIEF stabs you for {c.damage(damage)} damage!")
         else:
             self.hasDart = False
-            if player.dodge():
+            if player.dodge(self):
                 print("You dodge THIEF's dart.")
                 return
             
@@ -688,7 +698,7 @@ class Ogre(Boss):
         if self.isCharging:
             self.isCharging = False
 
-            if player.dodge():
+            if player.dodge(self):
                 print("You manage to dodge OGRE's heavy swing.")
                 return
             
@@ -706,7 +716,7 @@ class Ogre(Boss):
             self.isCharging = True
 
         elif chosenMove == "slam":
-            if player.dodge():
+            if player.dodge(self):
                 print("OGRE slams the ground, but you get out of the way.")
                 return
 
@@ -717,7 +727,7 @@ class Ogre(Boss):
                 print(f"OGRE slams the ground, dealing {c.damage(damage)}!")            
 
         else:
-            if player.dodge():
+            if player.dodge(self):
                 print("You dodge OGRE's club!")
                 return
 

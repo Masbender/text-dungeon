@@ -197,7 +197,7 @@ class Sword(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
 
-        if self.target.dodge():
+        if self.target.dodge(player):
             print(f"{self.target.name} dodges your attack!")
             return True
             
@@ -252,7 +252,7 @@ class Spear(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
 
-        if self.target.dodge():
+        if self.target.dodge(player):
             print(f"{self.target.name} dodges your attack!")
             return True
             
@@ -278,7 +278,7 @@ class Mace(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
 
-        if self.target.dodge():
+        if self.target.dodge(player):
             print(f"{self.target.name} dodges your attack!")
             return True
             
@@ -332,7 +332,7 @@ class Dagger(Weapon):
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
 
-        if self.target.dodge():
+        if self.target.dodge(player):
             print(f"{self.target.name} dodges your attack!")
             return True
             
@@ -501,6 +501,10 @@ class Ring(Item):
             
         return super().get_name()
 
+    def consume(self, floor):
+        self.equip()
+        self.put_on()
+
     def put_on(self):
         if player.ring != None:
             #player.inventory.append(player.ring)
@@ -516,8 +520,6 @@ class Ring(Item):
 
 class InfernoRing(Ring):
 # increases strength, but burns you when attacked
-    enchantable = True
-
     def __init__(self):
         super().__init__("Ring of Rage", 100, 1)
 
@@ -526,10 +528,6 @@ class InfernoRing(Ring):
         print("When you are attacked, you might be burned (-1 AC).")
         print("The duration of burned depends on this items enchantment level.")
 
-    def consume(self, floor):
-        self.equip()
-        self.put_on()
-
     def equip(self):
         player.strength += 2
         player.infernoRing = True
@@ -537,6 +535,35 @@ class InfernoRing(Ring):
     def unequip(self):
         player.strength -= 2
         player.infernoRing = False
+
+class IllusionRing(Ring):
+# increases dodged, when you dodge the attacker is stunned
+    def __init__(self):
+        super().__init__("Ring of Illusion", 100, 1)
+
+    def inspect(self):
+        enchantment = self.enchantment
+        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
+            enchantment -= 1
+
+        print("Whenever you dodge an attack, your attacker gets stunned.")
+        print(f"Increases your chance to dodge by {5 + 5 * enchantment}%.")
+
+    def equip(self):
+        enchantment = self.enchantment
+        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
+            enchantment -= 1
+
+        player.illusionRing = True
+        player.dodgeChance += 5 + 5 * enchantment
+
+    def unequip(self):
+        enchantment = self.enchantment
+        if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
+            enchantment -= 1
+
+        player.illusionRing = False
+        player.dodgeChance -= 5 + 5 * enchantment
 
 class BuffRing(Ring):
 # boosts one stat by 1 level
@@ -962,7 +989,7 @@ standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCu
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak, InfernoRing, SeeingOrb, EbonyDagger, FlamingMace]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
