@@ -20,7 +20,6 @@ if playerInput == "Thief":
 
 # equips warriors armor or thief's cloak
 player.inventory[1].consume(None)
-player.inventory.append(items.IllusionRing())
 
 dungeon.sort_inventory()
 

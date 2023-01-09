@@ -161,12 +161,15 @@ class Weapon(Item):
     def attack(self, enemies):
         damageDealt = self.damage - 2 * int(self.uses <= 0) + self.enchantment
 
-        options = [] # gets a list of enemy names
-        for enemy in enemies:
-            options.append(enemy.name)
-
-        # gets player input
-        self.target = enemies[gather_input("Who do you attack?", options)]
+        if len(enemies) == 1:
+            self.target = enemies[0]
+        else:
+            options = [] # gets a list of enemy names
+            for enemy in enemies:
+                options.append(enemy.name)
+    
+            # gets player input
+            self.target = enemies[gather_input("Who do you attack?", options)]
 
         self.degrade()
         
