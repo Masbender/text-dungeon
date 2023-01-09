@@ -918,7 +918,7 @@ class KnowledgeBook(Item):
         print("Reading this will let you level up one stat.")
 
     def consume(self, floor):
-        print(f"{player.strength} STR | {player.constitution} CON | {player.dexterity} DEX | {player.perception} PER | {player.intelligence} INT")
+        print(f"{player.baseSTR} STR | {player.baseCON} CON | {player.baseDEX} DEX | {player.basePER} PER | {player.baseINT} INT")
         
         options = ["cancel", "STR", "CON", "DEX", "PER", "INT"]
         chosenStat = gather_input("What stat do you improve?", options, False)

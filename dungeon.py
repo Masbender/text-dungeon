@@ -1,3 +1,5 @@
+0
+2
 from random import randint, choice
 from extra import clear_console, gather_input
 import entities
@@ -511,7 +513,7 @@ class Floor:
                     for item in playersDeal:
                         item.pickup()
                         player.inventory.append(item)
-
+                    sort_inventory()
                     break
 
                 elif playerInput == -2:
