@@ -341,13 +341,14 @@ class Dagger(Weapon):
         if self.target.dodge(player):
             print(f"{self.target.name} dodges your attack!")
             return True
-            
-        damageDealt = self.target.hurt(player, damageDealt)
 
         for effect in self.target.effects:
             if isinstance(effect, entities.Surprised):
                 damageDealt += self.sneakBonus
+                print("Sneak attack!")
                 break
+
+        damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
         print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
         return True
@@ -879,7 +880,7 @@ class Bomb(Item):
             if issubclass(type(enemy), entities.Boss):
                 damage = 8
 
-            damage = enemy.hurt(player, damage, 1)
+            damage = enemy.hurt(player, damage, 1, 0)
             print(f"The bomb does {c.damage(damage)} damage to {enemy.name}!")
 
         player.inventory.remove(self)
