@@ -277,7 +277,7 @@ class Mace(Weapon):
         self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to inflict stun.")
+        print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to stun.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot stun.")
     
@@ -365,7 +365,7 @@ class EbonyDagger(Dagger):
 
     def inspect(self):
         super().inspect()
-        print("The Ebony Dagger increases your maximum health for every kill.")
+        print("Your max health increases by 1 for every kill with the Ebony Dagger.")
 
     def attack(self, enemies):
         super().attack(enemies)
@@ -706,7 +706,7 @@ class Bandage(Medicine):
         super().__init__("bandage", 35, 3, 4, entities.Regeneration, 4, [entities.Bleeding])
 
     def inspect(self):
-        print(f"It heals around 4 HP and heals an addition 1 HP per turn for 4 turns.")
+        print(f"It heals around 4 HP and applies REGENERATION.")
         print(f"Cures bleeding.")
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
@@ -730,7 +730,7 @@ class Rations(Medicine):
         return ""
         
     def inspect(self):
-        print("Eating the rations will heal around 7 health, and 8 more health over 4 turns.")
+        print("Heals around 7 health instantly, and 8 more health over 4 turns.")
         print("You don't have enough time to eat this during combat.")
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 

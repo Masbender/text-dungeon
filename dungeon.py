@@ -1,5 +1,3 @@
-0
-2
 from random import randint, choice
 from extra import clear_console, gather_input
 import entities
@@ -1117,6 +1115,12 @@ class Generator:
         validRooms = self.rooms
         
         for enemy in self.addEnemies:
+            # ERROR CATCHER
+            if len(validRooms) == 0:
+                for i in range(len(layoutNums)):
+                    print(self.layoutNums[i])
+                input("ERROR DETECTED, DISPLAYING MAP (ENTER TO DISMISS)")
+            
             coords = choice(validRooms)
             room = self.layoutRooms[coords[0]][coords[1]]
 
