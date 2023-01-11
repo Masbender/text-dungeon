@@ -123,6 +123,8 @@ class Creature:
 
     def affect(self, effect, duration = 0):
     # applies resistance and immunities to an effect
+        isPermanent = duration == 0
+        
         # applies resistance
         if effect.natural and self.resistance > effect.level:
             if (duration - self.resistance + effect.level) > 0:
@@ -144,7 +146,13 @@ class Creature:
 
         # checks if immune to effect
         if not effect in self.immuneTo:
-            self.effects.append(effect(self))
+            effect = effect(self)
+
+            if isPermanent:
+                effect.isPermanent = True
+                duration = -1
+            
+            self.effects.append(effect)
             self.effectDurations.append(duration)
             return True
         else:
@@ -248,7 +256,7 @@ class Boss(Enemy):
 class Effect:
     natural = False
     level = 0
-    permanent = False
+    isPermanent = False
     color = c.effect_neutral
     
     def __init__(self, target):
@@ -384,7 +392,6 @@ class BrokenBones(Effect):
     name = "broken bones"
     natural = True
     level = 3
-    permanent = True
     color = c.effect_bad
 
     def __init__(self, target):
@@ -719,7 +726,7 @@ class Ogre(Boss):
             damage = player.hurt(self, 8, 1)
 
             if damage > 8:
-                if player.affect(BrokenBones, 1):
+                if player.affect(BrokenBones):
                     print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             

@@ -55,7 +55,7 @@ def print_effects(creature):
     effects = []
     for i in range(len(creature.effects)):
         effect = creature.effects[i]
-        if effect.permanent:
+        if effect.isPermanent:
             effects.append(f"{effect.color(effect.name)}")
         else:
             effects.append(f"{effect.color(effect.name)} - {creature.effectDurations[i]} turns")
