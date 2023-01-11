@@ -37,10 +37,10 @@ def item_list():
 
     return itemList
 
-def update_effects(creature):
+def update_effects(creature, enemies = None):
 # iterates through every effect
     for i in range(len(creature.effects)):
-        creature.effects[i].update()
+        creature.effects[i].update(enemies)
         creature.effectDurations[i] -= 1
 
     # deletes expired effects
@@ -147,7 +147,7 @@ class Battle:
     
     def enemy_turn(self, enemy):
         enemy.do_turn(self.enemies)
-        update_effects(enemy)
+        update_effects(enemy, self.enemies)
 
     def player_turn(self):
         turnOver = False
@@ -158,7 +158,7 @@ class Battle:
 
             turnOver = player.inventory[itemUsed].attack(self.enemies)
 
-        update_effects(player)
+        update_effects(player, self.enemies)
 
     def run_prompt(self): # if all enemies are stunned, the player can choose to run
         playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False)

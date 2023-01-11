@@ -254,7 +254,7 @@ class Effect:
     def __init__(self, target):
         self.target = target
 
-    def update(self):
+    def update(self, enemies):
     # called every turn
         pass
 
@@ -276,7 +276,7 @@ class Bleeding(Effect):
     def __init__(self, target):
         self.target = target
 
-    def update(self):
+    def update(self, enemies):
         # lowers health by 1 every turn
         self.target.health -= 1
 
@@ -291,7 +291,7 @@ class Regeneration(Effect):
     def __init__(self, target):
         self.target = target
 
-    def update(self):
+    def update(self, enemies):
         self.target.heal(1)
 
     def inspect(self):
@@ -305,7 +305,7 @@ class WellFed(Effect):
     def __init__(self, target):
         self.target = target
 
-    def update(self):
+    def update(self, enemies):
         self.target.heal(2)
 
     def inspect(self):
@@ -362,7 +362,7 @@ class Decay(Effect):
 
         self.target.update_constitution(-self.decayLevel)
 
-    def update(self):
+    def update(self, enemies):
         self.turnsToProgress -= 1
 
         if self.turnsToProgress == 0:
@@ -433,7 +433,7 @@ class OnFire(Effect):
     def __init__(self, target):
         self.target = target
 
-    def update(self):
+    def update(self, enemies):
         self.target.affect(Burned, 5)
         self.target.health -= 2
 
@@ -453,7 +453,7 @@ class Poisoned(Effect):
         
         self.target.strength -= 1
 
-    def update(self):
+    def update(self, enemies):
         self.target.health -= 1
 
     def reverse(self):
