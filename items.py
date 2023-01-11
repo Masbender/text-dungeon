@@ -211,10 +211,10 @@ class Sword(Weapon):
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
             if self.target.affect(entities.Bleeding, self.bleedDuration):
-                print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+                print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
-        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class JudgementSword(Sword):
@@ -264,7 +264,7 @@ class Spear(Weapon):
             
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class Mace(Weapon):
@@ -292,10 +292,10 @@ class Mace(Weapon):
 
         if randint(0, 11) < self.stunChance and self.uses > 0:
             self.target.stunned = True
-            print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage, leaving them stunned.")
+            print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.harm('stunned')}.")
             return True
 
-        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -350,7 +350,7 @@ class Dagger(Weapon):
 
         damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
-        print(f"You attack {self.target.name} for {c.damage(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
@@ -442,7 +442,7 @@ class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
     def __init__(self):
         super().__init__("cloak", 30, 25)
-        self.enchantValueMod = int(self.value * 0.75)
+        self.enchantValueMod = int(self.value * 0.8)
 
     def inspect(self):
         print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
@@ -881,7 +881,7 @@ class Bomb(Item):
                 damage = 8
 
             damage = enemy.hurt(player, damage, 1, 0)
-            print(f"The bomb does {c.damage(damage)} damage to {enemy.name}!")
+            print(f"The bomb does {c.harm(damage)} damage to {enemy.name}!")
 
         player.inventory.remove(self)
         return True

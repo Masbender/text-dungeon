@@ -89,11 +89,11 @@ class Battle:
         clear_console()
 
         # prints message
-        print(c.desc(choice(self.enemies[0].attackMessages)))
+        print(c.desc(choice(self.enemies[0].battleMessages)))
 
         canRun = True
         if self.enemies[0].isSpecial:
-            print(c.harm(f"There is no escape from this fight."))
+            print(c.warning(f"There is no escape from this fight."))
             canRun = False
         
         while not self.battleOver:
@@ -365,7 +365,7 @@ class Floor:
         print()
         
         if player.gold > 0:
-            print(f"You have {c.loot(str(player.gold))} gold.\n")
+            print(f"You have {c.highlight(str(player.gold))} gold.\n")
 
         # prints effects
         for i in range(len(player.effects)):
@@ -475,7 +475,7 @@ class Floor:
             options.append("buy " + item.get_name())
             print(f"{item.get_name()}, costs {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
 
-        print(f"\nYou have {c.loot(str(player.gold))} gold.")
+        print(f"\nYou have {c.highlight(str(player.gold))} gold.")
 
         playerInput = gather_input(f"What would you like to buy?", options) - 1
 
@@ -487,25 +487,25 @@ class Floor:
             playersPrice = 0
 
             while True:
-                print(f"{golemsDeal.get_name()} costs {golemsDeal.get_price(True, True)} gold.\n")
+                print(f"{golemsDeal.get_name()} costs {c.deal_bad(golemsDeal.get_price(True, True))} gold.\n")
                 
                 if len(playersDeal) > 0:
-                    print(f"Your deal (worth {c.blessed(str(playersPrice))} gold):")
+                    print(f"Your deal (worth {c.deal_good(str(playersPrice))} gold):")
                     for item in playersDeal:
                         print(f"{item.get_name()} is worth {item.get_price(False, True)} gold,")
                     print()
                 
                 if playersPrice < golemsPrice:
-                    print(f"This deal will cost you {c.cursed(str(golemsPrice - playersPrice))} gold.")
+                    print(f"This deal will cost you {c.deal_bad(str(golemsPrice - playersPrice))} gold.")
                 else:
-                    print(c.blessed("This deal will not cost you any gold."))
+                    print(c.deal_good("This deal will not cost you any gold."))
 
                 options = ["cancel", "accept deal", "undo"]
 
                 for item in player.inventory:
                     options.append(f"{item.get_name()}, worth {item.get_price(False, False)} gold")
 
-                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.loot(str(player.gold))} gold)", options) - 3
+                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options) - 3
 
                 if playerInput == -3:
                     for item in playersDeal:
@@ -516,14 +516,14 @@ class Floor:
 
                 elif playerInput == -2:
                     if playersPrice + player.gold < golemsPrice:
-                        print(c.desc(choice(["\"YOU DARE TRY TO SCAM ME?\"", "\"DO YOU THINK I'M A FOOL?\"", "\"YOU CLEARLY CAN'T AFFORD THIS.\""])))
+                        print(c.warning(choice(["\"YOU DARE TRY TO SCAM ME?\"", "\"DO YOU THINK I'M A FOOL?\"", "\"YOU CLEARLY CAN'T AFFORD THIS.\""])))
                     else:
                         goldSpent = 0
                         if playersPrice < golemsPrice:
                             goldSpent = golemsPrice - playersPrice
                             player.gold -= goldSpent
                             
-                        print(f"You buy {golemsDeal.get_name()} for {goldSpent} gold.")
+                        print(f"You buy {c.highlight(golemsDeal.get_name())} for {c.highlight(goldSpent)} gold.")
 
                         if goldSpent > 0:
                             print("The golem absorbs the gold.")
@@ -668,7 +668,7 @@ class Room:
 
 class Chest(Room):
     blocked = False
-    description = "There is a " + c.special("chest") + " here with a " + c.special("gold lock") + "."
+    description = "There is a " + c.special("chest") + " here with a " + c.highlight("gold lock") + "."
     specialAction = "unlock chest"
 
     def __init__(self):
@@ -685,11 +685,11 @@ class Chest(Room):
                     keyIndex = player.inventory.index(item)
 
         if keyIndex == -1:
-            print(f"You need a {self.lockType} key to unlock this.")
+            print(f"You need a {c.highlight(self.lockType)} key to unlock this.")
         else:
             options = ["cancel", "use key"]
 
-            playerInput = bool(gather_input(f"Do you use a {self.lockType} key?", options))
+            playerInput = bool(gather_input(f"Do you use a {c.highlight(self.lockType)} key?", options))
 
             if playerInput:
                 player.inventory.pop(keyIndex)
@@ -764,7 +764,7 @@ class LockedRoom(Room):
 
 class Stairs(Room):
     blocked = False
-    description = "There are " + c.special("stairs") + " here that lead down."
+    description = "There are " + c.highlight("stairs") + " here that lead down."
     specialAction = "descend stairs"
     
     def __init__(self):
@@ -773,7 +773,7 @@ class Stairs(Room):
 
 class Shop(Room):
     blocked = False
-    description = "You stumble upon the " + c.special("SHOPKEEPER") + ", an ancient stone golem."
+    description = "You stumble upon the " + c.highlight("SHOPKEEPER") + ", an ancient stone golem."
     specialAction = "shop"
 
     def __init__(self, depth):
@@ -856,9 +856,9 @@ class Generator:
             self.modifier = choice(["dangerous", "large", "cursed"])
 
             self.entryMessage = {
-                "dangerous":c.desc("You feel unsafe, watch your back."),
+                "dangerous":c.warning("You feel unsafe, watch your back."),
                 "large":c.desc("You hear your footsteps echo across the floor."),
-                "cursed":c.desc("A malevolent energy is lurking here.")
+                "cursed":c.warning("A malevolent energy is lurking here.")
             }[self.modifier]
 
             if self.modifier == "large":
@@ -1117,7 +1117,7 @@ class Generator:
         for enemy in self.addEnemies:
             # ERROR CATCHER
             if len(validRooms) == 0:
-                for i in range(len(layoutNums)):
+                for i in range(len(self.layoutNums)):
                     print(self.layoutNums[i])
                 input("ERROR DETECTED, DISPLAYING MAP (ENTER TO DISMISS)")
             

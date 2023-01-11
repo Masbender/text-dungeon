@@ -197,7 +197,7 @@ class Player(Creature):
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
             self.affect(Burned, 6 - self.ring.enchantment)
-            print(f"Your ring of rage {c.harm('BURNS')} you!")
+            print(f"You are {c.effect(Burned)} by your Ring of Rage!")
 
         return damageDealt
 
@@ -206,7 +206,7 @@ player = Player() # creates the one and only instance of player
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     # more identifying information
-    attackMessages = ["ENEMY notices you!"] # note that ENEMY is only colored in stealth due to the need to alert the player
+    battleMessages = ["ENEMY notices you!"] # note that ENEMY is only colored in stealth due to the need to alert the player
     stealthMessages = [c.threat("ENEMY") + " not notice you"]
     warning = "You feel uneasy..."
     undead = False
@@ -468,7 +468,7 @@ class Draugr(Enemy):
 # starts with armor but it degrades when hurt
 # can inflict bleeding
     name = "DRAUGR"
-    attackMessages = ["DRAUGR readies their axe with malicious intent!",
+    battleMessages = ["DRAUGR readies their axe with malicious intent!",
                      "DRAUGR charges at you with their axe!"]
     stealthMessages = [c.threat("DRAUGR") + " is on the hunt for human.",
                       c.threat("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
@@ -502,17 +502,17 @@ class Draugr(Enemy):
         if randint(1, 3) == 1:
             if player.affect(Bleeding, 4):
                 damage = player.hurt(self, 4)
-                print(f"DRAUGR hits you with their axe for {c.damage(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                print(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
             damage = player.hurt(self, 5)
-            print(f"DRAUGR hits you with their axe for {c.damage(damage)} damage!")
+            print(f"DRAUGR hits you with their axe for {c.harm(damage)} damage!")
 
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
 # can dodge attacks and inflicts decay
     name = "GHOUL"
     warning = "You smell a foul stench..."
-    attackMessages = ["You confront GHOUL, a foul, agile beast!",
+    battleMessages = ["You confront GHOUL, a foul, agile beast!",
                      "GHOUL detects your presence! It can barely see but has an excellent sense of smell."]
     stealthMessages = [c.threat("GHOUL") + " is roaming.",
                       c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
@@ -537,7 +537,7 @@ class Ghoul(Enemy):
             return
 
         damage = player.hurt(self, 4)
-        print(f"GHOUL bites you for {c.damage(damage)} damage!")
+        print(f"GHOUL bites you for {c.harm(damage)} damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -560,7 +560,7 @@ class Skeleton(Enemy):
 
         if self.name == "SKELETON": # doesn't apply to subclasses
             self.weapon = choice(["sword", "spear", "mace"])
-            self.attackMessages = [f"SKELETON grips their {self.weapon}!",
+            self.battleMessages = [f"SKELETON grips their {self.weapon}!",
                                   "SKELETON finally gets to see some action!"]
             self.stealthMessages = [c.threat("SKELETON") + f" is holding a {self.weapon}, and is searching for a target."]
 
@@ -600,16 +600,16 @@ class Skeleton(Enemy):
         # does damage
         if effect == None:
             damage = player.hurt(self, self.damage, piercing)
-            print(f"{self.name} attacks you with their {self.weapon} for {c.damage(damage)} damage!")
+            print(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage!")
         else:
             damage = player.hurt(self, self.damage, piercing)
-            print(f"{self.name} attacks you with their {self.weapon} for {c.damage(damage)} damage, leaving you {c.effect(effect)}!")
+            print(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage, leaving you {c.effect(effect)}!")
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
     name = "SKELETON GUARD"
     warning = "You hear the clanking of bones and metal..."
-    attackMessages = ["SKELETON GUARD raises their shield!",
+    battleMessages = ["SKELETON GUARD raises their shield!",
                     "SKELETON GUARD will not let it's training go to waste!"]
     stealthMessages = [c.threat("SKELETON GUARD") + " is alert, but has failed to notice you.",
                       c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
@@ -631,7 +631,7 @@ class Thief(Enemy):
 # hits you with a poison dart when at full health, might run away later in combat
     name = "THIEF"
     warning = "You are being watched..."
-    attackMessages = ["THIEF prepares a poison dart!",
+    battleMessages = ["THIEF prepares a poison dart!",
                      "THIEF eyes your gold pouch!"]
     stealthMessages = [c.threat("THIEF") + " is looking for a victim.",
                       c.threat("THIEF") + " is preparing poisons, and is unaware of your presence."]
@@ -663,7 +663,7 @@ class Thief(Enemy):
                 return
 
             damage = player.hurt(self, 4)
-            print(f"THIEF stabs you for {c.damage(damage)} damage!")
+            print(f"THIEF stabs you for {c.harm(damage)} damage!")
         else:
             self.hasDart = False
             if player.dodge(self):
@@ -680,7 +680,7 @@ class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "OGRE"
     warning = "You hear sounds that can only belong to a massive beast..."
-    attackMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
+    battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 
     maxHealth = 35
     gold = 60
@@ -720,10 +720,10 @@ class Ogre(Boss):
 
             if damage > 8:
                 if player.affect(BrokenBones, 1):
-                    print(f"OGRE hits you with a heavy strike, dealing {c.damage(damage)} and inflicting {c.effect(BrokenBones)}!")
+                    print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             
-            print(f"OGRE hits you with a heavy strike, dealing {c.damage(damage)} damage!")
+            print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} damage!")
             
         elif chosenMove == "heavy":
             print("OGRE prepares a heavy swing!")
@@ -736,9 +736,9 @@ class Ogre(Boss):
 
             damage = player.hurt(self, 3, 3)
             if player.affect(Dazed, 2):
-                print(f"OGRE slams the ground, dealing {c.damage(damage)} damage and leaving you {c.effect(Dazed)}!")
+                print(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
-                print(f"OGRE slams the ground, dealing {c.damage(damage)}!")            
+                print(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
 
         else:
             if player.dodge(self):
@@ -748,9 +748,9 @@ class Ogre(Boss):
             damage = player.hurt(self, 5)
 
             if player.affect(Bleeding, 3):
-                print(f"OGRE hits you with their club, dealing {c.damage(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                print(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
             else:
-                print(f"OGRE hits you with their club, delaing {c.damage(damage)} damage!")
+                print(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
