@@ -8,17 +8,19 @@ c = color
 player = entities.player
 
 class Item:
+    name = "item"
+    value = 10
+    enchantValue = 0.5 # +50% of price per level of enchantment
+    maxUses = 1
+
     enchantable = False
     enchantment = 0
     
     usePrompt = None # if this is None, then the inventory won't provide use as an options
     
-    def __init__(self, name, value, uses):
-        self.name = name
-        self.value = int(value * randint(9, 11) / 10) # 90% to 110% of value
-        self.uses = uses
-        self.maxUses = uses
-        self.enchantValueMod = int(value / 2) # additional value per enchantment level
+    def __init__(self):
+        self.value = int(self.value * randint(9, 11) / 10) # 90% to 110% of value
+        self.uses = self.maxUses
 
     def degrade(self):
         # if INT is less than 0, there's a 10 * INT % chance that item degrades twice
@@ -100,7 +102,7 @@ class Item:
     def get_price(self, shop = False, returnString = False):
     # returns value based on uses and enchantment
     # shop indicates if the item is yours or a vendors
-        price = int((self.value + (self.enchantValueMod * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
+        price = int((self.value + (self.value * self.enchantValue * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
         # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
 
         if shop:
@@ -125,9 +127,14 @@ class Weapon(Item):
     
     def __init__(self, name, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " " + name, 15 + (30 * level), 15 + (10 * level))
+
+        self.name = material + " " + name
+        self.price = 15 + (30 * level)
+        self.maxUses = 15 + (10 * level)
 
         self.damage = 4 + level
+
+        super().__init__()
 
     def degrade(self):
         # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
@@ -415,12 +422,17 @@ class HeavyArmor(Armor):
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
-        super().__init__(material + " armor", 20 + (35 * level), 20 + (12 * level))
+
+        self.name = material + " armor"
+        self.price = 20 + (35 * level)
+        self.maxUses = 20 + (12 * level)
 
         self.armorClass = level + 1
         self.dexLoss = 1
         if material == "iron" or material == "steel":
             self.dexLoss += 1
+
+        super().__init__()
 
     def inspect(self):
         print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
@@ -440,9 +452,10 @@ class HeavyArmor(Armor):
 
 class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
-    def __init__(self):
-        super().__init__("cloak", 30, 25)
-        self.enchantValueMod = int(self.value * 0.8)
+    name = "cloak"
+    value = 30
+    enchantValue = 0.8
+    maxUses = 25
 
     def inspect(self):
         print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
@@ -463,10 +476,14 @@ class Cloak(Armor):
 class ShadowCloak(Armor):
 # same as cloak, but enchantments affect stealth, not armor
 # starts enchanted
+    name = "Cloak of Shadows"
+    value = 55
+    enchantValue = 0.82 # 55 * 0.82 = 45.1, which rounds to 45. 55 + 45 = 100, the standard artifact value
+    maxUses = 30
+
     def __init__(self):
-        super().__init__("Cloak of Shadows", 55, 30)
+        super().__init__()
         self.enchantment += 1
-        self.enchantValueMod = 45
 
     def inspect(self):
         enchantment = self.enchantment
@@ -495,6 +512,8 @@ class ShadowCloak(Armor):
         player.stealth -= 1 + enchantment
         
 class Ring(Item):
+    maxUses = 1
+
     enchantable = True
 
     usePrompt = "equip"
@@ -527,8 +546,8 @@ class Ring(Item):
 
 class InfernoRing(Ring):
 # increases strength, but burns you when attacked
-    def __init__(self):
-        super().__init__("Ring of Rage", 100, 1)
+    name = "Ring of Rage"
+    value = 100
 
     def inspect(self):
         print("Increases your strength (STR) by 2.")
@@ -545,8 +564,8 @@ class InfernoRing(Ring):
 
 class IllusionRing(Ring):
 # increases dodged, when you dodge the attacker is stunned
-    def __init__(self):
-        super().__init__("Ring of Illusion", 100, 1)
+    name = "Ring of Illusion"
+    value = 100
 
     def inspect(self):
         enchantment = self.enchantment
@@ -576,15 +595,16 @@ class BuffRing(Ring):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
     def __init__(self, ID = -1):
-        super().__init__("ring of ", 40, 1)
-        self.enchantValueMod = self.value
+        self.value = 40
+        self.maxUses = 1
+        self.enchantValue = 1
         # decides what stat is boosted
         self.statID = ID
         if ID < 0:
             self.statID = randint(0, 4)
             
         self.stat = ["stealth", "dodge", "health", "resistance", "awareness"][self.statID]
-        self.name += ["shadows", "evasion", "resilience", "immunity", "vision"][self.statID]
+        self.name = "ring of " + ["shadows", "evasion", "resilience", "immunity", "vision"][self.statID]
 
     def inspect(self):
         enchantment = self.enchantment
@@ -648,12 +668,10 @@ class BuffRing(Ring):
 class Medicine(Item): 
     usePrompt = "use"
 
-    def __init__(self, name, value, uses, healing, effectApplied = None, effectDuration = 0, effectsCured = []):
-        super().__init__(name, value, uses)
-        self.healing = healing
-        self.effectApplied = effectApplied
-        self.effectDuration = effectDuration
-        self.effectsCured = effectsCured
+    healing = 0
+    effectApplied = None
+    effectDuration = 0
+    effectsCured = []
 
     def attack(self, enemies):
     # attack does the same thing as consume
@@ -702,8 +720,14 @@ class Medicine(Item):
 
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
-    def __init__(self):
-        super().__init__("bandage", 35, 3, 4, entities.Regeneration, 4, [entities.Bleeding])
+    name = "bandage"
+    value = 35
+    maxUses = 3
+
+    healing = 4
+    effectApplied = entities.Regeneration
+    effectDuration = 4
+    effectsCured = [entities.Bleeding]
 
     def inspect(self):
         print(f"It heals around 4 HP and applies REGENERATION.")
@@ -721,10 +745,15 @@ class Bandage(Medicine):
 # see gen_enemy() in entities.py for explanation
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
+    name = "rations"
+    value = 20
+    maxUses = 1
+
     usePrompt = "consume"
 
-    def __init__(self):
-        super().__init__("rations", 20, 1, 7, entities.WellFed, 4)
+    healing = 7
+    effectApplied = entities.WellFed
+    effectDuration = 4
 
     def status(self):
         return ""
@@ -740,10 +769,9 @@ class Rations(Medicine):
 
 class Scroll(Item):
 # one use item that is more powerful with higher intelligence
+    maxUses = 1
+    
     usePrompt = "read"
-
-    def __init__(self, name, value):
-        super().__init__(name, value, 1)
 
     def degrade(self):
         player.inventory.remove(self)
@@ -754,8 +782,8 @@ class Scroll(Item):
 
 class ScrollRemoveCurse(Scroll):
 # reverses curses from all items, has an INT in 4 chance to enchant
-    def __init__(self):
-        super().__init__("scroll of remove curse", 40)
+    name = "scroll of remove curse"
+    value = 40
 
     def inspect(self):
         print("Reverses every curse into blessings on all of your items.")
@@ -778,8 +806,8 @@ class ScrollRemoveCurse(Scroll):
 
 class ScrollEnchant(Scroll):
 # adds 1 + INT/2 levels of enchantment to an item
-    def __init__(self):
-        super().__init__("scroll of enchantment", 60)
+    name = "scroll of enchantment"
+    value = 60
 
     def inspect(self):
         print("This scroll will bless one of your items.")
@@ -820,8 +848,8 @@ class ScrollEnchant(Scroll):
 
 class ScrollRepair(Scroll):
 # fully repairs and item, higher levels of int increase its max uses
-    def __init__(self):
-        super().__init__("scroll of repair", 40)
+    name = "scroll of repair"
+    value = 45
 
     def inspect(self):
         print("This scroll will fully restore the uses of one item.")
@@ -862,8 +890,9 @@ class ScrollRepair(Scroll):
                 return False
         
 class Bomb(Item):
-    def __init__(self):
-        super().__init__("bomb", 40, 1)
+    name = "bomb"
+    value = 40
+    maxUses = 1
 
     def status(self):
         return ""
@@ -891,26 +920,38 @@ class Bomb(Item):
         print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
-class Key(Item):
-    def __init__(self, tier):
-        self.type = ["iron", "gold", "crystal"][tier]
-        super().__init__(self.type + " key", (35 * tier) - 15, 1)
+class IronKey(Item):
+    name = "iron key"
+    value = 20
+    maxUses = 1
 
     def status(self):
         return ""
 
     def inspect(self):
-        print(f"This key can open a {self.type} lock.")
+        print(f"This key can open an iron gate.")
+
+class GoldKey(Item):
+    name = "gold key"
+    value = 50
+    maxUses = 1
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print(f"This key can open a gold chest.")
 
 # number 1 through 16 is chosen
 # if standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]
 # there is a 8 in 16 chance for rations, 6 in 16 chance for bandage, and 2 in 16 for bomb
 class KnowledgeBook(Item):
 # improves one stat
-    usePrompt = "read"
+    name = "book of knowledge"
+    value = 70
+    maxUses = 1
 
-    def __init__(self):
-        super().__init__("book of knowledge", 70, 1)
+    usePrompt = "read"
 
     def status(self):
         return ""
@@ -953,10 +994,11 @@ class KnowledgeBook(Item):
 
 class SeeingOrb(Item):
 # reveals the whole map, requires a scroll of repair
-    usePrompt = "gaze"
+    name = "Seeing Orb"
+    value = 100
+    maxUses = 1
 
-    def __init__(self):
-        super().__init__("Seeing Orb", 100, 1)
+    usePrompt = "gaze"
 
     def status(self):
         if self.uses == 0:

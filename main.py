@@ -34,7 +34,7 @@ for i in range(3):
     generator.gen_floor("prison", i, 4 + ((i + 3) // 4))
 
     if i == goldKeyLocation: # adds gold key
-        generator.addItems.append(items.Key(1))
+        generator.addItems.append(items.GoldKey())
     
     if i % 3 == 1: # adds shops
         generator.addRooms.append(dungeon.Shop(i))

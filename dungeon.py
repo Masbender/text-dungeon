@@ -8,6 +8,26 @@ c = color
 
 player = entities.player
 
+def unlock(key):
+    keyIndex = -1
+    for item in player.inventory:
+        if type(item) == key:
+            keyIndex = player.inventory.index(item)
+
+    if keyIndex == -1:
+        print(f"You do not have a {key.name}.")
+        return False
+    else:
+        options = ["cancel", "use key"]
+
+        playerInput = bool(gather_input(f"Do you use a {key.name}?", options))
+
+        if playerInput:
+            player.inventory.pop(keyIndex)
+            return True
+
+        return False
+
 def sort_inventory():
     weapons = []
     healing = []
@@ -674,30 +694,19 @@ class Chest(Room):
     def __init__(self):
         self.loot = []
         self.threats = []
-        self.lockType = "gold"
         self.hiddenLoot = [items.gen_loot()]
 
     def unlock_chest(self):
-        keyIndex = -1
-        for item in player.inventory:
-            if type(item) == items.Key:
-                if item.type == self.lockType:
-                    keyIndex = player.inventory.index(item)
+        if unlock(items.GoldKey):
+            self.loot.extend(self.hiddenLoot)
 
-        if keyIndex == -1:
-            print(f"You need a {c.highlight(self.lockType)} key to unlock this.")
+            print("You unlock the chest.")
+            self.description = ""
+            self.specialAction = ""
+            return True
+
         else:
-            options = ["cancel", "use key"]
-
-            playerInput = bool(gather_input(f"Do you use a {c.highlight(self.lockType)} key?", options))
-
-            if playerInput:
-                player.inventory.pop(keyIndex)
-
-                self.loot.extend(self.hiddenLoot)
-                print("You unlock the chest.")
-                self.description = ""
-                self.specialAction = ""
+            return False
 
 class Wall(Room):
     blocked = True
@@ -731,35 +740,19 @@ class LockedRoom(Room):
     description = ""
     specialAction = ""
 
-    def __init__(self, lockType, depth):
+    def __init__(self, depth):
         self.loot = []
         self.threats = []
-        self.lockType = lockType
 
-        if self.lockType == "iron":
-            self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
+        self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
 
     def unblock(self): # requires a certain key
-        print(f"This room is locked and requires a {self.lockType} key.")
+        print(f"This room is locked and requires a iron key.")
 
-        keyIndex = -1
-        for item in player.inventory:
-            if type(item) == items.Key:
-                if item.type == self.lockType:
-                    keyIndex = player.inventory.index(item)
-
-        if keyIndex == -1:
-            return False
+        if unlock(items.IronKey):
+            print("The gate opens.")
+            return True
         else:
-            options = ["cancel", "use key"]
-
-            playerInput = bool(gather_input(f"Do you use a {self.lockType} key?", options))
-
-            if playerInput:
-                player.inventory.pop(keyIndex)
-                print("You unlock the door.")
-                return True
-
             return False
 
 class Stairs(Room):
@@ -847,8 +840,8 @@ class Generator:
         self.sideRooms = []
 
         # adds these features before finishing generation
-        self.addRooms = [LockedRoom("iron", self.depth)]
-        self.addItems = [items.Key(0), items.KnowledgeBook(), items.Rations()]
+        self.addRooms = [LockedRoom(self.depth)]
+        self.addItems = [items.IronKey(), items.KnowledgeBook(), items.Rations()]
         self.addEnemies = []
         
         # assigns modifier
