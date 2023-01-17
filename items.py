@@ -238,16 +238,16 @@ class JudgementSword(Sword):
 
     def inspect(self):
         super().inspect()
-        print("Stronger against undead enemies.")
+        print("Burns undead enemies.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
         # sets undead on fire
         if self.target.undead:
-            self.target.affect(entities.Burned, 4)
+            self.target.affect(entities.Burned)
             self.target.health -= 3
-            print(f"{self.target.name} is burned by the sword, taking 4 extra damage.")
+            print(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
     
         return True
 
@@ -319,13 +319,14 @@ class FlamingMace(Mace):
 
     def inspect(self):
         super().inspect()
-        print("It also sets enemies on fire.")
+        print("It can sets enemies on fire.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
-        if self.target.affect(entities.OnFire, randint(2, 3)):
-            print(f"{self.target.name} is set on fire.")
+        if randint(0, 1):
+            if self.target.affect(entities.OnFire, randint(2, 3)):
+                print(f"{self.target.name} is set on fire.")
 
         return True
         
@@ -725,7 +726,7 @@ class Bandage(Medicine):
     value = 35
     maxUses = 3
 
-    healing = 4
+    healing = 6
     effectApplied = entities.Regeneration
     effectDuration = 4
     effectsCured = [entities.Bleeding]
@@ -1034,7 +1035,7 @@ standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCu
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):

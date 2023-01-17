@@ -892,7 +892,7 @@ class Generator:
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(1, 2)))
+        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(2, 3)))
         
         # spawns enemies
         if self.modifier == "dangerous":
