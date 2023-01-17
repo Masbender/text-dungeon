@@ -126,13 +126,14 @@ class Weapon(Item):
     enchantable = True
     
     def __init__(self, name, level):
-        material = ["bronze", "iron", "steel", "mithril"][level]
-
-        self.name = material + " " + name
-        self.price = 15 + (30 * level)
-        self.maxUses = 15 + (10 * level)
-
-        self.damage = 4 + level
+        if type(self) in [Sword, Mace, Spear, Dagger]:
+            material = ["bronze", "iron", "steel", "mithril"][level]
+    
+            self.name = material + " " + name
+            self.price = 15 + (30 * level)
+            self.maxUses = 15 + (10 * level)
+    
+            self.damage = 4 + level
 
         super().__init__()
 
@@ -188,19 +189,20 @@ class Weapon(Item):
 class Sword(Weapon):
 # does damage to target and can inflict bleeding
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
-    def __init__(self, level):
+    def __init__(self, level = 0):
         super().__init__("sword", level)
-        
-        self.bleedDuration = 4
-        self.bleedChance = 2 # bleedChance is _ in 6
 
-        if level >= 1:
-            self.bleedChance += 1
-        if level >= 2:
-            self.bleedDuration += 1
-        if level >= 3:
-            self.bleedChance += 1
-            self.bleedDuration += 1
+        if type(self) == Sword:
+            self.bleedDuration = 4
+            self.bleedChance = 2 # bleedChance is _ in 6
+    
+            if level >= 1:
+                self.bleedChance += 1
+            if level >= 2:
+                self.bleedDuration += 1
+            if level >= 3:
+                self.bleedChance += 1
+                self.bleedDuration += 1
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage, with a {self.bleedChance} in 6 chance to inflict bleeding for {self.bleedDuration} turns.")
@@ -226,12 +228,13 @@ class Sword(Weapon):
 
 class JudgementSword(Sword):
 # same as sword but extra damage and burning against undead
-    def __init__(self):
-        super().__init__(1)
-        self.name = "Bane of the Undead" 
-        self.value *= 2
-        self.bleedChance += 1
-        self.bleedDuration += 1
+    name = "Bane of the Undead"
+    value = 100
+    maxUses = 20
+
+    damage = 5
+    bleedChance = 3
+    bleedDuration = 5
 
     def inspect(self):
         super().inspect()
@@ -251,11 +254,11 @@ class JudgementSword(Sword):
 class Spear(Weapon):
 # does damage to target and has some armor piercing
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
-    def __init__(self, level):
+    def __init__(self, level = 0):
         super().__init__("spear", level)
 
-        self.damage = 4 + level
-        self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
+        if type(self) == Spear:
+            self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage and pierces {self.armorPiercing - 1} to {self.armorPiercing} points of armor.")
@@ -277,11 +280,11 @@ class Spear(Weapon):
 class Mace(Weapon):
 # does damage to target and can stun
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
-    def __init__(self, level):
+    def __init__(self, level = 0):
         super().__init__("mace", level)
         
-        self.damage = 4 + level
-        self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
+        if type(self) == Mace:
+            self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to stun.")
@@ -307,13 +310,12 @@ class Mace(Weapon):
 
 class FlamingMace(Mace):
 # same as mace can set enemies on fire
-    def __init__(self):
-        super().__init__(1)
-        self.name = "Flaming Mace"
-        self.value *= 2
-        self.maxUses -= 5
-        self.uses -= 5
-        self.stunChance += 1
+    name = "Flaming Mace"
+    value = 100
+    maxUses = 20
+
+    damage = 5
+    stunChance = 3
 
     def inspect(self):
         super().inspect()
@@ -330,11 +332,11 @@ class FlamingMace(Mace):
 class Dagger(Weapon):
 # does damage to target but uses DEX not STR, strong vs surprised enemies
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
-    def __init__(self, level):
+    def __init__(self, level = 0):
         super().__init__("dagger", level)
 
-        self.damage = 4 + level
-        self.sneakBonus = (level + 3) // 2
+        if type(self) == Dagger:
+            self.sneakBonus = level + 1
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
@@ -362,13 +364,12 @@ class Dagger(Weapon):
 
 class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
-    def __init__(self):
-        super().__init__(1)
-        self.name = "Ebony Dagger"
-        self.value *= 2
-        self.maxUses -= 5
-        self.uses -= 5
-        self.sneakBonus += 1
+    name = "Ebony Dagger"
+    value = 100
+    maxUses = 20
+
+    damage = 5
+    sneakBonus = 3
 
     def inspect(self):
         super().inspect()
