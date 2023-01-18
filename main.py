@@ -8,7 +8,7 @@ from random import randint
 player = entities.player
 
 # placeholder character selection
-playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False)
+playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False)
 
 if playerInput == "Warrior":
     player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
@@ -18,7 +18,10 @@ if playerInput == "Thief":
     player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
     player.set_stats(0, -1, 1, 2, 1)
 
-# equips warriors armor or thief's cloak
+if playerInput == "Sorcerer":
+    player.inventory.extend([items.Sword(0), items.MagicRobe(), items.PoisonWand()])
+    player.set_stats(-1, 0, 1, 0, 2)
+
 player.inventory[1].consume(None)
 
 dungeon.sort_inventory()
@@ -50,6 +53,7 @@ for i in range(3):
 
 floor = 0
 while True:
+    player.currentFloor = floors[floor]
     floors[floor].enter_floor()
     floor += 1
 
@@ -62,3 +66,6 @@ while True:
         clear_console()
         print("thanks for playing")
         break
+
+    for item in player.inventory:
+        item.recharge()

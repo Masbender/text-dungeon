@@ -167,12 +167,15 @@ class Player(Creature):
     inventory = []
     ring = None
     armor = None
+    recharge = 1 # wand recharge speed
 
     baseSTR = 0
     baseCON = 0
     baseDEX = 0
     basePER = 0
     baseINT = 0
+
+    currentFloor = None
 
     # various stats for unusual effects
     infernoRing = False

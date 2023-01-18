@@ -99,6 +99,10 @@ class Item:
     # runs when an item is dropped or destroyed, reverses pickup
         return False
 
+    def recharge(self):
+    # runs for every item when player descends a floor
+        return False
+
     def get_price(self, shop = False, returnString = False):
     # returns value based on uses and enchantment
     # shop indicates if the item is yours or a vendors
@@ -124,13 +128,14 @@ class Item:
 
 class Weapon(Item):
     enchantable = True
+    enchantValue = 0.4
     
     def __init__(self, name, level):
         if type(self) in [Sword, Mace, Spear, Dagger]:
             material = ["bronze", "iron", "steel", "mithril"][level]
     
             self.name = material + " " + name
-            self.price = 15 + (30 * level)
+            self.value = 15 + (25 * level)
             self.maxUses = 15 + (10 * level)
     
             self.damage = 4 + level
@@ -138,12 +143,12 @@ class Weapon(Item):
         super().__init__()
 
     def degrade(self):
-        # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
+        # if INT is less than 0, there's a 10 * INT % chance that item degrades twice
         if player.intelligence < 0:
             if -randint(0, 99) > player.intelligence * 10:
                 self.uses -= 1
             self.uses -= 1
-        # for every level of INT, there is a 7.5% that the item doesn't degrade
+        # for every level of INT, there is a 10% that the item doesn't degrade
         else:
             if randint(0, 99) < player.intelligence * 10:
                 return False
@@ -385,6 +390,147 @@ class EbonyDagger(Dagger):
             print("You absorb " + self.target.name + "'s power.")
         
         return True
+
+class Wand(Item):
+# recharges some uses every floor
+    name = "wand"
+    value = 50
+    maxUses = 3
+
+    enchantable = True
+
+    reqInt = 1 # level of INT required to use the wand
+
+    def status(self):
+        return f"({self.uses + self.enchantment}/{self.maxUses + self.enchantment} charges)"
+
+    def degrade(self):
+        # if INT is less than 0, there's a 7.5 * INT % chance that item degrades twice
+        if player.intelligence < 0:
+            if -randint(0, 99) > player.intelligence * 10:
+                self.uses -= 1
+            self.uses -= 1
+        # for every level of INT, there is a 7.5% that the item doesn't degrade
+        else:
+            if randint(0, 99) < player.intelligence * 10:
+                print("Your wand gets a free charge because of your INT.")
+                return False
+            else:
+                self.uses -= 1
+                
+        return True
+
+    def recharge(self):
+        self.uses += player.recharge
+        
+        if self.uses > self.maxUses:
+            self.uses = self.maxUses
+
+    def attack(self, enemies):
+    # chooses a target
+        if player.intelligence < self.reqInt:
+            print(f"This wand requires {self.reqInt} intelligence (INT) to use!")
+        
+        if self.uses + self.enchantment > 0:
+            target = enemies[0]
+            
+            if len(enemies) > 1:
+                options = [] # gets a list of enemy names
+                for enemy in enemies:
+                    options.append(enemy.name)
+        
+                # gets player input
+                target = enemies[gather_input("Who do you attack?", options)]
+    
+            self.degrade()
+    
+            return self.cast(target)
+        else:
+            print("That wand doesn't have enough charges!")
+            return False
+
+    def cast(self, target):
+        return True
+
+class HarmWand(Wand):
+# (req 3 INT, 4 charges) does 5 + x direct damage, inflicts bleeding for x turns
+    name = "wand of harming"
+    value = 70
+    maxUses = 4
+
+    reqInt = 3
+
+    def inspect(self):
+        print(f"Does {5 + self.enchantment} direct damage to target.")
+        if self.enchantment > 0:
+            print(f"Inflicts target with bleeding for {self.enchantment} turns.")
+
+    def cast(self, target):
+        target.health -= 5 + self.enchantment
+
+        if self.enchantment > 0:
+            target.affect(entities.Bleeding, self.enchantment)
+            print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
+            return True
+
+        print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}.")
+        return True
+
+class PoisonWand(Wand):
+# (req 1 INT, 3 charges) inflicts poisoned for 5 + x turns, does x direct damage
+    name = "wand of poison"
+    value = 50
+    maxUses = 3
+
+    reqInt = 1
+
+    def inspect(self):
+        print(f"Inflicts poison to target for {7 + self.enchantment} turns.")
+        if self.enchantment > 0:
+            print(f"Does {self.enchantment} direct damage.")
+
+    def cast(self, target):
+        target.affect(entities.Poisoned, 7 + self.enchantment)
+
+        if self.enchantment > 0:
+            target.health -= self.enchantment
+            print(f"Your wand of poison does {c.harm(self.enchantment)} damage to {target.name}, and inflicts {c.effect(Poisoned)}.")
+            return True
+
+        print(f"Your wand of poison inflicts {target.name} with {c.effect(entities.Poisoned)}.")
+        return True
+
+class TeleportWand(Wand):
+# (req 2 INT, 2 charges) teleports target to a random room
+    name = "wand of teleportation"
+    value = 65
+    maxUses = 2
+
+    reqInt = 1
+
+    def inspect(self):
+        print("Teleports the target to a random room.")
+        print("Requires at least 2 intelligence (INT).")
+
+    def cast(self, target):
+        if issubclass(type(target), entities.Boss):
+            print(f"{target.name} is too powerful for that spell!")
+            return False
+            
+        currentRoom = player.currentFloor.get_room()
+
+        roomList = []
+        for row in player.currentFloor.layout:
+            for room in row:
+                if not room.blocked and room != currentRoom:
+                    roomList.append(room)
+
+        choice(roomList).threats.append(target)
+        currentRoom.threats.remove(target)
+
+        print(f"{target.name} disappears!")
+        target.heal(6) # heals the target a bit
+        return True
     
 class Armor(Item):
     enchantable = True
@@ -413,6 +559,10 @@ class Armor(Item):
         player.armor = self
         #player.inventory.remove(self)
 
+    def consume(self, floor):
+        self.equip()
+        self.put_on()
+
     def attack(self, enemies):
         return self.consume(None)
 
@@ -426,7 +576,7 @@ class HeavyArmor(Armor):
         material = ["bronze", "iron", "steel", "mithril"][level]
 
         self.name = material + " armor"
-        self.price = 20 + (35 * level)
+        self.value = 20 + (30 * level)
         self.maxUses = 20 + (12 * level)
 
         self.armorClass = level + 1
@@ -439,10 +589,6 @@ class HeavyArmor(Armor):
     def inspect(self):
         print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
 
-    def consume(self, floor):
-        self.equip()
-        self.put_on()
-
     def equip(self):
         player.armorClass += self.armorClass + self.enchantment
         player.update_dexterity(-self.dexLoss)
@@ -451,6 +597,27 @@ class HeavyArmor(Armor):
         # this is where it unequips
         player.armorClass -= self.armorClass + self.enchantment
         player.update_dexterity(self.dexLoss)
+
+class MagicRobe(Armor):
+# provides 0 base armor, but increases wand recharge
+    name = "magic robe"
+    value = 40
+    enchantValue = 0.8
+    maxUses = 20
+
+    def inspect(self):
+        print("When equipped it recharges your wands an additional time each floor.")
+        if self.enchantment > 0:
+            print(f"It also provides {self.enchantment} armor class.")
+
+    def equip(self):
+        # applies stats
+        player.armorClass += self.enchantment
+        player.recharge += 1
+
+    def unequip(self):
+        player.armorClass -= self.enchantment
+        player.recharge -= 1
 
 class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
@@ -461,10 +628,6 @@ class Cloak(Armor):
 
     def inspect(self):
         print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
-
-    def consume(self, floor):
-        self.equip()
-        self.put_on()
 
     def equip(self):
         # applies stats
@@ -493,10 +656,6 @@ class ShadowCloak(Armor):
             enchantment -= 1
             
         print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}.")
-
-    def consume(self, floor):
-        self.equip()
-        self.put_on()
 
     def equip(self):
         enchantment = self.enchantment
@@ -607,6 +766,8 @@ class BuffRing(Ring):
             
         self.stat = ["stealth", "dodge", "health", "resistance", "awareness"][self.statID]
         self.name = "ring of " + ["shadows", "evasion", "resilience", "immunity", "vision"][self.statID]
+
+        super().__init__()
 
     def inspect(self):
         enchantment = self.enchantment
@@ -1033,7 +1194,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
-gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16)]
+gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16), (MagicRobe, 17), (HarmWand, 18), (PoisonWand, 19), (TeleportWand, 20)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
 
@@ -1060,14 +1221,14 @@ def gen_loot():
             
 # generates an item such as a sword or armor
 def gen_gear(quality):
-    itemNum = randint(1, 16)
+    itemNum = randint(1, 20)
 
     for item in gearLoot:
         if itemNum <= item[1]:
             chosenItem = None
 
             # quality improves the material of some items
-            if not item[0] in [BuffRing, Cloak]:
+            if item[0] in [Sword, Mace, Spear, Dagger, HeavyArmor]:
                 # can be higher quality
                 if randint(1, 4) == 1:
                     quality += 1

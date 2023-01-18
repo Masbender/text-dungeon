@@ -30,6 +30,7 @@ def unlock(key):
 
 def sort_inventory():
     weapons = []
+    wands = []
     healing = []
     scrolls = []
     apparel = []
@@ -38,6 +39,8 @@ def sort_inventory():
     for item in player.inventory:
         if issubclass(type(item), items.Weapon):
             weapons.append(item)
+        elif issubclass(type(item), items.Wand):
+            wands.append(item)
         elif issubclass(type(item), items.Medicine):
             healing.append(item)
         elif issubclass(type(item), items.Scroll):
@@ -47,7 +50,7 @@ def sort_inventory():
         else:
             misc.append(item)
 
-        player.inventory = weapons + healing + scrolls + apparel + misc
+    player.inventory = weapons + wands + healing + scrolls + apparel + misc
 
 def item_list():
 # returns a list of item names
