@@ -494,7 +494,7 @@ class PoisonWand(Wand):
 
         if self.enchantment > 0:
             target.health -= self.enchantment
-            print(f"Your wand of poison does {c.harm(self.enchantment)} damage to {target.name}, and inflicts {c.effect(Poisoned)}.")
+            print(f"Your wand of poison does {c.harm(self.enchantment)} damage to {target.name}, and inflicts {c.effect(entities.Poisoned)}.")
             return True
 
         print(f"Your wand of poison inflicts {target.name} with {c.effect(entities.Poisoned)}.")
@@ -1155,8 +1155,27 @@ class KnowledgeBook(Item):
         player.inventory.remove(self)
         return True
 
+class SorcerersRock(Item):
+# increases wand recharge
+    name = "Sorcerers Rock"
+    value = 100
+    maxUses = 1
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("Your wands recharge an additional charge when traveling between floors")
+    
+    def pickup(self):
+        player.recharge += 1
+
+    def discard(self):
+        player.recharge -= 1
+
 class SeeingOrb(Item):
-# reveals the whole map, requires a scroll of repair
+# reveals the whole map, requires a scroll of repair to recharge
+# holding increases perception by 1
     name = "Seeing Orb"
     value = 100
     maxUses = 1
@@ -1196,7 +1215,7 @@ standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCu
 
 gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16), (MagicRobe, 17), (HarmWand, 18), (PoisonWand, 19), (TeleportWand, 20)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
