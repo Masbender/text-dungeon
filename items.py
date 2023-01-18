@@ -430,6 +430,7 @@ class Wand(Item):
     # chooses a target
         if player.intelligence < self.reqInt:
             print(f"This wand requires {self.reqInt} intelligence (INT) to use!")
+            return False
         
         if self.uses + self.enchantment > 0:
             target = enemies[0]
@@ -527,7 +528,7 @@ class TeleportWand(Wand):
 
         choice(roomList).threats.append(target)
         currentRoom.threats.remove(target)
-
+        
         print(f"{target.name} disappears!")
         target.heal(6) # heals the target a bit
         return True
@@ -1165,7 +1166,7 @@ class SorcerersRock(Item):
         return ""
 
     def inspect(self):
-        print("Your wands recharge an additional charge when traveling between floors")
+        print("Your wands recharge an additional charge when traveling between floors.")
     
     def pickup(self):
         player.recharge += 1

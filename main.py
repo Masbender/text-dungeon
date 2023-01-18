@@ -19,7 +19,8 @@ if playerInput == "Thief":
     player.set_stats(0, -1, 1, 2, 1)
 
 if playerInput == "Sorcerer":
-    player.inventory.extend([items.Sword(0), items.MagicRobe(), items.PoisonWand()])
+    player.inventory.extend([items.Mace(0), items.MagicRobe(), items.PoisonWand()])
+    player.inventory[2].enchantment += 1
     player.set_stats(-1, 0, 1, 0, 2)
 
 player.inventory[1].consume(None)

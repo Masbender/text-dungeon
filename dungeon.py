@@ -123,20 +123,20 @@ class Battle:
             self.player_turn()
 
             allStunned = True
-            updatedEnemies = []
+            removedEnemies = []
             for enemy in self.enemies:
                 if not enemy.stunned: # tracks if any enemies are not stunned
                     allStunned = False
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
-                    if enemy.health > 0: # checks if enemy died during thier turn
-                        updatedEnemies.append(enemy)
                 if enemy.health <= 0:
                     print(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
-                        
-            self.enemies = updatedEnemies
+                    removedEnemies.append(enemy)
+
+            for enemy in removedEnemies:
+                self.enemies.remove(enemy)
 
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
@@ -369,8 +369,6 @@ class Floor:
                 if isNoticed:
                     battle = Battle(room.threats)
                     battle.start_battle()
-    
-                    room.threats = battle.enemies
 
     def action_wait(self):
     # called when player chooses to wait
@@ -621,7 +619,6 @@ class Floor:
         battle = Battle(room.threats, True)
         battle.start_battle()
 
-        room.threats = battle.enemies
         room.areEnemiesAware = True
         
     def enter_floor(self):
