@@ -30,7 +30,6 @@ class Creature:
     # temporary stats that keep track of combat status
     health = 0
     effects = None
-    effectDurations = None
     stunned = False
 
     def __init__(self):
@@ -38,7 +37,6 @@ class Creature:
 
         self.immuneTo = []
         self.effects = []
-        self.effectDurations = []
 
     def update_strength(self, increase):
     # strength is added to damage dealt
@@ -136,9 +134,8 @@ class Creature:
         for i in range(len(self.effects)):
             if effect == type(self.effects[i]):
                 # checks which effect is longer
-                if self.effectDurations[i] < duration or duration < 0:
+                if self.effects[i].duration < duration or duration < 0:
                     self.effects[i].reverse()
-                    self.effectDurations.pop(i)
                     self.effects.pop(i)
                     break
                 else:
@@ -146,14 +143,14 @@ class Creature:
 
         # checks if immune to effect
         if not effect in self.immuneTo:
-            effect = effect(self)
-
             if isPermanent:
                 effect.isPermanent = True
                 duration = -1
-            
+            else:
+                effect.duration = duration
+                
             self.effects.append(effect)
-            self.effectDurations.append(duration)
+            effect.apply(self)
             return True
         else:
             return False
@@ -207,7 +204,7 @@ class Player(Creature):
 
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
-            self.affect(Burned, 6 - self.ring.enchantment)
+            self.affect(Burned(), 6 - self.ring.enchantment)
             print(f"You are {c.effect(Burned)} by your Ring of Rage!")
 
         return damageDealt
@@ -261,8 +258,10 @@ class Effect:
     level = 0
     isPermanent = False
     color = c.effect_neutral
+
+    duration = 0 # only changed when effect is created
     
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
     def update(self, enemies):
@@ -283,9 +282,6 @@ class Bleeding(Effect):
     natural = True
     level = 0
     color = c.effect_bad
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         # lowers health by 1 every turn
@@ -298,9 +294,6 @@ class Regeneration(Effect):
 # heals 1 hp per turn
     name = "regeneration"
     color = c.effect_good
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         self.target.heal(1)
@@ -312,9 +305,6 @@ class WellFed(Effect):
 # heals 2 health per turn
     name = "well fed"
     color = c.effect_good
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         self.target.heal(2)
@@ -329,7 +319,7 @@ class Dazed(Effect):
     level = 1
     color = c.effect_bad
     
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.update_dexterity(-1)
@@ -345,7 +335,7 @@ class Surprised(Effect):
     name = "surprised"
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.update_dexterity(-2)
@@ -363,7 +353,7 @@ class Decay(Effect):
     name = "decay"
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.decayLevel = 1
@@ -397,7 +387,7 @@ class BrokenBones(Effect):
     level = 3
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         if issubclass(type(self.target), Skeleton):
@@ -421,7 +411,7 @@ class Burned(Effect):
     level = -2
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.armorClass -= 1
@@ -440,11 +430,11 @@ class OnFire(Effect):
     level = 3
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
     def update(self, enemies):
-        self.target.affect(Burned, 5)
+        self.target.affect(Burned(), 5)
         self.target.health -= 2
 
     def inspect(self):
@@ -458,7 +448,7 @@ class Poisoned(Effect):
     level = -1
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
         
         self.target.strength -= 1
@@ -510,7 +500,7 @@ class Draugr(Enemy):
             return
 
         if randint(1, 3) == 1:
-            if player.affect(Bleeding, 4):
+            if player.affect(Bleeding(), 4):
                 damage = player.hurt(self, 4)
                 print(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
@@ -538,7 +528,7 @@ class Ghoul(Enemy):
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            if player.affect(Decay, 6):
+            if player.affect(Decay(), 6):
                 print(f"GHOUL curses you with {c.effect(Decay)}!")
                 return
         
@@ -599,12 +589,12 @@ class Skeleton(Enemy):
         if randint(1, 4) == 1:
             # swords inflict bleeding
             if self.weapon == "sword":
-                if player.affect(Bleeding, 4):
+                if player.affect(Bleeding(), 4):
                     effect = Bleeding
 
             # maces inflict dazed
             if self.weapon == "mace":
-                if player.affect(Dazed, 2):
+                if player.affect(Dazed(), 2):
                     effect = Dazed
         
         # does damage
@@ -680,7 +670,7 @@ class Thief(Enemy):
                 print("You dodge THIEF's dart.")
                 return
             
-            if player.affect(Poisoned, 6):
+            if player.affect(Poisoned(), 6):
                 print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
@@ -729,7 +719,7 @@ class Ogre(Boss):
             damage = player.hurt(self, 8, 1)
 
             if damage > 8:
-                if player.affect(BrokenBones):
+                if player.affect(BrokenBones()):
                     print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             
@@ -745,7 +735,7 @@ class Ogre(Boss):
                 return
 
             damage = player.hurt(self, 3, 3)
-            if player.affect(Dazed, 2):
+            if player.affect(Dazed(), 2):
                 print(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
                 print(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
@@ -757,7 +747,7 @@ class Ogre(Boss):
 
             damage = player.hurt(self, 5)
 
-            if player.affect(Bleeding, 3):
+            if player.affect(Bleeding(), 3):
                 print(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
             else:
                 print(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")

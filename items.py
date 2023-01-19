@@ -224,7 +224,7 @@ class Sword(Weapon):
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            if self.target.affect(entities.Bleeding, self.bleedDuration):
+            if self.target.affect(entities.Bleeding(), self.bleedDuration):
                 print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
@@ -250,7 +250,7 @@ class JudgementSword(Sword):
 
         # sets undead on fire
         if self.target.undead:
-            self.target.affect(entities.Burned)
+            self.target.affect(entities.Burned())
             self.target.health -= 3
             print(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
     
@@ -330,7 +330,7 @@ class FlamingMace(Mace):
         super().attack(enemies)
 
         if randint(0, 1):
-            if self.target.affect(entities.OnFire, randint(2, 3)):
+            if self.target.affect(entities.OnFire(), randint(2, 3)):
                 print(f"{self.target.name} is set on fire.")
 
         return True
@@ -470,7 +470,7 @@ class HarmWand(Wand):
         target.health -= 5 + self.enchantment
 
         if self.enchantment > 0:
-            target.affect(entities.Bleeding, self.enchantment)
+            target.affect(entities.Bleeding(), self.enchantment)
             print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
             return True
 
@@ -491,7 +491,7 @@ class PoisonWand(Wand):
             print(f"Does {self.enchantment} direct damage.")
 
     def cast(self, target):
-        target.affect(entities.Poisoned, 7 + self.enchantment)
+        target.affect(entities.Poisoned(), 7 + self.enchantment)
 
         if self.enchantment > 0:
             target.health -= self.enchantment
@@ -847,7 +847,7 @@ class Medicine(Item):
         healingDone = player.heal(self.healing + randint(-1, 1))
 
         if self.effectApplied != None:
-            player.affect(self.effectApplied, self.effectDuration)
+            player.affect(self.effectApplied(), self.effectDuration)
 
         # cures bleeding
         removedEffectsIndexes = []
@@ -861,7 +861,6 @@ class Medicine(Item):
             removedEffects.append(player.effects[i].name)
             player.effects[i].reverse()
             player.effects.pop(i)
-            player.effectDurations.pop(i)
 
         # prints out a message based on healing and removed effects
         message = f"The {self.name} restores {healingDone} health"

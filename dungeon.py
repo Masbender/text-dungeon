@@ -62,17 +62,20 @@ def item_list():
 
 def update_effects(creature, enemies = None):
 # iterates through every effect
+    effectDurations = []
+    
     for i in range(len(creature.effects)):
         creature.effects[i].update(enemies)
-        creature.effectDurations[i] -= 1
+        creature.effects[i].duration -= 1
+
+        effectDurations.append(creature.effects[i].duration)
 
     # deletes expired effects
-    while 0 in creature.effectDurations:
-        effectIndex = creature.effectDurations.index(0)
+    while 0 in effectDurations:
+        effectIndex = effectDurations.index(0)
+        effectDurations.pop(effectIndex)
         creature.effects[effectIndex].reverse()
-
         creature.effects.pop(effectIndex)
-        creature.effectDurations.pop(effectIndex)
 
 def print_effects(creature):
     effects = []
@@ -81,7 +84,7 @@ def print_effects(creature):
         if effect.isPermanent:
             effects.append(f"{effect.color(effect.name)}")
         else:
-            effects.append(f"{effect.color(effect.name)} - {creature.effectDurations[i]} turns")
+            effects.append(f"{effect.color(effect.name)} - {creature.effects[i].duration} turns")
 
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
@@ -394,7 +397,7 @@ class Floor:
 
             title = effect.color(effect.name.upper())
             if not effect.permanent:
-                title += f" ({player.effectDurations[i]} turns remaining)"
+                title += f" ({player.effects[i].duration} turns remaining)"
             print(title)
 
             effect.inspect()
@@ -613,7 +616,7 @@ class Floor:
 
         else:
             for enemy in room.threats: # makes sure all enemies are surprised and stunned
-                enemy.affect(entities.Surprised, 1)
+                enemy.affect(entities.Surprised(), 1)
                 enemy.stunned = True
 
         battle = Battle(room.threats, True)
