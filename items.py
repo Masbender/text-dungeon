@@ -454,17 +454,18 @@ class Wand(Item):
         return True
 
 class HarmWand(Wand):
-# (req 3 INT, 4 charges) does 5 + x direct damage, inflicts bleeding for x turns
+# (req 2 INT, 4 charges) does 5 + x direct damage, inflicts bleeding for x turns
     name = "wand of harming"
     value = 70
     maxUses = 4
 
-    reqInt = 3
+    reqInt = 2
 
     def inspect(self):
         print(f"Does {5 + self.enchantment} direct damage to target.")
         if self.enchantment > 0:
             print(f"Inflicts target with bleeding for {self.enchantment} turns.")
+        print("Requires at least 2 intelligence (INT).")
 
     def cast(self, target):
         target.health -= 5 + self.enchantment
@@ -489,6 +490,7 @@ class PoisonWand(Wand):
         print(f"Inflicts poison to target for {7 + self.enchantment} turns.")
         if self.enchantment > 0:
             print(f"Does {self.enchantment} direct damage.")
+        print("Requires at least 1 intelligence (INT).")
 
     def cast(self, target):
         target.affect(entities.Poisoned(), 7 + self.enchantment)
@@ -501,13 +503,31 @@ class PoisonWand(Wand):
         print(f"Your wand of poison inflicts {target.name} with {c.effect(entities.Poisoned)}.")
         return True
 
+class LightningWand(Wand):
+# (req 3 INT, 2 charges) electrocutes target for 5 + x turns
+    name = "wand of lightning"
+    value = 75
+    maxUses = 2
+
+    reqInt = 3
+
+    def inspect(self):
+        print(f"Electrocutes the target for {5 + self.enchantment} turns.")
+        print(f"Electrocuted targets become stunned every other turn")
+        print("Requires at least 3 intelligence (INT).")
+
+    def cast(self, target):
+        target.affect(entities.Electrocuted(), 5 + self.enchantment)
+        print(f"Your wand of lightning inflicts {target.name} with {c.effect(entities.Electrocuted)}.")
+        return True
+
 class TeleportWand(Wand):
 # (req 2 INT, 2 charges) teleports target to a random room
     name = "wand of teleportation"
     value = 65
     maxUses = 2
 
-    reqInt = 1
+    reqInt = 2
 
     def inspect(self):
         print("Teleports the target to a random room.")

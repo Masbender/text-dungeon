@@ -132,7 +132,7 @@ class Creature:
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
-            if effect == type(self.effects[i]):
+            if type(effect) == type(self.effects[i]):
                 # checks which effect is longer
                 if self.effects[i].duration < duration or duration < 0:
                     self.effects[i].reverse()
@@ -275,6 +275,18 @@ class Effect:
     def inspect(self):
     # tells the player what the effect does
         print("This is an effect.")
+
+class Electrocuted(Effect):
+# stuns the target every other turn
+    name = "electrocuted"
+    color = c.effect_bad
+
+    def update(self, enemies):
+        if self.duration % 2 == 1:
+            self.target.stunned = True
+
+    def inspect(self):
+        print("Stuns you every other turn.")
 
 class Bleeding(Effect):
 # does 1 damage per turn
