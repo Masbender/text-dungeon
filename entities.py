@@ -282,7 +282,7 @@ class Electrocuted(Effect):
     color = c.effect_bad
 
     def update(self, enemies):
-        if self.duration % 2 == 1:
+        if self.duration % 2 == 0:
             self.target.stunned = True
 
     def inspect(self):

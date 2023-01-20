@@ -1233,7 +1233,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
 
-gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16), (MagicRobe, 17), (HarmWand, 18), (PoisonWand, 19), (TeleportWand, 20)]
+gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16), (MagicRobe, 17), (HarmWand, 18), (PoisonWand, 19), (TeleportWand, 20), (LightningWand, 21)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
 
@@ -1258,9 +1258,9 @@ def gen_loot():
     rareLoot.remove(item)
     return item()
             
-# generates an item such as a sword or armor
+# generates an item such as weapons or armor
 def gen_gear(quality):
-    itemNum = randint(1, 20)
+    itemNum = randint(1, 21)
 
     for item in gearLoot:
         if itemNum <= item[1]:
