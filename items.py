@@ -912,6 +912,15 @@ class Bandage(Medicine):
     effectDuration = 4
     effectsCured = [entities.Bleeding]
 
+    def status(self):
+        message = ""
+        if self.uses == 1:
+            message = "(worn)"
+        elif self.uses == 2:
+            message = "(used)"
+
+        return message
+
     def inspect(self):
         print(f"It heals around 4 HP and applies REGENERATION.")
         print(f"Cures bleeding.")
