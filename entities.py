@@ -764,13 +764,78 @@ class Ogre(Boss):
             else:
                 print(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
 
+class Rat(Enemy):
+# a weak enemy who spawns in large groups
+# can inflict self with dexay, then infect the player
+    name = "RAT"
+    warning = "You hear small creatures running around..."
+    battleMessages = ["RAT snarls!",]
+    stealthMessages = [c.threat("RAT") + " is sleeping. Some of their bones are visible.",
+                      c.threat("RAT") + " is eating. They are a foul, decayed creature.",
+                      "You find " + c.threat("RAT") + ", who is much more mutated than any rat on the surface.",
+                      "You see " + c.threat("RAT") + ", who is not in very good condition.",
+                      c.threat("RAT") + " is roaming."]
+
+    maxHealth = 16
+    gold = 10
+    awareness = 2
+    stealth = 1
+
+    corruption = 0
+
+    def do_turn(self, enemies):
+        super().do_turn(enemies)
+
+        if randint(0, 1):
+            self.corruption += 1
+
+    def attack(self, enemies):
+        # inflicts self with decay
+        if self.corruption == 1:
+            self.corruption += 1
+            self.affect(Decay)
+            print(f"RAT becomes infected with {c.effect(Decay)}.")
+            return
+
+        # dodge
+        if player.dodge(self):
+            print("RAT leaps at you, but you avoid them.")
+            return
+
+        # inflicts plater with decay
+        if self.corruption > 1 and randint(0, 1):
+            # effect last longer if you already have it
+            bonusDuration = 0
+            for i in range(len(player.effects)):
+                if type(player.effects[i]) == Decay:
+                    bonusDuration = player.effectDurations[i] - 1
+                    break
+
+            if player.affect(Decay, 4 + bonusDuration):
+                damage = player.hurt(self, 4)
+                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(Decay)}!")
+                return
+            
+        # nibbles through armor
+        if randint(0, 1) and player.armor != None:
+            damage = player.hurt(self, 4, 2)
+            player.armor.degrade()
+            print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.damage(damage)} damage!")
+            return
+
+        # standard attack
+        damage = player.hurt(self, 5)
+        print(f"RAT leaps at you, biting you for {c.damage(damage)} damage!")
+
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
+    "crossroads":[([Rat, Rat], 6), ([Rat, Rat, Rat], 6)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
 specialEnemyPool = {
-    "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)]
+    "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)],
+    "crossroads":[([SkeletonGuard], 12)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):

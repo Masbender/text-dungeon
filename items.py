@@ -1254,6 +1254,9 @@ def gen_item(quality):
             return chosenItem()
 
 def gen_loot():
+    if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough
+        return ScrollEnchant()
+
     item = choice(rareLoot)
     rareLoot.remove(item)
     return item()
