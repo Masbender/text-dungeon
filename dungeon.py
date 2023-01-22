@@ -396,7 +396,7 @@ class Floor:
             effect = player.effects[i]
 
             title = effect.color(effect.name.upper())
-            if not effect.permanent:
+            if not effect.isPermanent:
                 title += f" ({player.effects[i].duration} turns remaining)"
             print(title)
 
