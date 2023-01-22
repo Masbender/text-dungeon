@@ -776,12 +776,25 @@ class Rat(Enemy):
                       "You see " + c.threat("RAT") + ", who is not in very good condition.",
                       c.threat("RAT") + " is roaming."]
 
-    maxHealth = 16
+    maxHealth = 14
     gold = 10
     awareness = 2
     stealth = 1
-
+    
     corruption = 0
+    mutations = []
+    isToxic = False
+    isHungry = False
+
+    def __init__(self):
+        if "stronger" in self.mutations:
+            self.maxHealth += 5
+
+        self.maxHealth -= randint(1, 4)
+
+        super().__init__()
+
+        self.health -= randint(0, 1)
 
     def do_turn(self, enemies):
         super().do_turn(enemies)
@@ -793,8 +806,12 @@ class Rat(Enemy):
         # inflicts self with decay
         if self.corruption == 1:
             self.corruption += 1
-            self.affect(Decay)
-            print(f"RAT becomes infected with {c.effect(Decay)}.")
+            effect = Decay
+            if "toxic" in self.mutations:
+                effect = Poisoned
+
+            self.affect(effect)
+            print(f"RAT becomes infected with {c.effect(effect)}.")
             return
 
         # dodge
@@ -804,28 +821,48 @@ class Rat(Enemy):
 
         # inflicts plater with decay
         if self.corruption > 1 and randint(0, 1):
+            effect = Decay
+            if "toxic" in self.mutations:
+                effect = Poisoned
+
             # effect last longer if you already have it
             bonusDuration = 0
             for i in range(len(player.effects)):
-                if type(player.effects[i]) == Decay:
+                if type(player.effects[i]) == effect:
                     bonusDuration = player.effectDurations[i] - 1
                     break
 
-            if player.affect(Decay, 4 + bonusDuration):
+            if player.affect(effect, 4 + bonusDuration):
                 damage = player.hurt(self, 4)
-                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(Decay)}!")
+                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(effect)}!")
                 return
+        
+        # eats teammate
+        if self.health < 10 and randint(0, 1) and len(enemies) > 1:
+            possibleTargets = enemies
+            possibleTargets.remove(self)
+            target = choice(possibleTargets)
+
+            damage = target.hurt(self, 3)
+            healing = self.heal(5)
+            print(f"RAT bites their teammate {target.name} for {c.hurt(damage)}, healing themselves {c.heal(healing)} health!")
+            return
             
         # nibbles through armor
-        if randint(0, 1) and player.armor != None:
+        if randint(0, 2) == 2 and player.armor != None:
             damage = player.hurt(self, 4, 2)
             player.armor.degrade()
-            print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.damage(damage)} damage!")
+            print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.harm(damage)} damage!")
             return
 
         # standard attack
-        damage = player.hurt(self, 5)
-        print(f"RAT leaps at you, biting you for {c.damage(damage)} damage!")
+        if "hungrier" in self.mutations and randint(0, 1):
+            damage = player.hurt(self, 5)
+            healing = self.heal(2)
+            print(f"RAT bites you for {c.harm(damage)} damage, restoring {c.heal(healing)} health!")
+        else:
+            damage = player.hurt(self, 5)
+            print(f"RAT leaps at you, biting you for {c.harm(damage)} damage!")
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],

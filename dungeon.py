@@ -844,17 +844,32 @@ class Generator:
 
         # adds these features before finishing generation
         self.addRooms = [LockedRoom(self.depth)]
-        self.addItems = [items.IronKey(), items.KnowledgeBook(), items.Rations()]
+        self.addItems = [items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant, items.ScrollRemoveCurse, items.ScrollRepair])()]
         self.addEnemies = []
+
+        # mutates rats
+        if self.area == "crossroads" and self.depth > 3:
+            mutationList = ["toxic", "stronger", "hungrier"]
+            for mutation in entities.Rat.mutations:
+                mutationList.remove(mutation)
+            
+            mutation = choice(mutationList)
+
+            entities.Rat.mutations.append(mutation)
+            self.entryMessage += c.warning({
+                "toxic":"The rats have mutated.\n",
+                "stronger":"The rats grow stronger.\n",
+                "hungrier":"The rats are hungry.\n"
+            }[mutation])
         
         # assigns modifier
         if self.size > 4 and randint(0, 1):
             self.modifier = choice(["dangerous", "large", "cursed"])
 
-            self.entryMessage = {
-                "dangerous":c.warning("You feel unsafe, watch your back."),
-                "large":c.desc("You hear your footsteps echo across the floor."),
-                "cursed":c.warning("A malevolent energy is lurking here.")
+            self.entryMessage += {
+                "dangerous":c.warning("You feel unsafe, watch your back.\n"),
+                "large":c.desc("You hear your footsteps echo across the floor.\n"),
+                "cursed":c.warning("A malevolent energy is lurking here.\n")
             }[self.modifier]
 
             if self.modifier == "large":
@@ -1079,30 +1094,30 @@ class Generator:
         spawnedItems = []
         
         # spawns gear
-        chosenGear = []
+        #chosenGear = []
         for i in range(gearAmount):
-            randomItem = items.gen_gear(self.depth)
+            lootPool = [items.gen_weapon, items.gen_armor, items.gen_wand]
+            if i < 3: # always generates at least one weapon, armor, and wand
+                lootPool = lootPool[i]
+            else:
+                lootPool = choice(lootPool)
+            
+            randomItem = lootPool(self.depth)
 
             # can't have more than 2 of the same item per floor
-            while chosenGear.count(type(randomItem)) > 1:
-                 randomItem = items.gen_gear(self.depth)
+            #while chosenGear.count(type(randomItem)) > 1:
+            randomItem = lootPool(self.depth)
 
             # cursed modifier has a 1 in 3 chance to degrade every item
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
                 randomItem.enchantment -= 1
 
-            chosenGear.append(type(randomItem))
+            #chosenGear.append(type(randomItem))
             spawnedItems.append(randomItem)
 
         # spawns items
-        chosenItems = []
         for i in range(itemAmount):
             randomItem = items.gen_item(self.depth)
-            
-            while type(randomItem) in chosenItems:
-                 randomItem = items.gen_item(self.depth)
-
-            chosenItems.append(type(randomItem))
             spawnedItems.append(randomItem)
 
         return spawnedItems

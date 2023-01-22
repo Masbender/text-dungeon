@@ -3,20 +3,26 @@ import entities
 from extra import clear_console
 from extra import gather_input
 import items
+import color
 from random import randint
 
 player = entities.player
+c = color
 
 # placeholder character selection
 playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False)
 
+introMessage = ""
+
 if playerInput == "Warrior":
     player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
     player.set_stats(1, 1, 0, 1, 0)
+    introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
 
 if playerInput == "Thief":
     player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
     player.set_stats(0, -1, 1, 2, 1)
+    introMessage = "You manage to escape your cell, but you soon become lost in the halls of the Prison."
 
 if playerInput == "Sorcerer":
     player.inventory.extend([items.Mace(0), items.MagicRobe(), items.PoisonWand()])
@@ -30,7 +36,7 @@ dungeon.sort_inventory()
 # GENERATION START
 goldKeyLocation = randint(0, 2)
 
-areas = ["prison", "crossroads", "dungeon"]
+areas = ["prison", "crossroads", "stronghold"]
 
 floors = []
 
@@ -39,6 +45,13 @@ for i in range(6):
     area = areas[i // 3]
 
     generator.gen_floor(area, i, 4 + ((i + 2) // 3))
+
+    if i % 3 == 0:
+        message = c.desc({
+            "prison":"Welcome to the Dungeon. " + introMessage,
+            "crossroads":"You have entered the Crossroads. The halls are sewer like and the sounds of rats are everywhere."
+        }[area] + "\n")
+        generator.entryMessage = message + generator.entryMessage
 
     if i == goldKeyLocation: # adds gold key
         generator.addItems.append(items.GoldKey())

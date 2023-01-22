@@ -52,6 +52,9 @@ def effect(eff):
 def harm(text):
     return red + str(text) + regular
 
+def heal(text):
+    return green + str(text) + regular
+
 
 # used in health_status, determines the color assigned to each status of health
 def critical_health(text):

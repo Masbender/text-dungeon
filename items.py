@@ -1240,9 +1240,10 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 7), (Bandage, 10), (ScrollRepair, 11), (ScrollRemoveCurse, 12), (ScrollEnchant, 13), (Bomb, 16)]
+standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 5)]
 
-gearLoot = [(Sword, 2), (Mace, 4), (Spear, 6), (Dagger, 8), (Cloak, 9), (HeavyArmor, 12), (BuffRing, 16), (MagicRobe, 17), (HarmWand, 18), (PoisonWand, 19), (TeleportWand, 20), (LightningWand, 21)]
+
+
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
 
@@ -1261,6 +1262,8 @@ def gen_item(quality):
             chosenItem = item[0]
 
             return chosenItem()
+        else:
+            itemNum -= item[1]
 
 def gen_loot():
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough
@@ -1269,34 +1272,56 @@ def gen_loot():
     item = choice(rareLoot)
     rareLoot.remove(item)
     return item()
+
+def gen_armor(quality):
+    armorLoot = [(Cloak, 3), (HeavyArmor, 6), (BuffRing, 5), (MagicRobe, 2)]
+
+    finalArmor = None
+    armor = gen_standard(armorLoot)
+
+    if armor == HeavyArmor:
+        gearLevel = (quality + 2) // 3
+        if gearLevel > 3:
+            gearLevel = 3
             
-# generates an item such as weapons or armor
-def gen_gear(quality):
-    itemNum = randint(1, 21)
+        finalArmor = armor(gearLevel)
+    
+    else:
+        finalArmor = armor()
+        finalArmor.enchantment += (quality + 1) // 4
+    
+    finalArmor.enchantment += randint(-1, 1)
 
-    for item in gearLoot:
+    return finalArmor
+
+
+def gen_weapon(quality):
+    weaponLoot = [(Sword, 4), (Mace, 4), (Spear, 4), (Dagger, 4)]
+
+    finalWeapon = gen_standard(weaponLoot)((quality + 2) // 3)
+
+    finalWeapon.enchantment += randint(-1, 1)
+
+    return finalWeapon
+
+def gen_wand(quality):
+    wandLoot = [(TeleportWand, 4), (LightningWand, 4), (HarmWand, 4), (PoisonWand, 4)]
+
+    finalWand = gen_standard(wandLoot)()
+
+    finalWand.enchantment += randint(-1, 1) + ((quality + 2) // 4)
+
+    return finalWand
+
+def gen_standard(gearList):
+# used in functions for generating weapons, armor, and wands
+    itemNum = randint(1, 16)
+
+    for item in gearList:
         if itemNum <= item[1]:
-            chosenItem = None
+            return item[0]
+        else:
+            itemNum -= item[1]
 
-            # quality improves the material of some items
-            if item[0] in [Sword, Mace, Spear, Dagger, HeavyArmor]:
-                # can be higher quality
-                if randint(1, 4) == 1:
-                    quality += 1
-
-                gearLevel = (quality + 2) // 3
-                if gearLevel > 3:
-                    gearLevel = 3
-                    
-                chosenItem = item[0](gearLevel)
-
-            else:
-                chosenItem = item[0]()
-
-            if type(chosenItem) in [Cloak]: # cloaks are better the further they're found
-                chosenItem.enchantment += (quality + 2) // 5
-
-            if chosenItem.enchantable:
-                chosenItem.enchantment = randint(-1, 1)
-
-            return chosenItem
+def gen_gear(quality):
+    return choice([gen_armor, gen_wand, gen_weapon])(quality)
