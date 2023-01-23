@@ -810,7 +810,7 @@ class Rat(Enemy):
             if self.isToxic:
                 effect = Poisoned
 
-            self.affect(effect)
+            self.affect(effect())
             print(f"RAT becomes infected with {c.effect(effect)}.")
             return
 
@@ -832,7 +832,7 @@ class Rat(Enemy):
                     bonusDuration = player.effectDurations[i] - 1
                     break
 
-            if player.affect(effect, 4 + bonusDuration):
+            if player.affect(effect(), 4 + bonusDuration):
                 damage = player.hurt(self, 4)
                 print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(effect)}!")
                 return
