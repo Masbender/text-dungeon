@@ -910,13 +910,13 @@ class Generator:
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(2, 3)))
+        self.addItems.extend(self.gen_random_items(self.size + randint(1, 2), self.size - randint(1, 2)))
         
         # spawns enemies
         if self.modifier == "dangerous":
-            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3))
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth % 3, self.depth % 3))
         else:
-            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth, self.depth % 3))
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -1095,12 +1095,15 @@ class Generator:
         
         # spawns gear
         #chosenGear = []
+        lootPools = [items.gen_weapon, items.gen_armor, items.gen_wand]
         for i in range(gearAmount):
-            lootPool = [items.gen_weapon, items.gen_armor, items.gen_wand]
+            lootpool = None
             if i < 3: # always generates at least one weapon, armor, and wand
-                lootPool = lootPool[i]
+                lootPool = lootPools[i]
             else:
-                lootPool = choice(lootPool)
+                lootPool = choice(lootPools)
+                if lootPool == items.gen_wand:
+                    lootPools.remove(items.gen_wand)
             
             randomItem = lootPool(self.depth)
 

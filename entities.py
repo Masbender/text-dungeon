@@ -124,7 +124,7 @@ class Creature:
         isPermanent = duration == 0
         
         # applies resistance
-        if effect.natural and self.resistance > effect.level:
+        if effect.natural and self.resistance > effect.level and not isPermanent:
             if (duration - self.resistance + effect.level) > 0:
                 duration += effect.level - self.resistance
             else:
@@ -142,7 +142,7 @@ class Creature:
                     return False
 
         # checks if immune to effect
-        if not effect in self.immuneTo:
+        if not type(effect) in self.immuneTo:
             if isPermanent:
                 effect.isPermanent = True
                 duration = -1
@@ -807,7 +807,7 @@ class Rat(Enemy):
         if self.corruption == 1:
             self.corruption += 1
             effect = Decay
-            if "toxic" in self.mutations:
+            if self.isToxic:
                 effect = Poisoned
 
             self.affect(effect)
@@ -822,7 +822,7 @@ class Rat(Enemy):
         # inflicts plater with decay
         if self.corruption > 1 and randint(0, 1):
             effect = Decay
-            if "toxic" in self.mutations:
+            if self.isToxic:
                 effect = Poisoned
 
             # effect last longer if you already have it
@@ -838,14 +838,14 @@ class Rat(Enemy):
                 return
         
         # eats teammate
-        if self.health < 10 and randint(0, 1) and len(enemies) > 1:
+        if self.health < 10 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
             possibleTargets = enemies
             possibleTargets.remove(self)
             target = choice(possibleTargets)
 
             damage = target.hurt(self, 3)
             healing = self.heal(5)
-            print(f"RAT bites their teammate {target.name} for {c.hurt(damage)}, healing themselves {c.heal(healing)} health!")
+            print(f"RAT bites their teammate {target.name} for {c.harm(damage)}, healing themselves {c.heal(healing)} health!")
             return
             
         # nibbles through armor
@@ -856,7 +856,7 @@ class Rat(Enemy):
             return
 
         # standard attack
-        if "hungrier" in self.mutations and randint(0, 1):
+        if self.isHungry and randint(0, 1):
             damage = player.hurt(self, 5)
             healing = self.heal(2)
             print(f"RAT bites you for {c.harm(damage)} damage, restoring {c.heal(healing)} health!")
