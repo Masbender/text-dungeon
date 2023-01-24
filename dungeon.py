@@ -920,7 +920,6 @@ class Generator:
     
     def gen_hall(self):
     # generates a snake-like hall
-        print("gen hall")
         genOver = False
         x, y = 0, 0
     
@@ -956,7 +955,6 @@ class Generator:
 
     def gen_intersection(self):
     # generates two intersecting halls
-        print("gen intersection")
         offset = 1 # how close to the edge the halls are allowed to be
         if self.size > 5:
             offset = 2
@@ -976,7 +974,6 @@ class Generator:
 
     def gen_square(self):
     # generates a ring around that leaves one wall between it and the border
-        print("gen square")
         self.layoutNums[1] = [0] + ([1] * (self.size - 2)) + [0]
         self.layoutNums[self.size - 2] = [0] + ([1] * (self.size - 2)) + [0]
 
@@ -998,7 +995,6 @@ class Generator:
 
     def gen_random(self):
     # generates a random layout
-        print("gen random")
         # picks starting position
         x = randint(1, self.size) - 1
         y = randint(1, self.size) - 1

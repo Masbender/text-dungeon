@@ -9,11 +9,6 @@ from random import randint
 player = entities.player
 c = color
 
-while True:
-    generator = dungeon.Generator()
-    generator.gen_floor("prison", 1, 5)
-    generator.finish_floor()
-
 # placeholder character selection
 playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False)
 
