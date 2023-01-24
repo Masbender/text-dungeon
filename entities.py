@@ -776,7 +776,7 @@ class Rat(Enemy):
                       "You see " + c.threat("RAT") + ", who is not in very good condition.",
                       c.threat("RAT") + " is roaming."]
 
-    maxHealth = 14
+    maxHealth = 12
     gold = 10
     awareness = 2
     stealth = 1
@@ -788,7 +788,7 @@ class Rat(Enemy):
 
     def __init__(self):
         if "stronger" in self.mutations:
-            self.maxHealth += 5
+            self.maxHealth += 4
 
         self.maxHealth -= randint(1, 4)
 
@@ -857,11 +857,11 @@ class Rat(Enemy):
 
         # standard attack
         if self.isHungry and randint(0, 1):
-            damage = player.hurt(self, 5)
+            damage = player.hurt(self, 4)
             healing = self.heal(2)
             print(f"RAT bites you for {c.harm(damage)} damage, restoring {c.heal(healing)} health!")
         else:
-            damage = player.hurt(self, 5)
+            damage = player.hurt(self, 4)
             print(f"RAT leaps at you, biting you for {c.harm(damage)} damage!")
 
 enemyPool = {
