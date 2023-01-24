@@ -1243,8 +1243,6 @@ class SeeingOrb(Item):
 standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 5)]
 
 
-
-
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
 
 # generates an item such as a bomb or bandage
@@ -1253,14 +1251,14 @@ def gen_item(quality):
     itemNum = randint(1, 16) + quality
 
     # makes sure that the chosen number isn't too high
-    if itemNum > standardLoot[-1][1]:
-        itemNum = standardLoot[-1][1]
+    if itemNum > 16: # 16 is placeholder value until more items are added
+        itemNum = 16
 
     # goes through each item until it finds one with a larger number than selected
     for item in standardLoot:
         if itemNum <= item[1]:
+            print(itemNum <= item[1])
             chosenItem = item[0]
-
             return chosenItem()
         else:
             itemNum -= item[1]
