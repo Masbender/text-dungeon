@@ -1,5 +1,5 @@
 from random import randint, choice
-from extra import clear_console, gather_input
+from extra import clear_console, gather_input, slowprint, separator
 import entities
 import items
 import color
@@ -8,6 +8,7 @@ c = color
 
 player = entities.player
 
+
 def unlock(key):
     keyIndex = -1
     for item in player.inventory:
@@ -15,7 +16,7 @@ def unlock(key):
             keyIndex = player.inventory.index(item)
 
     if keyIndex == -1:
-        print(f"You do not have a {key.name}.")
+        slowprint(f"You do not have a {key.name}.")
         return False
     else:
         options = ["cancel", "use key"]
@@ -27,6 +28,7 @@ def unlock(key):
             return True
 
         return False
+
 
 def sort_inventory():
     weapons = []
@@ -49,6 +51,7 @@ def sort_inventory():
 
         player.inventory = weapons + healing + scrolls + apparel + misc
 
+
 def item_list():
 # returns a list of item names
     itemList = []
@@ -56,6 +59,7 @@ def item_list():
         itemList.append(item.get_name())
 
     return itemList
+
 
 def update_effects(creature, enemies = None):
 # iterates through every effect
@@ -71,6 +75,7 @@ def update_effects(creature, enemies = None):
         creature.effects.pop(effectIndex)
         creature.effectDurations.pop(effectIndex)
 
+
 def print_effects(creature):
     effects = []
     for i in range(len(creature.effects)):
@@ -83,21 +88,25 @@ def print_effects(creature):
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
 
+
 def print_player_info():
 # prints player health, effects, stats, and equipment
-    print(f"You have {c.health_status(player.health, player.maxHealth)} HP, {player.armorClass} AC")
+    separator()
+    print(f"YOU: [{c.health_status(player.health, player.maxHealth)} ♥] [{player.armorClass} AC]")
     
     print_effects(player)
 
     statsDisplay = ""
 
-    statsDisplay += f"{c.compare(player.strength, player.baseSTR)} STR | "
-    statsDisplay += f"{c.compare(player.constitution, player.baseCON)} CON | "
-    statsDisplay += f"{c.compare(player.dexterity, player.baseDEX)} DEX | "
-    statsDisplay += f"{c.compare(player.perception, player.basePER)} PER | "
-    statsDisplay += f"{c.compare(player.intelligence, player.baseINT)} INT"
+    statsDisplay += f"[{c.compare(player.strength, player.baseSTR)} STR] "
+    statsDisplay += f"[{c.compare(player.constitution, player.baseCON)} CON] "
+    statsDisplay += f"[{c.compare(player.dexterity, player.baseDEX)} DEX] "
+    statsDisplay += f"[{c.compare(player.perception, player.basePER)} PER] "
+    statsDisplay += f"[{c.compare(player.intelligence, player.baseINT)} INT] "
     
     print(statsDisplay)
+    separator()
+           
                 
 class Battle:
     def __init__(self, enemies, isSurprise = False):
@@ -106,14 +115,12 @@ class Battle:
         self.isSurpriseAttack = isSurprise
 
     def start_battle(self):
-        clear_console()
-
-        # prints message
-        print(c.desc(choice(self.enemies[0].battleMessages)))
+        slowprint(c.desc(choice(self.enemies[0].battleMessages)))
+        separator()
 
         canRun = True
         if self.enemies[0].isSpecial:
-            print(c.warning(f"There is no escape from this fight."))
+            slowprint(c.warning(f"There is no escape from this fight."))
             canRun = False
         
         while not self.battleOver:
@@ -127,10 +134,10 @@ class Battle:
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
-                    if enemy.health > 0: # checks if enemy died during thier turn
+                    if enemy.health > 0: # checks if enemy died during their turn
                         updatedEnemies.append(enemy)
                 if enemy.health <= 0:
-                    print(f"{enemy.name} drops {enemy.gold} gold.")
+                    slowprint(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
                         
             self.enemies = updatedEnemies
@@ -152,18 +159,13 @@ class Battle:
             return False
 
     def print_battle(self):
-        print()
-
         for creature in self.enemies:
-            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name)} : {c.health_status(creature.health, creature.maxHealth)} HP, {creature.armorClass} AC")
+            print(creature.portrait)
+            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name)} : [{c.health_status(creature.health, creature.maxHealth)} ♥] [{creature.armorClass} AC]")
             
             print_effects(creature)
 
-            print()
-
         print_player_info()
-        
-        print()
     
     def enemy_turn(self, enemy):
         enemy.do_turn(self.enemies)
@@ -202,13 +204,14 @@ class Floor:
         for i in range(len(self.layout)):
             self.map.append(['?'] * len(self.layout))
 
-    def check_pos(self, position):
     # checks if an x or y coordinate is too big or small
+    def check_pos(self, position):
         if position >= len(self.layout) or position < 0:
             return False
         else:
             return True
 
+    # prints map
     def print_map(self):
         # prepares a list with the proper characters
         lines = []
@@ -239,15 +242,17 @@ class Floor:
                 # rooms are represented as '+'
                 else:
                     lines[i].append(' ')
-
         # prints the map
+        separator()
         for line in lines:
             print(" ".join(line))
+
 
     def update_room(self, y, x):
         self.map[y][x] = self.layout[y][x]
     # adds a room to the map
         
+
     def update_map(self):
     # adds nearby rooms to the map
     # warns player of nearby enemies
@@ -277,7 +282,8 @@ class Floor:
             if player.awareness >= enemy.stealth:
                 if not enemy.warning in messages:
                     messages.append(enemy.warning)
-                    print(enemy.warning)
+                    slowprint(enemy.warning)
+
 
     def move_player(self, direction):
     # moves the player
@@ -287,7 +293,7 @@ class Floor:
 
         # checks if new position is too big or small
         if not (self.check_pos(newY) and self.check_pos(newX)):
-            print("The wall here is protected by magic and is indestructible.")
+            slowprint("The wall here is protected by magic and is indestructible.")
             return False
 
         # checks if new tile is a wall
@@ -301,6 +307,7 @@ class Floor:
         self.posX = newX
         return True
 
+
     def get_room(self):
     # retunrs the room that the player is in
         return self.layout[self.posY][self.posX]
@@ -312,20 +319,20 @@ class Floor:
         options = ["move", "wait", "view stats"]
 
         if player.inventory != []:
-            options.append("inventory")
+            options.append(f"inventory [{len(player.inventory)}/{player.inventorySize}]")
             
         if room.loot != []:
             options.append(c.loot("take item"))
             # prints items
             if len(room.loot) == 1:
-                print(f"\nThere is a {c.loot(room.loot[0].get_name())} here.")
+                print(f"There is a {c.loot(room.loot[0].get_name())} here.")
             else:
                 # gets a list of item names
                 names = []
                 for item in room.loot:
                     names.append(c.loot(item.get_name()))
                     
-                print(f"\nThere is a {', '.join(names[0:-1])}, and a {names[-1]} here.")
+                print(f"There is a {', '.join(names[0:-1])}, and a {names[-1]} here.")            
 
         # presents options to player and gathers input
         if room.specialAction != "":
@@ -334,7 +341,6 @@ class Floor:
         if room.threats != []:
             options.append(c.threat("surprise attack"))
             
-            print()
             for enemy in room.threats:
                 print(c.desc(choice(enemy.stealthMessages)))
     
@@ -346,6 +352,7 @@ class Floor:
         options = ["cancel", "↑", "→", "↓", "←"]
 
         self.print_map()
+        separator(end="")
         playerInput = gather_input("\nWhat direction do you move?", options) - 1
 
         if playerInput > -1: # -1 is cancel
@@ -373,7 +380,7 @@ class Floor:
     # called when player chooses to wait
         self.update_map()
         update_effects(player)
-        print(choice(["You wait.", "You take a moment to enjoy your surroundings.", "You ponder existence.", "You fall asleep for an unknown amount of time."]))
+        slowprint(choice(["You wait.", "You take a moment to enjoy your surroundings.", "You ponder existence.", "You fall asleep for an unknown amount of time."]))
         
     def action_view_stats(self):
     # called when player decides to view stats
@@ -382,7 +389,6 @@ class Floor:
         print(f"stealth : {player.stealth} | your ability to be unnoticed")
         print(f"awareness : {player.awareness} | detects enemies on the map")
         print(f"appraisal : {player.appraisal} gold | helps you detect fair prices")
-        print()
         
         if player.gold > 0:
             print(f"You have {c.highlight(str(player.gold))} gold.\n")
@@ -397,7 +403,6 @@ class Floor:
             print(title)
 
             effect.inspect()
-            print()
 
     def action_take_item(self):
     # called when player takes an item
@@ -421,10 +426,7 @@ class Floor:
             # moves item to inventory
             room.loot[chosenItem].pickup()
             player.inventory.append(room.loot.pop(chosenItem))
-            print(f"You take the {options[chosenItem + 1]}.")
-            print()
-            #player.inventory[-1].inspect()
-            print()
+            slowprint(f"You take the {options[chosenItem + 1]}.")
     
             sort_inventory()
 
@@ -459,7 +461,6 @@ class Floor:
                 print(f"This item is {c.blessed('blessed')}.")
             elif chosenItem.enchantment < 0:
                 print(f"This item is {c.cursed('cursed')}, and cannot be dropped.")
-            print()
 
             # asks for input
             playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
@@ -486,9 +487,9 @@ class Floor:
     # called when the player talks to the shopkeeper
         room = self.get_room()
 
-        print("The golem doesn't even look alive, but you approach it anyways.\n")
+        slowprint("The golem doesn't even look alive, but you approach it anyways.\n")
 
-        print("The golem shows you it's wares:")
+        slowprint("The golem shows you it's wares:")
         options = ["cancel"]
         # displays items and forms options
         for item in room.stock:
@@ -513,7 +514,6 @@ class Floor:
                     print(f"Your deal (worth {c.deal_good(str(playersPrice))} gold):")
                     for item in playersDeal:
                         print(f"{item.get_name()} is worth {item.get_price(False, True)} gold,")
-                    print()
                 
                 if playersPrice < golemsPrice:
                     print(f"This deal will cost you {c.deal_bad(str(golemsPrice - playersPrice))} gold.")
@@ -604,7 +604,7 @@ class Floor:
         room = self.get_room()
         
         if room.areEnemiesAware:
-            print("You have already fought these enemies, they will not be surprised.")
+            slowprint("You have already fought these enemies, they will not be surprised.")
             playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"])
 
             if playerInput == 0:
@@ -625,6 +625,7 @@ class Floor:
     # starts when player enters the floor, ends when they exit
     # returns -1 or 1, representing the change in floor
         clear_console()
+
         if self.entryMessage != "":
             print(self.entryMessage)
         self.update_map()
@@ -634,22 +635,17 @@ class Floor:
 
             # ===== PRINTS INFORMATION =====
             self.print_map()
-            print()
-            
+        
             if room.description != "":
-                print(room.description)
-                print()
-
-            print_player_info()
-            print(f"Your inventory contains {len(player.inventory)}/{player.inventorySize} items.")
-
+                slowprint(room.description)
             options = self.get_options()
             
-            playerInput = gather_input("\nWhat do you do?", options, False)
+            print_player_info()
+            playerInput = gather_input("What do you do?", options, False)
 
             actions = {
                 "move":self.action_move, "wait":self.action_wait, 
-                "view stats":self.action_view_stats, "inventory":self.action_inventory,
+                "view stats":self.action_view_stats, f"inventory [{len(player.inventory)}/{player.inventorySize}]":self.action_inventory,
                 c.loot("take item"):self.action_take_item, c.special("shop"):self.action_shop,
                 c.special("unlock chest"):self.action_unlock_chest, c.threat("surprise attack"):self.action_surprise
             }
@@ -700,7 +696,7 @@ class Chest(Room):
         if unlock(items.GoldKey):
             self.loot.extend(self.hiddenLoot)
 
-            print("You unlock the chest.")
+            slowprint("You unlock the chest.")
             self.description = ""
             self.specialAction = ""
             return True
@@ -718,7 +714,7 @@ class Wall(Room):
         self.threats = []
 
     def unblock(self): # requires a bomb or pickaxe
-        print("There is a wall in the way.")
+        slowprint("There is a wall in the way.")
         
         # gathers input
         options = ["cancel"]

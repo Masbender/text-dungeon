@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 """
 TABLE OF CONTENTS :
@@ -24,9 +25,9 @@ def gather_input(prompt, options, returnInt = True):
 # INPUT : prompt (string), options (list), returnInt (bool, optional)
 # OUTPUT : provides the player with options and requires an INT as a response, returns index or name of response
     # prints and numbers options
-    print(prompt)
+    slowprint(prompt, .004)
     for i in range(len(options)):
-        print(f"{i}) {options[i]}")
+        slowprint(f"[{i + 1}] {options[i]}", .004)
 
   # gathers input and accounts for user error
     validResponse = False
@@ -34,7 +35,7 @@ def gather_input(prompt, options, returnInt = True):
         playerInput = None
         try:
             playerInput = input("Enter a Number : ")
-            playerInput = int(playerInput)
+            playerInput = int(playerInput) - 1
         
             if playerInput in range(len(options)):
                 validResponse = True
@@ -51,3 +52,14 @@ def gather_input(prompt, options, returnInt = True):
         return playerInput
     else:
         return options[playerInput]
+
+# prints text slower
+def slowprint(text, speed=.03):
+    for letter in text:
+        print(letter, end="", flush=True)
+        sleep(speed)
+    print()
+
+# break between output
+def separator(end="\n"):
+    print("----------------------------------------", end=end)

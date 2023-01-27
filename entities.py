@@ -1,4 +1,5 @@
 from random import randint, choice
+from extra import slowprint
 import color
 
 c = color
@@ -32,6 +33,12 @@ class Creature:
     effects = None
     effectDurations = None
     stunned = False
+
+    #portrait
+    portrait = """ _____
+|  O_O |
+| [__] |
+|_LL_L_|"""
 
     def __init__(self):
         self.health = self.maxHealth
@@ -191,7 +198,7 @@ class Player(Creature):
 
         if dodged and self.illusionRing:
             attacker.stunned = True
-            print(f"Your Ring of Illusion stuns {attacker.name}.")
+            slowprint(f"Your Ring of Illusion stuns {attacker.name}.")
 
         return dodged
 
@@ -205,7 +212,7 @@ class Player(Creature):
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
             self.affect(Burned, 6 - self.ring.enchantment)
-            print(f"You are {c.effect(Burned)} by your Ring of Rage!")
+            slowprint(f"You are {c.effect(Burned)} by your Ring of Rage!")
 
         return damageDealt
 
@@ -229,7 +236,7 @@ class Enemy(Creature):
     def do_turn(self, enemies):
         # parameter 'enemies' allows the method to see the whole battlefield
         if self.stunned:
-            print(f"{self.name} is stunned and unable to fight")
+            slowprint(f"{self.name} is stunned and unable to fight")
             self.stunned = False
         else:
             self.attack(enemies)
@@ -244,10 +251,10 @@ class Boss(Enemy):
     # less likely to be stunned
         if self.stunned:
             if randint(0, 1):
-                print(f"{self.name} is stunned and unable to fight")
+                slowprint(f"{self.name} is stunned and unable to fight")
                 self.stunned = False
             else:
-                print(f"{self.name} resisted the stun")
+                slowprint(f"{self.name} resisted the stun")
                 self.stunned = False
                 self.attack(enemies)
         else:
@@ -399,7 +406,7 @@ class BrokenBones(Effect):
 
         if issubclass(type(self.target), Skeleton):
             self.target.health = 0
-            print(self.target.name + " dies")
+            slowprint(self.target.name + " dies")
 
         self.target.update_dexterity(-4)
         self.target.update_strength(-1)
@@ -497,22 +504,22 @@ class Draugr(Enemy):
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
-            print("DRAUGR's armor degrades.")
+            slowprint("DRAUGR's armor degrades.")
         
         return damageDealt
         
     def attack(self, enemies):
         if player.dodge(self):
-            print(f"You dodge DRAUGR's attack.")
+            slowprint(f"You dodge DRAUGR's attack.")
             return
 
         if randint(1, 3) == 1:
             if player.affect(Bleeding, 4):
                 damage = player.hurt(self, 4)
-                print(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                slowprint(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
             damage = player.hurt(self, 5)
-            print(f"DRAUGR hits you with their axe for {c.harm(damage)} damage!")
+            slowprint(f"DRAUGR hits you with their axe for {c.harm(damage)} damage!")
 
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
@@ -536,15 +543,15 @@ class Ghoul(Enemy):
     def attack(self, enemies):
         if randint(1, 3) == 1:
             if player.affect(Decay, 6):
-                print(f"GHOUL curses you with {c.effect(Decay)}!")
+                slowprint(f"GHOUL curses you with {c.effect(Decay)}!")
                 return
         
         if player.dodge(self):
-            print("You dodge GHOUL's bite.")
+            slowprint("You dodge GHOUL's bite.")
             return
 
         damage = player.hurt(self, 4)
-        print(f"GHOUL bites you for {c.harm(damage)} damage!")
+        slowprint(f"GHOUL bites you for {c.harm(damage)} damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -574,7 +581,7 @@ class Skeleton(Enemy):
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
         if randint(0, 5) < self.staggerChance:
-            print(f"{self.name} staggers and misses their attack.")
+            slowprint(f"{self.name} staggers and misses their attack.")
             self.stunned = False
         else:
             super().do_turn(enemies)
@@ -582,7 +589,7 @@ class Skeleton(Enemy):
     def attack(self, enemies):
         # checks dodge
         if player.dodge(self):
-            print(f"You dodge SKELETONS {self.weapon}.")
+            slowprint(f"You dodge SKELETONS {self.weapon}.")
             return
 
         piercing = 0
@@ -607,10 +614,10 @@ class Skeleton(Enemy):
         # does damage
         if effect == None:
             damage = player.hurt(self, self.damage, piercing)
-            print(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage!")
+            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage!")
         else:
             damage = player.hurt(self, self.damage, piercing)
-            print(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage, leaving you {c.effect(effect)}!")
+            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage, leaving you {c.effect(effect)}!")
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
@@ -618,8 +625,8 @@ class SkeletonGuard(Skeleton):
     warning = "You hear the clanking of bones and metal..."
     battleMessages = ["SKELETON GUARD raises their shield!",
                     "SKELETON GUARD will not let it's training go to waste!"]
-    stealthMessages = [c.threat("SKELETON GUARD") + " is alert, but has failed to notice you.",
-                      c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
+    stealthMessages = [c.threat("SKELETON GUARD") + " promised not to fall asleep this time... but has failed.",
+                       c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
     isSpecial = True
 
     maxHealth = 15
@@ -658,30 +665,30 @@ class Thief(Enemy):
         self.time += 1
         if randint(1, 4) < self.time:
             self.health = 0
-            print("THIEF runs away!")
+            slowprint("THIEF runs away!")
             
         elif self.time == 3:
-            print(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
+            slowprint(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
 
     def attack(self, enemies):
         if not self.hasDart:
             if player.dodge(self):
-                print("You dodge THIEF's dagger.")
+                slowprint("You dodge THIEF's dagger.")
                 return
 
             damage = player.hurt(self, 4)
-            print(f"THIEF stabs you for {c.harm(damage)} damage!")
+            slowprint(f"THIEF stabs you for {c.harm(damage)} damage!")
         else:
             self.hasDart = False
             if player.dodge(self):
-                print("You dodge THIEF's dart.")
+                slowprint("You dodge THIEF's dart.")
                 return
             
             if player.affect(Poisoned, 6):
-                print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
+                slowprint(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
-                print(f"THIEF hits you with a dart, but you resist it's poison.")
+                slowprint(f"THIEF hits you with a dart, but you resist its poison.")
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
@@ -706,7 +713,7 @@ class Ogre(Boss):
         if self.health < 20 and not self.isRaged:
             self.isRaged = True
             self.strength += 3
-            print("OGRE is enraged!")
+            slowprint("OGRE is enraged!")
         
         # choses move, can't do the same twice in a row
         choices = ["heavy", "slam", "attack"]
@@ -720,44 +727,44 @@ class Ogre(Boss):
             self.isCharging = False
 
             if player.dodge(self):
-                print("You manage to dodge OGRE's heavy swing.")
+                slowprint("You manage to dodge OGRE's heavy swing.")
                 return
             
             damage = player.hurt(self, 8, 1)
 
             if damage > 8:
                 if player.affect(BrokenBones):
-                    print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
+                    slowprint(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             
-            print(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} damage!")
+            slowprint(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} damage!")
             
         elif chosenMove == "heavy":
-            print("OGRE prepares a heavy swing!")
+            slowprint("OGRE prepares a heavy swing!")
             self.isCharging = True
 
         elif chosenMove == "slam":
             if player.dodge(self):
-                print("OGRE slams the ground, but you get out of the way.")
+                slowprint("OGRE slams the ground, but you get out of the way.")
                 return
 
             damage = player.hurt(self, 3, 3)
             if player.affect(Dazed, 2):
-                print(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
+                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
-                print(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
+                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
 
         else:
             if player.dodge(self):
-                print("You dodge OGRE's club!")
+                slowprint("You dodge OGRE's club!")
                 return
 
             damage = player.hurt(self, 5)
 
             if player.affect(Bleeding, 3):
-                print(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                slowprint(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
             else:
-                print(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
+                slowprint(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],

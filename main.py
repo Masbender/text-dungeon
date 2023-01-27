@@ -8,7 +8,7 @@ from random import randint
 player = entities.player
 
 # placeholder character selection
-playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False)
+playerInput = gather_input("Choose a starting character:", ["Warrior", "Thief"], False)
 
 if playerInput == "Warrior":
     player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])

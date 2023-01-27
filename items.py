@@ -1,5 +1,5 @@
 from random import randint, choice
-from extra import gather_input, clear_console
+from extra import gather_input, slowprint
 import entities
 import color
 
@@ -213,17 +213,17 @@ class Sword(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            print(f"{self.target.name} dodges your attack!")
+            slowprint(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
             if self.target.affect(entities.Bleeding, self.bleedDuration):
-                print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+                slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
-        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class JudgementSword(Sword):
@@ -247,7 +247,7 @@ class JudgementSword(Sword):
         if self.target.undead:
             self.target.affect(entities.Burned)
             self.target.health -= 3
-            print(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
+            slowprint(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
     
         return True
 
@@ -269,12 +269,12 @@ class Spear(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            print(f"{self.target.name} dodges your attack!")
+            slowprint(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class Mace(Weapon):
@@ -295,17 +295,17 @@ class Mace(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            print(f"{self.target.name} dodges your attack!")
+            slowprint(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 11) < self.stunChance and self.uses > 0:
             self.target.stunned = True
-            print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.harm('stunned')}.")
+            slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.harm('stunned')}.")
             return True
 
-        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -326,7 +326,7 @@ class FlamingMace(Mace):
 
         if randint(0, 1):
             if self.target.affect(entities.OnFire, randint(2, 3)):
-                print(f"{self.target.name} is set on fire.")
+                slowprint(f"{self.target.name} is set on fire.")
 
         return True
         
@@ -349,18 +349,18 @@ class Dagger(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            print(f"{self.target.name} dodges your attack!")
+            slowprint(f"{self.target.name} dodges your attack!")
             return True
 
         for effect in self.target.effects:
             if isinstance(effect, entities.Surprised):
                 damageDealt += self.sneakBonus
-                print("Sneak attack!")
+                slowprint("Sneak attack!")
                 break
 
         damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
-        print(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
@@ -382,7 +382,7 @@ class EbonyDagger(Dagger):
         # applies ebony dagger's effect
         if self.target.health <= 0:
             player.maxHealth += 1
-            print("You absorb " + self.target.name + "'s power.")
+            slowprint("You absorb " + self.target.name + "'s power.")
         
         return True
     
