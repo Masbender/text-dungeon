@@ -31,7 +31,6 @@ class Creature:
     # temporary stats that keep track of combat status
     health = 0
     effects = None
-    effectDurations = None
     stunned = False
 
     #portrait
@@ -45,7 +44,6 @@ class Creature:
 
         self.immuneTo = []
         self.effects = []
-        self.effectDurations = []
 
     def update_strength(self, increase):
     # strength is added to damage dealt
@@ -133,7 +131,7 @@ class Creature:
         isPermanent = duration == 0
         
         # applies resistance
-        if effect.natural and self.resistance > effect.level:
+        if effect.natural and self.resistance > effect.level and not isPermanent:
             if (duration - self.resistance + effect.level) > 0:
                 duration += effect.level - self.resistance
             else:
@@ -141,26 +139,25 @@ class Creature:
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
-            if effect == type(self.effects[i]):
+            if type(effect) == type(self.effects[i]):
                 # checks which effect is longer
-                if self.effectDurations[i] < duration or duration < 0:
+                if self.effects[i].duration < duration or duration < 0:
                     self.effects[i].reverse()
-                    self.effectDurations.pop(i)
                     self.effects.pop(i)
                     break
                 else:
                     return False
 
         # checks if immune to effect
-        if not effect in self.immuneTo:
-            effect = effect(self)
-
+        if not type(effect) in self.immuneTo:
             if isPermanent:
                 effect.isPermanent = True
                 duration = -1
-            
+            else:
+                effect.duration = duration
+                
             self.effects.append(effect)
-            self.effectDurations.append(duration)
+            effect.apply(self)
             return True
         else:
             return False
@@ -174,12 +171,15 @@ class Player(Creature):
     inventory = []
     ring = None
     armor = None
+    recharge = 1 # wand recharge speed
 
     baseSTR = 0
     baseCON = 0
     baseDEX = 0
     basePER = 0
     baseINT = 0
+
+    currentFloor = None
 
     # various stats for unusual effects
     infernoRing = False
@@ -265,8 +265,10 @@ class Effect:
     level = 0
     isPermanent = False
     color = c.effect_neutral
+
+    duration = 0 # only changed when effect is created
     
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
     def update(self, enemies):
@@ -281,15 +283,24 @@ class Effect:
     # tells the player what the effect does
         print("This is an effect.")
 
+class Electrocuted(Effect):
+# stuns the target every other turn
+    name = "electrocuted"
+    color = c.effect_bad
+
+    def update(self, enemies):
+        if self.duration % 2 == 0:
+            self.target.stunned = True
+
+    def inspect(self):
+        print("Stuns you every other turn.")
+
 class Bleeding(Effect):
 # does 1 damage per turn
     name = "bleeding"
     natural = True
     level = 0
     color = c.effect_bad
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         # lowers health by 1 every turn
@@ -302,9 +313,6 @@ class Regeneration(Effect):
 # heals 1 hp per turn
     name = "regeneration"
     color = c.effect_good
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         self.target.heal(1)
@@ -316,9 +324,6 @@ class WellFed(Effect):
 # heals 2 health per turn
     name = "well fed"
     color = c.effect_good
-    
-    def __init__(self, target):
-        self.target = target
 
     def update(self, enemies):
         self.target.heal(2)
@@ -333,7 +338,7 @@ class Dazed(Effect):
     level = 1
     color = c.effect_bad
     
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.update_dexterity(-1)
@@ -349,7 +354,7 @@ class Surprised(Effect):
     name = "surprised"
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.update_dexterity(-2)
@@ -367,7 +372,7 @@ class Decay(Effect):
     name = "decay"
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.decayLevel = 1
@@ -401,7 +406,7 @@ class BrokenBones(Effect):
     level = 3
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         if issubclass(type(self.target), Skeleton):
@@ -425,7 +430,7 @@ class Burned(Effect):
     level = -2
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
         self.target.armorClass -= 1
@@ -444,11 +449,11 @@ class OnFire(Effect):
     level = 3
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
 
     def update(self, enemies):
-        self.target.affect(Burned, 5)
+        self.target.affect(Burned(), 5)
         self.target.health -= 2
 
     def inspect(self):
@@ -462,7 +467,7 @@ class Poisoned(Effect):
     level = -1
     color = c.effect_bad
 
-    def __init__(self, target):
+    def apply(self, target):
         self.target = target
         
         self.target.strength -= 1
@@ -514,7 +519,7 @@ class Draugr(Enemy):
             return
 
         if randint(1, 3) == 1:
-            if player.affect(Bleeding, 4):
+            if player.affect(Bleeding(), 4):
                 damage = player.hurt(self, 4)
                 slowprint(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
@@ -542,7 +547,7 @@ class Ghoul(Enemy):
 
     def attack(self, enemies):
         if randint(1, 3) == 1:
-            if player.affect(Decay, 6):
+            if player.affect(Decay(), 6):
                 slowprint(f"GHOUL curses you with {c.effect(Decay)}!")
                 return
         
@@ -603,12 +608,12 @@ class Skeleton(Enemy):
         if randint(1, 4) == 1:
             # swords inflict bleeding
             if self.weapon == "sword":
-                if player.affect(Bleeding, 4):
+                if player.affect(Bleeding(), 4):
                     effect = Bleeding
 
             # maces inflict dazed
             if self.weapon == "mace":
-                if player.affect(Dazed, 2):
+                if player.affect(Dazed(), 2):
                     effect = Dazed
         
         # does damage
@@ -733,7 +738,7 @@ class Ogre(Boss):
             damage = player.hurt(self, 8, 1)
 
             if damage > 8:
-                if player.affect(BrokenBones):
+                if player.affect(BrokenBones()):
                     slowprint(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             
@@ -749,7 +754,7 @@ class Ogre(Boss):
                 return
 
             damage = player.hurt(self, 3, 3)
-            if player.affect(Dazed, 2):
+            if player.affect(Dazed(), 2):
                 slowprint(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
                 slowprint(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
@@ -761,18 +766,120 @@ class Ogre(Boss):
 
             damage = player.hurt(self, 5)
 
-            if player.affect(Bleeding, 3):
+            if player.affect(Bleeding(), 3):
                 slowprint(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
             else:
                 slowprint(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
 
+class Rat(Enemy):
+# a weak enemy who spawns in large groups
+# can inflict self with dexay, then infect the player
+    name = "RAT"
+    warning = "You hear small creatures running around..."
+    battleMessages = ["RAT snarls!",]
+    stealthMessages = [c.threat("RAT") + " is sleeping. Some of their bones are visible.",
+                      c.threat("RAT") + " is eating. They are a foul, decayed creature.",
+                      "You find " + c.threat("RAT") + ", who is much more mutated than any rat on the surface.",
+                      "You see " + c.threat("RAT") + ", who is not in very good condition.",
+                      c.threat("RAT") + " is roaming."]
+
+    maxHealth = 12
+    gold = 10
+    awareness = 2
+    stealth = 1
+    
+    corruption = 0
+    mutations = []
+    isToxic = False
+    isHungry = False
+
+    def __init__(self):
+        if "stronger" in self.mutations:
+            self.maxHealth += 4
+
+        self.maxHealth -= randint(1, 4)
+
+        super().__init__()
+
+        self.health -= randint(0, 1)
+
+    def do_turn(self, enemies):
+        super().do_turn(enemies)
+
+        if randint(0, 1):
+            self.corruption += 1
+
+    def attack(self, enemies):
+        # inflicts self with decay
+        if self.corruption == 1:
+            self.corruption += 1
+            effect = Decay
+            if self.isToxic:
+                effect = Poisoned
+
+            self.affect(effect())
+            print(f"RAT becomes infected with {c.effect(effect)}.")
+            return
+
+        # dodge
+        if player.dodge(self):
+            print("RAT leaps at you, but you avoid them.")
+            return
+
+        # inflicts plater with decay
+        if self.corruption > 1 and randint(0, 1):
+            effect = Decay
+            if self.isToxic:
+                effect = Poisoned
+
+            # effect last longer if you already have it
+            bonusDuration = 0
+            for i in range(len(player.effects)):
+                if type(player.effects[i]) == effect:
+                    bonusDuration = player.effectDurations[i] - 1
+                    break
+
+            if player.affect(effect(), 4 + bonusDuration):
+                damage = player.hurt(self, 4)
+                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(effect)}!")
+                return
+        
+        # eats teammate
+        if self.health < 10 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
+            possibleTargets = enemies
+            possibleTargets.remove(self)
+            target = choice(possibleTargets)
+
+            damage = target.hurt(self, 3)
+            healing = self.heal(5)
+            print(f"RAT bites their teammate {target.name} for {c.harm(damage)}, healing themselves {c.heal(healing)} health!")
+            return
+            
+        # nibbles through armor
+        if randint(0, 2) == 2 and player.armor != None:
+            damage = player.hurt(self, 4, 2)
+            player.armor.degrade()
+            print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.harm(damage)} damage!")
+            return
+
+        # standard attack
+        if self.isHungry and randint(0, 1):
+            damage = player.hurt(self, 4)
+            healing = self.heal(2)
+            print(f"RAT bites you for {c.harm(damage)} damage, restoring {c.heal(healing)} health!")
+        else:
+            damage = player.hurt(self, 4)
+            print(f"RAT leaps at you, biting you for {c.harm(damage)} damage!")
+
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
+    "crossroads":[([Rat, Rat], 6), ([Rat, Rat, Rat], 6)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
 specialEnemyPool = {
-    "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)]
+    "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)],
+    "crossroads":[([SkeletonGuard], 12)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):

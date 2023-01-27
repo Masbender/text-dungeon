@@ -32,6 +32,7 @@ def unlock(key):
 
 def sort_inventory():
     weapons = []
+    wands = []
     healing = []
     scrolls = []
     apparel = []
@@ -40,6 +41,8 @@ def sort_inventory():
     for item in player.inventory:
         if issubclass(type(item), items.Weapon):
             weapons.append(item)
+        elif issubclass(type(item), items.Wand):
+            wands.append(item)
         elif issubclass(type(item), items.Medicine):
             healing.append(item)
         elif issubclass(type(item), items.Scroll):
@@ -49,7 +52,7 @@ def sort_inventory():
         else:
             misc.append(item)
 
-        player.inventory = weapons + healing + scrolls + apparel + misc
+    player.inventory = weapons + wands + healing + scrolls + apparel + misc
 
 
 def item_list():
@@ -63,17 +66,20 @@ def item_list():
 
 def update_effects(creature, enemies = None):
 # iterates through every effect
+    effectDurations = []
+    
     for i in range(len(creature.effects)):
         creature.effects[i].update(enemies)
-        creature.effectDurations[i] -= 1
+        creature.effects[i].duration -= 1
+
+        effectDurations.append(creature.effects[i].duration)
 
     # deletes expired effects
-    while 0 in creature.effectDurations:
-        effectIndex = creature.effectDurations.index(0)
+    while 0 in effectDurations:
+        effectIndex = effectDurations.index(0)
+        effectDurations.pop(effectIndex)
         creature.effects[effectIndex].reverse()
-
         creature.effects.pop(effectIndex)
-        creature.effectDurations.pop(effectIndex)
 
 
 def print_effects(creature):
@@ -83,7 +89,7 @@ def print_effects(creature):
         if effect.isPermanent:
             effects.append(f"{effect.color(effect.name)}")
         else:
-            effects.append(f"{effect.color(effect.name)} - {creature.effectDurations[i]} turns")
+            effects.append(f"{effect.color(effect.name)} - {creature.effects[i].duration} turns")
 
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
@@ -127,20 +133,20 @@ class Battle:
             self.player_turn()
 
             allStunned = True
-            updatedEnemies = []
+            removedEnemies = []
             for enemy in self.enemies:
                 if not enemy.stunned: # tracks if any enemies are not stunned
                     allStunned = False
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
-                    if enemy.health > 0: # checks if enemy died during their turn
-                        updatedEnemies.append(enemy)
                 if enemy.health <= 0:
                     slowprint(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
-                        
-            self.enemies = updatedEnemies
+                    removedEnemies.append(enemy)
+
+            for enemy in removedEnemies:
+                self.enemies.remove(enemy)
 
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
@@ -373,8 +379,6 @@ class Floor:
                 if isNoticed:
                     battle = Battle(room.threats)
                     battle.start_battle()
-    
-                    room.threats = battle.enemies
 
     def action_wait(self):
     # called when player chooses to wait
@@ -398,8 +402,8 @@ class Floor:
             effect = player.effects[i]
 
             title = effect.color(effect.name.upper())
-            if not effect.permanent:
-                title += f" ({player.effectDurations[i]} turns remaining)"
+            if not effect.isPermanent:
+                title += f" ({player.effects[i].duration} turns remaining)"
             print(title)
 
             effect.inspect()
@@ -612,13 +616,12 @@ class Floor:
 
         else:
             for enemy in room.threats: # makes sure all enemies are surprised and stunned
-                enemy.affect(entities.Surprised, 1)
+                enemy.affect(entities.Surprised(), 1)
                 enemy.stunned = True
 
         battle = Battle(room.threats, True)
         battle.start_battle()
 
-        room.threats = battle.enemies
         room.areEnemiesAware = True
         
     def enter_floor(self):
@@ -814,7 +817,7 @@ def gen_room(area, depth, type):
     
 class Generator:
 # generates floors
-    def gen_floor(self, area, depth, size):
+    def gen_floor(self, area, depth, size):                                                 
         # stores info about progression
         self.area = area
         self.depth = depth
@@ -837,17 +840,32 @@ class Generator:
 
         # adds these features before finishing generation
         self.addRooms = [LockedRoom(self.depth)]
-        self.addItems = [items.IronKey(), items.KnowledgeBook(), items.Rations()]
+        self.addItems = [items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant, items.ScrollRemoveCurse, items.ScrollRepair])()]
         self.addEnemies = []
+
+        # mutates rats
+        if self.area == "crossroads" and self.depth > 3:
+            mutationList = ["toxic", "stronger", "hungrier"]
+            for mutation in entities.Rat.mutations:
+                mutationList.remove(mutation)
+            
+            mutation = choice(mutationList)
+
+            entities.Rat.mutations.append(mutation)
+            self.entryMessage += c.warning({
+                "toxic":"The rats have mutated.\n",
+                "stronger":"The rats grow stronger.\n",
+                "hungrier":"The rats are hungry.\n"
+            }[mutation])
         
         # assigns modifier
         if self.size > 4 and randint(0, 1):
             self.modifier = choice(["dangerous", "large", "cursed"])
 
-            self.entryMessage = {
-                "dangerous":c.warning("You feel unsafe, watch your back."),
-                "large":c.desc("You hear your footsteps echo across the floor."),
-                "cursed":c.warning("A malevolent energy is lurking here.")
+            self.entryMessage += {
+                "dangerous":c.warning("You feel unsafe, watch your back.\n"),
+                "large":c.desc("You hear your footsteps echo across the floor.\n"),
+                "cursed":c.warning("A malevolent energy is lurking here.\n")
             }[self.modifier]
 
             if self.modifier == "large":
@@ -858,7 +876,7 @@ class Generator:
             self.layoutNums.append([0] * self.size)
 
         # generates rooms
-        generation = choice([self.gen_hall, self.gen_random, self.gen_intersection, self.gen_square])
+        generation = choice([self.gen_hall, self.gen_intersection, self.gen_square])
         generation()
             
         self.count_rooms()
@@ -888,13 +906,13 @@ class Generator:
         #if self.depth != 0:
         #    self.layoutRooms[self.startY][self.startX] = StairsUp()
 
-        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(2, 3)))
+        self.addItems.extend(self.gen_random_items(self.size + randint(1, 2), self.size - randint(1, 2)))
         
         # spawns enemies
         if self.modifier == "dangerous":
-            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth, self.depth % 3))
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth % 3, self.depth % 3))
         else:
-            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth, self.depth % 3))
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -1072,30 +1090,33 @@ class Generator:
         spawnedItems = []
         
         # spawns gear
-        chosenGear = []
+        #chosenGear = []
+        lootPools = [items.gen_weapon, items.gen_armor, items.gen_wand]
         for i in range(gearAmount):
-            randomItem = items.gen_gear(self.depth)
+            lootpool = None
+            if i < 3: # always generates at least one weapon, armor, and wand
+                lootPool = lootPools[i]
+            else:
+                lootPool = choice(lootPools)
+                if lootPool == items.gen_wand:
+                    lootPools.remove(items.gen_wand)
+            
+            randomItem = lootPool(self.depth)
 
             # can't have more than 2 of the same item per floor
-            while chosenGear.count(type(randomItem)) > 1:
-                 randomItem = items.gen_gear(self.depth)
+            #while chosenGear.count(type(randomItem)) > 1:
+            randomItem = lootPool(self.depth)
 
             # cursed modifier has a 1 in 3 chance to degrade every item
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
                 randomItem.enchantment -= 1
 
-            chosenGear.append(type(randomItem))
+            #chosenGear.append(type(randomItem))
             spawnedItems.append(randomItem)
 
         # spawns items
-        chosenItems = []
         for i in range(itemAmount):
             randomItem = items.gen_item(self.depth)
-            
-            while type(randomItem) in chosenItems:
-                 randomItem = items.gen_item(self.depth)
-
-            chosenItems.append(type(randomItem))
             spawnedItems.append(randomItem)
 
         return spawnedItems
