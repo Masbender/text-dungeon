@@ -211,7 +211,7 @@ class Player(Creature):
 
         # applies inferno ring's effect
         if self.infernoRing and randint(1, 3) == 1:
-            self.affect(Burned, 6 - self.ring.enchantment)
+            self.affect(Burned(), 6 - self.ring.enchantment)
             slowprint(f"You are {c.effect(Burned)} by your Ring of Rage!")
 
         return damageDealt
@@ -689,8 +689,8 @@ class Thief(Enemy):
                 slowprint("You dodge THIEF's dart.")
                 return
             
-            if player.affect(Poisoned, 6):
-                slowprint(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned())}!")
+            if player.affect(Poisoned(), 6):
+                slowprint(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
                 slowprint(f"THIEF hits you with a dart, but you resist its poison.")
