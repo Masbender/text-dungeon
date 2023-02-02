@@ -690,7 +690,7 @@ class Thief(Enemy):
                 return
             
             if player.affect(Poisoned, 6):
-                slowprint(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
+                slowprint(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned())}!")
             else:
                 player.health -= 1
                 slowprint(f"THIEF hits you with a dart, but you resist its poison.")
