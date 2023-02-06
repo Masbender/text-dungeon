@@ -12,6 +12,11 @@ gather_input(prompt, ) - gathers input by presenting options and requesting a nu
 
 """
 
+# if on a slow machine it doesn't slow print
+doSlowPrint = True
+if input("Optimize performance? (y/n): ").lower() == 'y':
+    doSlowPrint = False
+    
 # detects the os and selects the appropriate clear command
 clearCommand = 'clear'
 if os.name in ('nt', 'dos'):
@@ -55,10 +60,13 @@ def gather_input(prompt, options, returnInt = True):
 
 # prints text slower
 def slowprint(text, speed=.03):
-    for letter in text:
-        print(letter, end="", flush=True)
-        sleep(speed)
-    print()
+    if doSlowPrint:
+        for letter in text:
+            print(letter, end="", flush=True)
+            sleep(speed)
+        print()
+    else:
+        print(text)
 
 # break between output
 def separator(end="\n"):
