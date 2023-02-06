@@ -40,7 +40,7 @@ def gather_input(prompt, options, returnInt = True):
         playerInput = None
         try:
             playerInput = input("Enter a Number : ")
-            playerInput = int(playerInput) - 1
+            playerInput = int(playerInput)
         
             if playerInput in range(len(options)):
                 validResponse = True
@@ -54,9 +54,9 @@ def gather_input(prompt, options, returnInt = True):
     clear_console()
 
     if returnInt:
-        return playerInput
+        return playerInput - 1
     else:
-        return options[playerInput]
+        return options[playerInput - 1]
 
 # prints text slower
 def slowprint(text, speed=.03):
