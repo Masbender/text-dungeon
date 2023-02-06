@@ -40,23 +40,23 @@ def gather_input(prompt, options, returnInt = True):
         playerInput = None
         try:
             playerInput = input("Enter a Number : ")
-            playerInput = int(playerInput)
+            playerInput = int(playerInput) - 1
         
             if playerInput in range(len(options)):
                 validResponse = True
             elif playerInput < 0:
-                print(f"'{playerInput}' is too small")
+                print(f"'{playerInput + 1}' is too small")
             else:
-                print(f"'{playerInput}' is too large")
+                print(f"'{playerInput + 1}' is too large")
         except ValueError:
             print(f"'{playerInput}' is not a number")
 
     clear_console()
 
     if returnInt:
-        return playerInput - 1
+        return playerInput
     else:
-        return options[playerInput - 1]
+        return options[playerInput]
 
 # prints text slower
 def slowprint(text, speed=.03):
