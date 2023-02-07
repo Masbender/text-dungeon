@@ -1257,7 +1257,6 @@ def gen_item(quality):
     # goes through each item until it finds one with a larger number than selected
     for item in standardLoot:
         if itemNum <= item[1]:
-            print(itemNum <= item[1])
             chosenItem = item[0]
             return chosenItem()
         else:

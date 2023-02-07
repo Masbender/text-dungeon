@@ -21,7 +21,7 @@ def unlock(key):
     else:
         options = ["cancel", "use key"]
 
-        playerInput = bool(gather_input(f"Do you use a {key.name}?", options, True))
+        playerInput = bool(gather_input(f"Do you use a {key.name}?", options))
 
         if playerInput:
             player.inventory.pop(keyIndex)
@@ -358,8 +358,8 @@ class Floor:
         options = ["cancel", "↑", "→", "↓", "←"]
 
         self.print_map()
-        separator(end="")
-        playerInput = gather_input("\nWhat direction do you move?", options, True) - 1
+        separator()
+        playerInput = gather_input("What direction do you move?", options, True) - 1
 
         if playerInput > -1: # -1 is cancel
             # - MOVE -
@@ -438,7 +438,7 @@ class Floor:
         while True:
             options = ["back"] + item_list()
             
-            playerInput = gather_input("\nSelect an item:", options, True) - 1
+            playerInput = gather_input("Select an item:", options, True) - 1
 
             # exits the loop if player selects "back"
             if playerInput == -1:
@@ -467,7 +467,7 @@ class Floor:
                 print(f"This item is {c.cursed('cursed')}, and cannot be dropped.")
 
             # asks for input
-            playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, True, False)
+            playerInput = gather_input("\nWhat do you do with " + chosenItem.get_name() + "?", options, True, False)
 
             if playerInput == chosenItem.usePrompt:
                 chosenItem.consume(self)
@@ -498,7 +498,7 @@ class Floor:
         # displays items and forms options
         for item in room.stock:
             options.append("buy " + item.get_name())
-            print(f"{item.get_name()}, costs {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
+            print(f"{item.get_name()}, {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
 
         print(f"\nYou have {c.highlight(str(player.gold))} gold.")
 
@@ -527,9 +527,9 @@ class Floor:
                 options = ["cancel", "accept deal", "undo"]
 
                 for item in player.inventory:
-                    options.append(f"{item.get_name()}, worth {item.get_price(False, False)} gold")
+                    options.append(f"{item.get_name()}, {item.get_price(False, False)} gold")
 
-                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options, True) - 3
+                playerInput = gather_input(f"\nDo you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options, True) - 3
 
                 if playerInput == -3:
                     for item in playersDeal:
