@@ -10,7 +10,7 @@ player = entities.player
 c = color
 
 # placeholder character selection
-playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False)
+playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False, False)
 
 introMessage = ""
 

@@ -21,7 +21,7 @@ def unlock(key):
     else:
         options = ["cancel", "use key"]
 
-        playerInput = bool(gather_input(f"Do you use a {key.name}?", options))
+        playerInput = bool(gather_input(f"Do you use a {key.name}?", options, True))
 
         if playerInput:
             player.inventory.pop(keyIndex)
@@ -189,7 +189,7 @@ class Battle:
         update_effects(player, self.enemies)
 
     def run_prompt(self): # if all enemies are stunned, the player can choose to run
-        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False)
+        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], True, False)
 
         if playerInput == "run":
             self.battleOver = True
@@ -359,7 +359,7 @@ class Floor:
 
         self.print_map()
         separator(end="")
-        playerInput = gather_input("\nWhat direction do you move?", options) - 1
+        playerInput = gather_input("\nWhat direction do you move?", options, True) - 1
 
         if playerInput > -1: # -1 is cancel
             # - MOVE -
@@ -424,7 +424,7 @@ class Floor:
         # gathers input if more than one item
         chosenItem = 0
         if len(room.loot) > 1:
-            chosenItem = gather_input("What do you pickup?", options) - 1
+            chosenItem = gather_input("What do you pickup?", options, True) - 1
 
         if chosenItem > -1: # -1 is cancel
             # moves item to inventory
@@ -438,7 +438,7 @@ class Floor:
         while True:
             options = ["back"] + item_list()
             
-            playerInput = gather_input("\nSelect an item:", options) - 1
+            playerInput = gather_input("\nSelect an item:", options, True) - 1
 
             # exits the loop if player selects "back"
             if playerInput == -1:
@@ -467,7 +467,7 @@ class Floor:
                 print(f"This item is {c.cursed('cursed')}, and cannot be dropped.")
 
             # asks for input
-            playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
+            playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, True, False)
 
             if playerInput == chosenItem.usePrompt:
                 chosenItem.consume(self)
@@ -502,7 +502,7 @@ class Floor:
 
         print(f"\nYou have {c.highlight(str(player.gold))} gold.")
 
-        playerInput = gather_input(f"What would you like to buy?", options) - 1
+        playerInput = gather_input(f"What would you like to buy?", options, True) - 1
 
         if playerInput > -1:
             golemsDeal = room.stock[playerInput]
@@ -529,7 +529,7 @@ class Floor:
                 for item in player.inventory:
                     options.append(f"{item.get_name()}, worth {item.get_price(False, False)} gold")
 
-                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options) - 3
+                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options, True) - 3
 
                 if playerInput == -3:
                     for item in playersDeal:
@@ -609,7 +609,7 @@ class Floor:
         
         if room.areEnemiesAware:
             slowprint("You have already fought these enemies, they will not be surprised.")
-            playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"])
+            playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"], True)
 
             if playerInput == 0:
                 return
@@ -644,7 +644,7 @@ class Floor:
             options = self.get_options()
             
             print_player_info()
-            playerInput = gather_input("What do you do?", options, False)
+            playerInput = gather_input("What do you do?", options, False, False)
 
             actions = {
                 "move":self.action_move, "wait":self.action_wait, 
@@ -724,7 +724,7 @@ class Wall(Room):
         for item in player.inventory:
             options.append(item.get_name())
         
-        itemUsed = gather_input("How do you destroy it?", options)
+        itemUsed = gather_input("How do you destroy it?", options, True)
 
         # checks if item works then uses it
         tunnelDug = False

@@ -1011,7 +1011,7 @@ class ScrollEnchant(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        itemIndex = gather_input("What item do you bless?", options)
+        itemIndex = gather_input("What item do you bless?", options, True)
 
         if itemIndex == 0: # 0 cancels
             return False
@@ -1055,7 +1055,7 @@ class ScrollRepair(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        chosenItem = gather_input("What item do you repair?", options)
+        chosenItem = gather_input("What item do you repair?", options, True)
 
         if chosenItem == 0: # 0 cancels
             return False
@@ -1155,7 +1155,7 @@ class KnowledgeBook(Item):
         print(f"{player.baseSTR} STR | {player.baseCON} CON | {player.baseDEX} DEX | {player.basePER} PER | {player.baseINT} INT")
         
         options = ["cancel", "STR", "CON", "DEX", "PER", "INT"]
-        chosenStat = gather_input("What stat do you improve?", options, False)
+        chosenStat = gather_input("What stat do you improve?", options, True, False)
 
         if chosenStat == "cancel":
             return False
