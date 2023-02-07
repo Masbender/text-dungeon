@@ -1105,7 +1105,7 @@ class Generator:
 
             # can't have more than 2 of the same item per floor
             #while chosenGear.count(type(randomItem)) > 1:
-            randomItem = lootPool(self.depth)
+            #randomItem = lootPool(self.depth)
 
             # cursed modifier has a 1 in 3 chance to degrade every item
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
@@ -1118,7 +1118,7 @@ class Generator:
         for i in range(itemAmount):
             randomItem = items.gen_item(self.depth)
             spawnedItems.append(randomItem)
-
+        input(spawnedItems)
         return spawnedItems
 
     def spawn_enemies(self):
