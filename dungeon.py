@@ -1118,7 +1118,7 @@ class Generator:
         for i in range(itemAmount):
             randomItem = items.gen_item(self.depth)
             spawnedItems.append(randomItem)
-        input(spawnedItems)
+        
         return spawnedItems
 
     def spawn_enemies(self):
