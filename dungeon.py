@@ -189,7 +189,7 @@ class Battle:
         update_effects(player, self.enemies)
 
     def run_prompt(self): # if all enemies are stunned, the player can choose to run
-        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], True, False)
+        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False, False)
 
         if playerInput == "run":
             self.battleOver = True
