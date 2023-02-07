@@ -224,7 +224,7 @@ class Sword(Weapon):
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            if self.target.affect(entities.Bleeding, self.bleedDuration):
+            if self.target.affect(entities.Bleeding(), self.bleedDuration):
                 slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
@@ -330,7 +330,7 @@ class FlamingMace(Mace):
         super().attack(enemies)
 
         if randint(0, 1):
-            if self.target.affect(entities.OnFire, randint(2, 3)):
+            if self.target.affect(entities.OnFire(), randint(2, 3)):
                 slowprint(f"{self.target.name} is set on fire.")
 
         return True
