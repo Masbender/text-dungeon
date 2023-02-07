@@ -399,7 +399,7 @@ class Decay(Effect):
         print(f"This effect becomse stronger in {self.turnsToProgress} turns.")
 
 class BrokenBones(Effect):
-# lowers DEX, STR, permanent
+# lowers DEX, STR, CON, permanently
 # instantly kills skeletons
     name = "broken bones"
     natural = True
@@ -413,15 +413,17 @@ class BrokenBones(Effect):
             self.target.health = 0
             slowprint(self.target.name + " dies")
 
-        self.target.update_dexterity(-4)
+        self.target.update_dexterity(-1)
         self.target.update_strength(-1)
+        self.target.update_constitution(-1)
         
     def reverse(self):
-        self.target.update_dexterity(4)
+        self.target.update_dexterity(1)
         self.target.update_strength(1)
+        self.target.update_constitution(1)
 
     def inspect(self):
-        print("Lowers DEX by 4 and STR by 1.")
+        print("Lowers STR, CON, and DEX by 1.")
 
 class Burned(Effect):
 # lowers AC by 1
