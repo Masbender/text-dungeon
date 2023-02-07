@@ -703,10 +703,9 @@ class Ogre(Boss):
     warning = "You hear sounds that can only belong to a massive beast..."
     battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 
-    maxHealth = 35
+    maxHealth = 34
     gold = 60
     
-    strength = 1
     armorClass = 1
     resistance = 2
     dodgeChance = -10
@@ -733,9 +732,12 @@ class Ogre(Boss):
         if self.isCharging:
             self.isCharging = False
 
+            player.dodge += 10
             if player.dodge(self):
                 slowprint("You manage to dodge OGRE's heavy swing.")
+                player.dodge -= 10
                 return
+            player.dodge -= 10
             
             damage = player.hurt(self, 8, 1)
 

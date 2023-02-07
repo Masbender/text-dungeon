@@ -348,7 +348,7 @@ class Floor:
             options.append(c.threat("surprise attack"))
             
             for enemy in room.threats:
-                print(c.desc(choice(enemy.stealthMessages)))
+                print(choice(enemy.stealthMessages))
     
         return options
 
