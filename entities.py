@@ -827,10 +827,13 @@ class Rat(Enemy):
             self.affect(effect())
             print(f"RAT becomes infected with {c.effect(effect)}.")
 
-        # dodge
+        # rats are easier to dodge
+        player.dodge += 15
         if player.dodge(self):
             print("RAT leaps at you, but you avoid them.")
+            player.dodge -= 15
             return
+        player.dodge -= 15
 
         # inflicts plater with decay
         if self.corruption > 1 and randint(0, 1):
@@ -863,7 +866,7 @@ class Rat(Enemy):
             
         # nibbles through armor
         if randint(0, 2) == 2 and player.armor != None:
-            damage = player.hurt(self, 4, 2)
+            damage = player.hurt(self, 4, 1)
             player.armor.degrade()
             print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.harm(damage)} damage!")
             return

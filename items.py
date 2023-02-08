@@ -1321,4 +1321,4 @@ def gen_standard(gearList):
             itemNum -= item[1]
 
 def gen_gear(quality):
-    return choice([gen_armor, gen_wand, gen_weapon])(quality)
+    return choice([gen_armor, gen_weapon])(quality)
