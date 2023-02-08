@@ -22,7 +22,7 @@ if input("Load previous save? (y/n) : ").lower() == 'y':
     floors = pickle.load(open("level.p", "rb"))
 else:
     # placeholder character selection
-    playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Sorcerer"], False, False)
+    playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False, False)
     
     introMessage = ""
     

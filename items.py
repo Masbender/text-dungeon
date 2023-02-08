@@ -1243,7 +1243,7 @@ class SeeingOrb(Item):
 standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 5)]
 
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
@@ -1271,7 +1271,7 @@ def gen_loot():
     return item()
 
 def gen_armor(quality):
-    armorLoot = [(Cloak, 3), (HeavyArmor, 6), (BuffRing, 5), (MagicRobe, 2)]
+    armorLoot = [(Cloak, 3), (HeavyArmor, 7), (BuffRing, 6)]
 
     finalArmor = None
     armor = gen_standard(armorLoot)
