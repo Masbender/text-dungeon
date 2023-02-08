@@ -15,11 +15,15 @@ floors = []
 
 
 if input("Load previous save? (y/n) : ").lower() == 'y':
-    entities.player = pickle.load(open("player.p", "rb"))
+    file1 = open("player.p", "rb")
+    file2 = open("level.p", "rb")
+    entities.player = pickle.load(file1)
     player = entities.player
     items.player = player
     dungeon.player = player
-    floors = pickle.load(open("level.p", "rb"))
+    floors = pickle.load(file2)
+    file1.close()
+    file2.close()
 else:
     # placeholder character selection
     playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False, False)
@@ -100,5 +104,9 @@ while True:
         item.recharge()
 
     player.floor = None
-    pickle.dump(player, open("player.p", "wb"))
-    pickle.dump(floors, open("level.p", "wb"))
+    file1 = open("player.p", "wb")
+    file2 = open("level.p", "wb")
+    pickle.dump(player, file1)
+    pickle.dump(floors, file2)
+    file1.close()
+    file2.close()
