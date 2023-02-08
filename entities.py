@@ -800,6 +800,9 @@ class Rat(Enemy):
     def __init__(self):
         if "stronger" in self.mutations:
             self.maxHealth += 4
+        
+        self.isToxic = "toxic" in self.mutations
+        self.isHungry = "hungrier" in self.mutations
 
         self.maxHealth -= randint(1, 4)
 
@@ -823,7 +826,6 @@ class Rat(Enemy):
 
             self.affect(effect())
             print(f"RAT becomes infected with {c.effect(effect)}.")
-            return
 
         # dodge
         if player.dodge(self):
@@ -845,7 +847,7 @@ class Rat(Enemy):
 
             if player.affect(effect(), 4 + bonusDuration):
                 damage = player.hurt(self, 4)
-                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(effect)}!")
+                print(f"RAT bites you for {c.hurt(damage)} damage, infecting you with {c.effect(effect)}!")
                 return
         
         # eats teammate
