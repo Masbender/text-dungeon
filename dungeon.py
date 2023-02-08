@@ -1094,7 +1094,7 @@ class Generator:
         lootPools = [items.gen_weapon, items.gen_armor]
         for i in range(gearAmount):
             lootpool = None
-            if i < 3: # always generates at least one weapon, armor, and wand
+            if i < 2: # always generates at least one weapon, armor, and wand
                 lootPool = lootPools[i]
             else:
                 lootPool = choice(lootPools)
