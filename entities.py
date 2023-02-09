@@ -104,7 +104,7 @@ class Creature:
             finalDamage += randint(strength, strength // 2)
 
         # applies piercing
-        damageReduction = self.armorClass
+        damageReduction = int(self.armorClass / 2 + 0.5)
         if damageReduction > 0:
             damageReduction -= piercing
             if damageReduction < 0:
