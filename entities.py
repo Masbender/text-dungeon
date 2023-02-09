@@ -342,12 +342,14 @@ class Dazed(Effect):
         self.target = target
 
         self.target.update_dexterity(-1)
+        self.target.update_perception(-1)
 
     def reverse(self):
         self.target.update_dexterity(1)
+        self.target.update_perception(1)
 
     def inspect(self):
-        print("Lowers DEX by 1, reducing your stealth and dodge chance.")
+        print("Lowers DEX and PER by 1.")
 
 class Surprised(Effect):
 # lowers DEX and AC

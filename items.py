@@ -1119,6 +1119,23 @@ class Bomb(Consumable):
         print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
+class StunBomb(Consumable):
+    name = "stun bomb"
+    value = 30
+
+    def inspect(self, enemies):
+        print("Stuns every enemy, giving you an opportunity to escape.")
+        print(f"You can't run from enemies with {c.threat('(!)')}.")
+        print(f"Leaves enemies {c.effect(entities.Dazed)}, lowering their DEX and PER.")
+
+    def attack(self, enemies):
+        for enemy in enemies:
+            enemy.stunned = True
+            enemy.affect(entities.Dazed(), 4)
+            print(f"All enemies are {c.harm('stunned')} and {c.effect(entities.Dazed)}!")
+        self.degrade()
+        return True
+    
 class IronKey(Item):
     name = "iron key"
     value = 20
@@ -1247,8 +1264,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 5)]
-
+standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 6), (StunBomb, 3)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
 
@@ -1258,7 +1274,7 @@ def gen_item(quality):
     itemNum = randint(1, 16) + quality
 
     # makes sure that the chosen number isn't too high
-    if itemNum > 16: # 16 is placeholder value until more items are added
+    if itemNum > 20: # 16 is placeholder value until more items are added
         itemNum = 16
 
     # goes through each item until it finds one with a larger number than selected
