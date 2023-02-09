@@ -104,7 +104,10 @@ class Creature:
             finalDamage += randint(strength, strength // 2)
 
         # applies piercing
-        damageReduction = int(self.armorClass / 2 + 0.5)
+        damageReduction = self.armorClass // 2
+        if self.armorClass % 2 == 1:
+            damageReduction += randint(0, 1)
+        
         if damageReduction > 0:
             damageReduction -= piercing
             if damageReduction < 0:
@@ -928,13 +931,15 @@ class RatBeast(Enemy):
     immunity = -1
     armorClass = 1
 
+    isRaged = False
+
     def __init__(self):
         self.maxHealth -= randint(0, 2)
         super().__init__()
         self.health -= randint(0, 4)
 
         effect = choice([Bleeding, Decay, Dazed, Poisoned, Regeneration, WellFed, Burned])
-        self.affect(effect(), randint(3, 5))
+        self.affect(effect(), randint(4, 6))
 
     def do_turn(self, enemies):
         super().do_turn(enemies)
@@ -943,6 +948,14 @@ class RatBeast(Enemy):
             print("RAT BEAST decays.")
             self.health -= randint(2, 3)
             self.maxHealth -= randint(1, 2)
+
+        if self.health < 16 and not self.isRaged:
+            self.isRaged = True
+            self.strength += 2
+            print(choice([
+                "RAT BEAST is becoming desperate!",
+                "RAT BEAST is enraged!"
+            ]))
 
     def attack(self, enemies):
         if randint(0, 1):
