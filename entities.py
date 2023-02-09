@@ -837,12 +837,14 @@ class Rat(Enemy):
         # inflicts player with decay
         if self.corruption == 1:
             self.corruption += 1
+            
+            bonusDuration = 0
             effect = Decay
             if self.isToxic:
                 effect = Poisoned
+                bonusDuration += 4
 
             # effect last longer if you already have it
-            bonusDuration = 0
             for i in range(len(player.effects)):
                 if type(player.effects[i]) == effect:
                     bonusDuration = player.effectDurations[i] - 1
@@ -851,6 +853,10 @@ class Rat(Enemy):
             if player.affect(effect(), 4 + bonusDuration):
                 damage = player.hurt(self, 4)
                 print(f"RAT bites you for {c.harm(damage)} damage, infecting you with {c.effect(effect)}!")
+                return
+            else:
+                damage = player.hurt(self, 4)
+                print(f"RAT bites you for {c.harm(damage)} damage, but you resist {c.effect(effect)}!")
                 return
         
         # eats teammate
