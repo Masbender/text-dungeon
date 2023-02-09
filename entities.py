@@ -850,7 +850,7 @@ class Rat(Enemy):
 
             if player.affect(effect(), 4 + bonusDuration):
                 damage = player.hurt(self, 4)
-                print(f"RAT bites you for {c.hurt(damage)} damage, infecting you with {c.effect(effect)}!")
+                print(f"RAT bites you for {c.harm(damage)} damage, infecting you with {c.effect(effect)}!")
                 return
         
         # eats teammate
