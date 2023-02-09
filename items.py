@@ -1123,15 +1123,14 @@ class StunBomb(Consumable):
     name = "stun bomb"
     value = 30
 
-    def inspect(self, enemies):
-        print("Stuns every enemy, giving you an opportunity to escape.")
-        print(f"You can't run from enemies with {c.threat('(!)')}.")
+    def inspect(self):
+        print("Stuns every enemy, giving you an opportunity to escape. Allows you to escape from any non-boss fight.")
         print(f"Leaves enemies {c.effect(entities.Dazed)}, lowering their DEX and PER.")
 
     def attack(self, enemies):
         for enemy in enemies:
             enemy.stunned = True
-            enemy.affect(entities.Dazed(), 4)
+            enemy.affect(entities.Dazed(True), 2)
             print(f"All enemies are {c.harm('stunned')} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True

@@ -337,6 +337,9 @@ class Dazed(Effect):
     natural = True
     level = 1
     color = c.effect_bad
+
+    def __init__(self, allowRun = False):
+        self.allowRun = allowRun
     
     def apply(self, target):
         self.target = target
@@ -344,9 +347,18 @@ class Dazed(Effect):
         self.target.update_dexterity(-1)
         self.target.update_perception(-1)
 
+        self.allowRun = self.allowRun and self.target.isSpecial and not issubclass(type(target), Boss)
+
+        if self.allowRun:
+            self.target.isSpecial = False
+        
+
     def reverse(self):
         self.target.update_dexterity(1)
         self.target.update_perception(1)
+
+        if self.allowRun:
+            self.target.isSpecial = True
 
     def inspect(self):
         print("Lowers DEX and PER by 1.")

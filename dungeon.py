@@ -127,18 +127,20 @@ class Battle:
         slowprint(c.desc(choice(self.enemies[0].battleMessages)))
         separator()
 
-        canRun = True
         if self.enemies[0].isSpecial:
             slowprint(c.warning(f"There is no escape from this fight."))
-            canRun = False
         
         while not self.battleOver:
             self.player_turn()
 
+            
+            canRun = True
             allStunned = True
             for enemy in self.enemies:
                 if not enemy.stunned: # tracks if any enemies are not stunned
                     allStunned = False
+                if enemy.isSpecial:
+                    canRun = False
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
