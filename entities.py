@@ -793,10 +793,11 @@ class Ogre(Boss):
 
 class Rat(Enemy):
 # a weak enemy who spawns in large groups
-# can inflict self with dexay, then infect the player
+# can inflict self with decay, then infects the player
     name = "RAT"
     warning = "You hear small creatures running around..."
-    battleMessages = ["RAT snarls!",]
+    battleMessages = ["RAT snarls!", 
+                      "RAT releases a battle cry!"]
     stealthMessages = [c.threat("RAT") + " is sleeping. Some of their bones are visible.",
                       c.threat("RAT") + " is eating. They are a foul, decayed creature.",
                       "You find " + c.threat("RAT") + ", who is much more mutated than any rat on the surface.",
@@ -804,7 +805,7 @@ class Rat(Enemy):
                       c.threat("RAT") + " is roaming."]
 
     maxHealth = 12
-    gold = 10
+    gold = 7
     awareness = 2
     stealth = 1
     
@@ -908,9 +909,70 @@ class Rat(Enemy):
             damage = player.hurt(self, 4)
             print(f"RAT leaps at you, biting you for {c.harm(damage)} damage!")
 
+class RatBeast(Enemy):
+# tough enemy, rages when low health, loses hp over time
+# can bite and ram, starts injured and with a random effect
+    name = "RAT BEAST"
+    warning = "You hear a loud wheezing..."
+    battleMessages = ["RAT BEAST lumbers towards you!",
+                     "RAT BEAST lets out a loud roar!"]
+    stealthMessages = [c.threat("RAT BEAST") + " is wandering.",
+                      c.threat("RAT BEAST") + " is looking for their next meal.",
+                      "You encounter a " + c.threat("RAT BEAST") + ", a rat the size of a bear."]
+
+    maxHealth = 32
+    gold = 15
+    awareness = 5
+    stealth = 1
+
+    immunity = -1
+    armorClass = 1
+
+    def __init__(self):
+        self.maxHealth -= randint(0, 2)
+        super().__init__()
+        self.health -= randint(0, 4)
+
+        effect = choice([Bleeding, Decay, Dazed, Poisoned, Regeneration, WellFed, Burned])
+        self.affect(effect(), randint(3, 5))
+
+    def do_turn(self, enemies):
+        super().do_turn(enemies)
+
+        if randint(0, 1):
+            print("RAT BEAST decays.")
+            self.health -= randint(2, 3)
+            self.maxHealth -= randint(1, 2)
+
+    def attack(self, enemies):
+        if randint(0, 1):
+            if player.dodge(self):
+                print("RAT BEAST lunges at you, but you dodge.")
+                return
+
+            damage = player.hurt(self, 6)
+            if randint(0, 1):
+                player.affect(Bleeding(), randint(5, 7))
+                print(f"RAT BEAST bites you for {c.harm(damage)} damage, inflicting {c.effect(Bleeding)}!")
+            else:
+                print(f"RAT BEAST bites you for {c.harm(damage)} damage!")
+
+        else:
+            player.dodgeChance += 5
+            if player.dodge(self):
+                print(f"You evade RAT BEAST, and they hit a wall, leaving them {c.effect(Dazed)}.")
+                self.affect(Dazed(), 2)
+                player.dodgeChance -= 5
+                return
+            player.dodgeChance -= 5
+
+            damage = player.hurt(self, 5, 3)
+            player.affect(Dazed(), randint(1, 2))
+            print(f"RAT BEAST rams you for {c.harm(damage)} damage, leaving you {c.effect(Dazed)}!")
+
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
-    "crossroads":[([Rat, Rat], 6), ([Rat, Rat, Rat], 6)]
+    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast,], 6)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
