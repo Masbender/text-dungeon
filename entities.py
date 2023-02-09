@@ -761,7 +761,7 @@ class Ogre(Boss):
             if player.affect(Dazed(), 2):
                 slowprint(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
-                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
+                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)} damage!")            
 
         else:
             if player.dodge(self):
@@ -872,7 +872,10 @@ class Rat(Enemy):
             
         # nibbles through armor
         if randint(0, 2) == 2 and player.armor != None:
-            damage = player.hurt(self, 4, 1)
+            piercing = 2
+            if player.armorClass > 4:
+                piercing += 1
+            damage = player.hurt(self, 4, piercing)
             player.armor.degrade()
             print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.harm(damage)} damage!")
             return
