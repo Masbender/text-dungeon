@@ -133,13 +133,16 @@ class Battle:
             self.player_turn()
 
             allStunned = True
-            removedEnemies = []
             for enemy in self.enemies:
                 if not enemy.stunned: # tracks if any enemies are not stunned
                     allStunned = False
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
+
+            # checks if enemies should die
+            removedEnemies = []
+            for enemy in self.enemies:
                 if enemy.health <= 0:
                     slowprint(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold

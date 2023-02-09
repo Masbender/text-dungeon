@@ -860,14 +860,17 @@ class Rat(Enemy):
                 return
         
         # eats teammate
-        if self.health < 10 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
-            possibleTargets = enemies
-            possibleTargets.remove(self)
-            target = choice(possibleTargets)
+        if self.health < 8 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
+            selfIndex = enemies.index(self)
+            
+            enemies.remove(self)
+            target = choice(enemies)
+
+            enemies.insert(selfIndex, self)
 
             damage = target.hurt(self, 3)
             healing = self.heal(5)
-            print(f"RAT bites their teammate {target.name} for {c.harm(damage)}, healing themselves {c.heal(healing)} health!")
+            print(f"RAT bites their teammate {target.name} for {c.harm(damage)} damage, healing themselves {c.heal(healing)} health!")
             return
             
         # nibbles through armor
