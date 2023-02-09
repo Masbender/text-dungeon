@@ -1186,7 +1186,7 @@ class KnowledgeBook(Item):
         if chosenStat == "STR":
             player.update_strength(1)
             player.baseSTR += 1
-            print("Your attacks are stronger now.")
+            print("Your attacks are stronger, you can carry more items.")
         elif chosenStat == "CON":
             player.update_constitution(1)
             player.baseCON += 1

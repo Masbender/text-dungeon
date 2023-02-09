@@ -48,6 +48,8 @@ class Creature:
     def update_strength(self, increase):
     # strength is added to damage dealt
         self.strength += increase
+        if issubclass(type(self), Player):
+            self.inventorySize += increase
 
     def update_dexterity(self, increase):
     # dexterity improves stealth and dodge
