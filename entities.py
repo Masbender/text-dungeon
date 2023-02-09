@@ -732,12 +732,12 @@ class Ogre(Boss):
         if self.isCharging:
             self.isCharging = False
 
-            player.dodge += 10
+            player.dodgeChance += 10
             if player.dodge(self):
                 slowprint("You manage to dodge OGRE's heavy swing.")
-                player.dodge -= 10
+                player.dodgeChance -= 10
                 return
-            player.dodge -= 10
+            player.dodgeChance -= 10
             
             damage = player.hurt(self, 8, 1)
 
@@ -828,12 +828,12 @@ class Rat(Enemy):
             print(f"RAT becomes infected with {c.effect(effect)}.")
 
         # rats are easier to dodge
-        player.dodge += 15
+        player.dodgeChance += 15
         if player.dodge(self):
             print("RAT leaps at you, but you avoid them.")
-            player.dodge -= 15
+            player.dodgeChance -= 15
             return
-        player.dodge -= 15
+        player.dodgeChance -= 15
 
         # inflicts plater with decay
         if self.corruption > 1 and randint(0, 1):
