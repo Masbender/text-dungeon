@@ -819,7 +819,6 @@ class Rat(Enemy):
     def attack(self, enemies):
         # inflicts self with decay
         if self.corruption == 1:
-            self.corruption += 1
             effect = Decay
             if self.isToxic:
                 effect = Poisoned
@@ -835,8 +834,9 @@ class Rat(Enemy):
             return
         player.dodgeChance -= 15
 
-        # inflicts plater with decay
-        if self.corruption > 1 and randint(0, 1):
+        # inflicts player with decay
+        if self.corruption == 1:
+            self.corruption += 1
             effect = Decay
             if self.isToxic:
                 effect = Poisoned
