@@ -34,8 +34,9 @@ def sort_inventory():
     weapons = []
     wands = []
     healing = []
-    scrolls = []
+    consumables = []
     apparel = []
+    scrolls = []
     misc = []
 
     for item in player.inventory:
@@ -49,10 +50,12 @@ def sort_inventory():
             scrolls.append(item)
         elif issubclass(type(item), items.Armor) or issubclass(type(item), items.Ring):
             apparel.append(item)
+        elif issubclass(type(item), items.Consumable):
+            consumables.append(item)
         else:
             misc.append(item)
 
-    player.inventory = weapons + wands + healing + scrolls + apparel + misc
+    player.inventory = weapons + wands + healing + consumables + apparel + scrolls + misc
 
 
 def item_list():

@@ -1080,14 +1080,21 @@ class ScrollRepair(Scroll):
             else:
                 print(item.name + " does not work with the scroll of repair")
                 return False
-        
-class Bomb(Item):
-    name = "bomb"
-    value = 40
+
+class Consumable(Item):
+# a one use item that varies slightly from the scroll
     maxUses = 1
+
+    def degrade(self):
+        player.inventory.remove(self)
+        return True
 
     def status(self):
         return ""
+        
+class Bomb(Consumable):
+    name = "bomb"
+    value = 40
 
     def inspect(self):
         print("Bombs can destroy walls, possibly revealing secrets.")
@@ -1104,11 +1111,11 @@ class Bomb(Item):
             damage = enemy.hurt(player, damage, 1, 0)
             print(f"The bomb does {c.harm(damage)} damage to {enemy.name}!")
 
-        player.inventory.remove(self)
+        self.degrade()
         return True
 
     def dig(self):
-        player.inventory.remove(self)
+        self.degrade()
         print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
