@@ -847,7 +847,7 @@ class Rat(Enemy):
             # effect last longer if you already have it
             for i in range(len(player.effects)):
                 if type(player.effects[i]) == effect:
-                    bonusDuration = player.effectDurations[i] - 1
+                    bonusDuration = player.effects[i].duration - 1
                     break
 
             if player.affect(effect(), 4 + bonusDuration):
