@@ -62,9 +62,9 @@ class Item:
         message += self.name
 
         if self.enchantment > 0:
-            message += c.blessed(f" (+{self.enchantment})")
+            message += c.green(f" (+{self.enchantment})")
         elif self.enchantment < 0:
-            message += c.cursed(f" (-{-self.enchantment})")
+            message += c.red(f" (-{-self.enchantment})")
 
         return message
         
@@ -225,10 +225,10 @@ class Sword(Weapon):
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
             if self.target.affect(entities.Bleeding(), self.bleedDuration):
-                slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+                slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class JudgementSword(Sword):
@@ -252,7 +252,7 @@ class JudgementSword(Sword):
         if self.target.undead:
             self.target.affect(entities.Burned())
             self.target.health -= 3
-            slowprint(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
+            slowprint(f"{self.target.name} is burned by the sword, taking {c.red(3)} extra damage.")
     
         return True
 
@@ -279,7 +279,7 @@ class Spear(Weapon):
             
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class Mace(Weapon):
@@ -307,10 +307,10 @@ class Mace(Weapon):
 
         if randint(0, 11) < self.stunChance and self.uses > 0:
             self.target.stunned = True
-            slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.harm('stunned')}.")
+            slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.red('stunned')}.")
             return True
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -365,7 +365,7 @@ class Dagger(Weapon):
 
         damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
@@ -472,10 +472,10 @@ class HarmWand(Wand):
 
         if self.enchantment > 0:
             target.affect(entities.Bleeding(), self.enchantment)
-            print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
+            print(f"Your wand of harm does {c.red(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
             return True
 
-        print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}.")
+        print(f"Your wand of harm does {c.red(5 + self.enchantment)} damage to {target.name}.")
         return True
 
 class PoisonWand(Wand):
@@ -497,7 +497,7 @@ class PoisonWand(Wand):
 
         if self.enchantment > 0:
             target.health -= self.enchantment
-            print(f"Your wand of poison does {c.harm(self.enchantment)} damage to {target.name}, and inflicts {c.effect(entities.Poisoned)}.")
+            print(f"Your wand of poison does {c.red(self.enchantment)} damage to {target.name}, and inflicts {c.effect(entities.Poisoned)}.")
             return True
 
         print(f"Your wand of poison inflicts {target.name} with {c.effect(entities.Poisoned)}.")
@@ -1109,7 +1109,7 @@ class Bomb(Consumable):
                 damage = 8
 
             damage = enemy.hurt(player, damage, 1, 0)
-            print(f"The bomb does {c.harm(damage)} damage to {enemy.name}!")
+            print(f"The bomb does {c.red(damage)} damage to {enemy.name}!")
 
         self.degrade()
         return True
@@ -1131,7 +1131,7 @@ class StunBomb(Consumable):
         for enemy in enemies:
             enemy.stunned = True
             enemy.affect(entities.Dazed(True), 2)
-            print(f"All enemies are {c.harm('stunned')} and {c.effect(entities.Dazed)}!")
+            print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True
     

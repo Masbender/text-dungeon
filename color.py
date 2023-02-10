@@ -1,70 +1,64 @@
 # \033[1;32m
 
 regular = "\033[0m"
+"""
+red = "\033[1;31m" # danger, enemies, bad, damage
+yellow = "\033[1;33m" # loot, gold
+green = "\033[1;92m" # good, healing
+blue = "\033[1;36m" # descriptive, player
+purple = "\033[1;35m" # story
+"""
 
-red = "\033[1;31m"
-yellow = "\033[1;33m"
-green = "\033[1;92m"
+def red(text):
+    return "\033[1;31m" + str(text) + regular
 
-blue = "\033[1;36m"
+def yellow(text):
+    return "\033[1;33m" + str(text) + regular
+
+def green(text):
+    return "\033[1;92m" + str(text) + regular
+
+def blue(text):
+    return "\033[1;36m" + str(text) + regular
+
+def purple(text):
+    return "\033[1;35m" + str(text) + regular
 
 # these functions are give to Effect classes and are called whenever they need to display their name
 # effect colors has effect as an argument because python tries to input self into them
 def effect_good(effect, text):
-    return green + str(text) + regular
+    return green(text)
 
 def effect_neutral(effect, text):
-    return yellow + str(text) + regular
+    return yellow(text)
 
 def effect_bad(effect, text):
-    return red + str(text) + regular
+    return red(text)
 
 
 # compare is primarily used for displaying stats, the color determines if they're being modified or not
 def compare(actual, base):
     if actual < base:
-        return red + str(actual) + regular
+        return red(actual)
     elif actual > base:
-        return green + str(actual) + regular
+        return green(actual)
     else:
         return str(actual)
-
-
-# threat and loot are used for highlighting information such as items and enemies
-def threat(text):
-    return red + str(text) + regular
-
-def loot(text):
-    return yellow + str(text) + regular
-
-# desc is used for description notifcations, warning is used for notifications that indicate danger
-def desc(text):
-    return blue + str(text) + regular
-
-def warning(text):
-    return red + str(text) + regular
-
 
 # requires a subclass of Effect, displays the effect with it's appropriate color
 def effect(eff):
     return eff.color(eff, eff.name.upper())
-# used for attack messages to indicate damage or other negative aspects
-def harm(text):
-    return red + str(text) + regular
-
-def heal(text):
-    return green + str(text) + regular
 
 
 # used in health_status, determines the color assigned to each status of health
 def critical_health(text):
-    return red + str(text) + regular
+    return red(text)
 
 def low_health(text):
-    return yellow + str(text) + regular
+    return yellow(text)
 
 def full_health(text):
-    return green + str(text) + regular
+    return green(text)
 
 # displays the message of health/maxHealth with appropriate color
 def health_status(health, maxHealth):
@@ -75,31 +69,3 @@ def health_status(health, maxHealth):
         return low_health(text)
     else:
         return full_health(text)
-
-
-# used to display the player on the map
-def player(text):
-    return green + str(text) + regular
-
-# used to display unique encounters on the map
-def special(text):
-    return yellow + str(text) + regular
-
-# used to make ceratin information pop out
-def highlight(text):
-    return yellow + str(text) + regular
-
-# used when items are cursed or blessed
-def blessed(text):
-    return green + str(text) + regular
-
-def cursed(text):
-    return red + str(text) + regular
-
-
-# used when shopping
-def deal_good(text):
-    return green + str(text) + regular
-
-def deal_bad(text):
-    return red + str(text) + regular

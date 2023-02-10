@@ -63,7 +63,7 @@ else:
         generator.gen_floor(area, i, 4 + ((i + 2) // 3))
     
         if i % 3 == 0:
-            message = c.desc({
+            message = c.blue({
                 "prison":"Welcome to the Dungeon. " + introMessage,
                 "crossroads":"You have entered the Crossroads. The halls are sewer like and the sounds of rats are everywhere."
             }[area] + "\n")
