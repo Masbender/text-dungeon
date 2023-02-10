@@ -519,7 +519,7 @@ class Draugr(Enemy):
     stealth = 2
     
     resistance = 2
-    armorClass = 2
+    armorClass = 3
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
         damageDealt = super().hurt(attacker, damage, piercing, strength)
@@ -528,6 +528,7 @@ class Draugr(Enemy):
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
+            self.health -= 1
             slowprint("DRAUGR's armor degrades.")
         
         return damageDealt
@@ -594,7 +595,7 @@ class Skeleton(Enemy):
     
     def __init__(self):
         super().__init__()
-        self.immuneTo.extend([Bleeding, Burned])
+        self.immuneTo.extend([Bleeding, Poisoned])
 
         if self.name == "SKELETON": # doesn't apply to subclasses
             self.weapon = choice(["sword", "spear", "mace"])
@@ -653,9 +654,9 @@ class SkeletonGuard(Skeleton):
                        c.red("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
     isSpecial = True
 
-    maxHealth = 15
+    maxHealth = 17
     gold = 16
-    awareness = 4
+    awareness = 5
     stealth = -1
 
     armorClass = 2
