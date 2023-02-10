@@ -26,26 +26,37 @@ if input("Load previous save? (y/n) : ").lower() == 'y':
     file2.close()
 else:
     # placeholder character selection
-    playerInput = gather_input("Choose a character:", ["Warrior", "Thief"], False, False)
+    print("\nGuard is a well equipped soldier.\nThey were patrolling the prison when they found themselves lost in the dungeon.\n")
+    print("Thief is well rounded but poorly equipped.\nThey escaped their cell but got lost in the dungeon.\n")
+    print("Assassin is specialized in stealth.\nAfter the prison was cursed, they were the first to be sentenced to the dungeon.\n")
+    playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Assassin"], False, False)
     
     introMessage = ""
     
     if playerInput == "Warrior":
         player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
-        player.set_stats(1, 1, 0, 1, 0)
+        player.inventory[1].consume(None)
+        player.set_stats(1, 0, 0, 2, 0)
         introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
     
     if playerInput == "Thief":
-        player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bomb()])
-        player.set_stats(0, -1, 1, 2, 1)
+        player.inventory.extend([items.Sword(0), items.Bandage()])
+        player.set_stats(0, 1, 0, 1, 2)
         introMessage = "You manage to escape your cell, but you soon become lost in the halls of the Prison."
+
+    if playerInput == "Assassin":
+        player.inventory.extend([items.Dagger(1), items.Cloak(), items.StunBomb()])
+        player.inventory[1].consume(None)
+        player.inventory[0].uses = 10
+        player.set_stats(-1, 0, 1, 0, 1)
+        introMessage = "You have only recently been thrown into the cursed prison, yet all fresh air has already disappeared."
     
     if playerInput == "Sorcerer":
         player.inventory.extend([items.Mace(0), items.MagicRobe(), items.PoisonWand()])
         player.inventory[2].enchantment += 1
         player.set_stats(-1, 0, 1, 0, 3)
+        player.inventory[1].consume(None)
     
-    player.inventory[1].consume(None)
     
     dungeon.sort_inventory()
     
