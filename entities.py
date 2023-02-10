@@ -90,39 +90,35 @@ class Creature:
         return self.dodgeChance > number
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
-    # lowers health but applies armor class and strength
-        # uses attackers strength as default
+        # uses attacker strength by default, but can be overridden
         if strength == None:
             strength = attacker.strength
-
-        finalDamage = damage
-
-        # applies strength
-        if strength > 0:
-            finalDamage += randint(strength // 2, strength)
-        elif strength < 0:
-            finalDamage += randint(strength, strength // 2)
-
-        # applies piercing
-        damageReduction = self.armorClass // 2
-        if self.armorClass % 2 == 1:
-            damageReduction += randint(0, 1)
-        else:
-            damageReduction -= randint(0, 1)
+            
+        reduction = self.armorClass
+        if reduction > 0 and piercing > 0: # piercing is only applied if AC > 0
+            reduction -= piercing
+            if reduction < 0: # piercing can't lead to -AC
+                reduction = 0
+                
+        reduction /= 2.0 # each point of AC is only 0.5 damage reduction
         
-        if damageReduction > 0:
-            damageReduction -= piercing
-            if damageReduction < 0:
-                damageReduction = 0
-
-        # applies armor class and randomnes
-        finalDamage += + randint(-1, 1) - damageReduction 
-        if finalDamage < 0:
-            finalDamage = 0
-
-        # applies damage
-        self.health -= finalDamage
-        return finalDamage
+        # applies reduction and strength, each point of strength is 0.75 extra damage
+        finalDamage = damage - reduction + (strength * 0.75)
+        
+        # all attacks do at least 0.5 damage, (50% to do 1 damage)
+        if finalDamage < 0.5:
+            finalDamage = 0.5
+        
+        # if there is a decimal, it is treated as a chance to do extra damage
+        # example: 5.4 damage has a 40% to do 6 damage, and 60% to do 5
+        if (finalDamage != int(finalDamage)):
+            dif = finalDamage - int(finalDamage)
+            if randint(0, 99) < dif * 100:
+                finalDamage += 1
+        
+        # calculations are made with floats but are returned as ints
+        self.health -= int(finalDamage)
+        return int(finalDamage)
 
     def heal(self, healthRestored):
     # heals health but makes sure it doesn't exceed max health
@@ -493,13 +489,13 @@ class Poisoned(Effect):
     def apply(self, target):
         self.target = target
         
-        self.target.strength -= 1
+        self.target.update_strength(-1)
 
     def update(self, enemies):
         self.target.health -= 1
 
     def reverse(self):
-        self.target.strength +=1 
+        self.target.update_strength(1)
 
     def inspect(self):
         print("Lowers STR by 1.")
@@ -721,7 +717,7 @@ class Thief(Enemy):
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "OGRE"
-    warning = "You hear sounds that can only belong to a massive beast..."
+    warning = "You hear the sounds of an ogre..."
     battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 
     maxHealth = 34

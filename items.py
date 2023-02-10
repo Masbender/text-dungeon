@@ -380,13 +380,13 @@ class EbonyDagger(Dagger):
     def inspect(self):
         super().inspect()
         print(f"Your max health has a 50% chance to increase by 1 for every kill with the Ebony Dagger.")
-        print("This will only occur if the weapon isn't broken, and this weapon has less durability.")
+        print("This will only occur if the weapon isn't broken, and this weapon unusually low durability.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
         # applies ebony dagger's effect
-        if self.target.health <= 0 and self.uses > 0:
+        if self.target.health <= 0 and self.uses > 0 and randint(0, 1):
             player.maxHealth += 1
             slowprint("You absorb " + self.target.name + "'s power.")
         

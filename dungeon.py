@@ -399,12 +399,7 @@ class Floor:
         message = ""
         # strength
         message += f"{c.compare(player.strength, player.baseSTR)} STR : "
-        if player.strength > 0:
-            message += f"you do {player.strength//2} to {player.strength} extra damage with weapons "
-        elif player.strength < 0:
-            message += f"you do {-player.strength//2} to {-player.strength} less damage with weapons "
-        else:
-            message += "you don't deal additional damage with weapons "
+        message += f"you do {player.strength * 0.75} extra damage with weapons "
         message += f"and you can carry up to {c.compare(player.inventorySize, player.strength + 10)} items"
 
         # constitution
@@ -427,7 +422,7 @@ class Floor:
         else:
             message += "you have no minor resistances "
 
-        if len(major) > 1:
+        if len(major) > 0:
             message += f"and major resistance to ({', '.join(major)})"
         else:
             message += "and no major resistances"
@@ -443,13 +438,7 @@ class Floor:
 
         print(message)
 
-        if player.armorClass > 0:
-            if player.armorClass % 2 == 1:
-                print(f"\nYou have {player.armorClass} AC, granting you {player.armorClass // 2} to {player.armorClass // 2 + 1} damage resistance.")
-            elif player.armorClass % 2 == -1:
-                print(f"\nYou have {player.armorClass} AC, granting you {player.armorClass // 2 - 1} to {player.armorClass // 2} damage resistance.")
-            else:
-                print(f"\nYou have 0 AC, granting no damage resistance.")
+        print(f"\nYou have {player.armorClass} AC, granting {player.armorClass / 2} damage resistance.")
         
         if player.gold > 0:
             print(f"You have {c.yellow(str(player.gold))} gold.\n")
