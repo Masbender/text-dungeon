@@ -319,8 +319,9 @@ class EnchantedSpear(Spear):
         super().attack(enemies)
 
         if not self.target.undead:
-            if bool(player.heal(1)):
-                print(f"You heal {c.green(1)} health.")
+            healing = player.heal(randint(1, 2))
+            if healing > 0:
+                print(f"You heal {c.green(healing)} health.")
 
         return True
 
@@ -421,8 +422,7 @@ class EbonyDagger(Dagger):
 
     def inspect(self):
         super().inspect()
-        print(f"Your max health has a 50% chance to increase by 1 for every kill with the Ebony Dagger.")
-        print("This will only occur if the weapon isn't broken, and this weapon unusually low durability.")
+        print(f"Getting kills with this weapon can increase your max health.")
 
     def attack(self, enemies):
         super().attack(enemies)

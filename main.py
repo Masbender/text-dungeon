@@ -48,7 +48,7 @@ else:
         player.inventory.extend([items.Dagger(1), items.Cloak(), items.StunBomb()])
         player.inventory[1].consume(None)
         player.inventory[0].uses = 10
-        player.set_stats(-1, 0, 1, 0, 1)
+        player.set_stats(0, -1, 1, 0, 1)
         introMessage = "You have only recently been thrown into the cursed prison, yet all fresh air has already disappeared."
     
     if playerInput == "Sorcerer":
