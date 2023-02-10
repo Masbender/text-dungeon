@@ -396,11 +396,60 @@ class Floor:
         
     def action_view_stats(self):
     # called when player decides to view stats
-        print(f"resistance : {player.resistance} | decreases the duration of poisons and injuries")
-        print(f"dodge : {player.dodgeChance}% | chance to avoid attacks")
-        print(f"stealth : {player.stealth} | your ability to be unnoticed")
-        print(f"awareness : {player.awareness} | detects enemies on the map")
-        print(f"appraisal : {player.appraisal} gold | helps you detect fair prices")
+        message = ""
+        # strength
+        message += f"{c.compare(player.strength, player.baseSTR)} STR : "
+        if player.strength > 0:
+            message += f"you do {player.strength//2} to {player.strength} extra damage with weapons "
+        elif player.strength < 0:
+            message += f"you do {-player.strength//2} to {-player.strength} less damage with weapons "
+        else:
+            message += "you don't deal additional damage with weapons "
+        message += f"and you can carry up to {c.compare(player.inventorySize, player.strength + 10)} items"
+
+        # constitution
+        message += f"\n\n{c.compare(player.constitution, player.baseCON)} CON : "
+        message += f"your maximum health is {c.compare(player.maxHealth, 20 + player.constitution * 2)}, "
+        message += f"and your resistance level is {c.compare(player.resistance, player.constitution)}\n\t"
+
+        minor = [] # minor resistances
+        major = [] # major resistances
+
+        for effect in [entities.Poisoned, entities.Bleeding, entities.Burned, entities.Dazed, entities.OnFire, entities.BrokenBones]:
+            if effect.level < player.resistance:
+                if player.resistance - effect.level > 3:
+                    major.append(effect.name)
+                else:
+                    minor.append(effect.name)
+
+        if len(minor) > 0:
+            message += f"you have minor resistance to ({', '.join(minor)}) "
+        else:
+            message += "you have no minor resistances "
+
+        if len(major) > 1:
+            message += f"and major resistance to ({', '.join(major)})"
+        else:
+            message += "and no major resistances"
+        
+        message += f"\n\n{c.compare(player.dexterity, player.baseDEX)} DEX : "
+        message += f"you have a {c.compare(player.dodgeChance, player.dexterity * 5)}% chance to dodge attacks, and your stealth is level {c.compare(player.stealth, player.dexterity)}"
+        
+        message += f"\n\n{c.compare(player.perception, player.basePER)} PER : "
+        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you can appraise items with a value of {c.compare(player.appraisal, player.perception * 25 + 50)} gold or less"
+        
+        message += f"\n\n{c.compare(player.intelligence, player.baseINT)} INT : "
+        message += f"your gear degrades {100 - player.intelligence * 10}% of the time"
+
+        print(message)
+
+        if player.armorClass > 0:
+            if player.armorClass % 2 == 1:
+                print(f"\nYou have {player.armorClass} AC, granting you {player.armorClass // 2} to {player.armorClass // 2 + 1} damage resistance.")
+            elif player.armorClass % 2 == -1:
+                print(f"\nYou have {player.armorClass} AC, granting you {player.armorClass // 2 - 1} to {player.armorClass // 2} damage resistance.")
+            else:
+                print(f"\nYou have 0 AC, granting no damage resistance.")
         
         if player.gold > 0:
             print(f"You have {c.highlight(str(player.gold))} gold.\n")

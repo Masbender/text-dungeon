@@ -107,6 +107,8 @@ class Creature:
         damageReduction = self.armorClass // 2
         if self.armorClass % 2 == 1:
             damageReduction += randint(0, 1)
+        else:
+            damageReduction -= randint(0, 1)
         
         if damageReduction > 0:
             damageReduction -= piercing
@@ -304,7 +306,7 @@ class Bleeding(Effect):
 # does 1 damage per turn
     name = "bleeding"
     natural = True
-    level = 0
+    level = 1
     color = c.effect_bad
 
     def update(self, enemies):
@@ -340,7 +342,7 @@ class Dazed(Effect):
 # lowers DEX
     name = "dazed"
     natural = True
-    level = 1
+    level = 2
     color = c.effect_bad
 
     def __init__(self, allowRun = False):
@@ -422,7 +424,7 @@ class BrokenBones(Effect):
 # instantly kills skeletons
     name = "broken bones"
     natural = True
-    level = 3
+    level = 5
     color = c.effect_bad
 
     def apply(self, target):
@@ -448,7 +450,7 @@ class Burned(Effect):
 # lowers AC by 1
     name = "burned"
     natural = True
-    level = -2
+    level = 0
     color = c.effect_bad
 
     def apply(self, target):
@@ -467,7 +469,7 @@ class OnFire(Effect):
 # also applies burned
     name = "on fire"
     natural = True
-    level = 3
+    level = 4
     color = c.effect_bad
 
     def apply(self, target):
