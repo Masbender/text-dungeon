@@ -231,29 +231,49 @@ class Sword(Weapon):
         slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
-class JudgementSword(Sword):
+class CursedSword(Sword):
 # same as sword but extra damage and burning against undead
-    name = "Bane of the Undead"
+    name = "Cursed Blade"
     value = 100
     maxUses = 20
+
+    enchantment = -1
+    enchantable = False
 
     damage = 5
     bleedChance = 3
     bleedDuration = 5
 
-    def inspect(self):
-        super().inspect()
-        print("Burns undead enemies.")
-
-    def attack(self, enemies):
-        super().attack(enemies)
-
-        # sets undead on fire
-        if self.target.undead:
-            self.target.affect(entities.Burned())
-            self.target.health -= 3
-            slowprint(f"{self.target.name} is burned by the sword, taking {c.red(3)} extra damage.")
+    usePrompt = "sacrifice health"
     
+    def inspect(self):
+        self.enchantment *= -1
+        super().inspect()
+        self.enchantment *= -1
+        print("Becomes stronger when cursed, and weaker when blessed.")
+        print("You can sacrifice your max health to repair and curse the sword further.")
+        print(f"You currently have {c.health_status(player.health, player.maxHealth)} health.")
+
+    def consume(self, floor):
+        self.uses = self.maxUses
+        self.enchantment -= 1
+
+        player.maxHealth -= 1
+        player.health -= 2
+        
+        # becomes more expensive depending the level of curse
+        if self.enchantment < 0:
+            player.maxHealth += self.enchantment
+            player.health += int(self.enchantment * 1.5)
+
+        print("Your sacrifice makes the blade stronger, but hungrier.")
+        return True
+    
+    def attack(self, enemies):
+        self.enchantment *= -1
+        super().attack(enemies)
+        self.enchantment *= -1
+
         return True
 
 class Spear(Weapon):
@@ -280,6 +300,28 @@ class Spear(Weapon):
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
         slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        return True
+
+class EnchantedSpear(Spear):
+# same as spear but heals you when you attack alive enemies
+    name = "Enchanted Spear"
+    value = 100
+    maxUses = 20
+
+    damage = 5
+    armorPiercing = 3
+
+    def inspect(self):
+        super().inspect()
+        print("It heals you when you attack non-undead enemies.")
+
+    def attack(self, enemies):
+        super().attack(enemies)
+
+        if not self.target.undead:
+            if bool(player.heal(1)):
+                print(f"You heal {c.green(1)} health.")
+
         return True
 
 class Mace(Weapon):
@@ -733,7 +775,7 @@ class InfernoRing(Ring):
     value = 100
 
     def inspect(self):
-        print("Increases your strength (STR) by 2.")
+        print("Increases your strength (STR) by 2, but doesn't increase inventory size.")
         print("When you are attacked, you might be burned (-1 AC).")
         print("The duration of burned depends on this items enchantment level.")
 
@@ -1266,7 +1308,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 6), (StunBomb, 3)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
