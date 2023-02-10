@@ -76,7 +76,8 @@ else:
             generator.addRooms.append(dungeon.Shop(i))
     
         elif i % 3 == 2: # adds gold chest
-            generator.addRooms.append(dungeon.Chest())
+            generator.addRooms.append(dungeon.Chest(i))
+            goldKeyLocation = i + randint(1, 3)
     
         floors.append(generator.finish_floor())
     

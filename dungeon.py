@@ -747,10 +747,10 @@ class Chest(Room):
     description = "There is a " + c.yellow("chest") + " here with a " + c.yellow("gold lock") + "."
     specialAction = "unlock chest"
 
-    def __init__(self):
+    def __init__(self, depth):
         self.loot = []
         self.threats = []
-        self.hiddenLoot = [items.gen_loot()]
+        self.hiddenLoot = [items.gen_loot(depth)]
 
     def unlock_chest(self):
         if unlock(items.GoldKey):
@@ -829,7 +829,7 @@ class Shop(Room):
         self.loot = []
         self.threats = []
 
-        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot()]
+        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot(depth)]
         if self.stock[0].enchantable:
             self.stock[0].enchantment += 1
         
@@ -862,7 +862,7 @@ def gen_room(area, depth, type):
     elif type == 3:
         room.description = "This is a secret room."
         
-        loot.append(items.gen_loot())
+        loot.append(items.gen_loot(depth))
         
         for i in range(randint(1, 2)):
             loot.append(items.gen_item(depth + 3 - i))

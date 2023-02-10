@@ -372,20 +372,21 @@ class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
     name = "Ebony Dagger"
     value = 100
-    maxUses = 20
+    maxUses = 15
 
     damage = 5
     sneakBonus = 3
 
     def inspect(self):
         super().inspect()
-        print("Your max health increases by 1 for every kill with the Ebony Dagger.")
+        print(f"Your max health has a 50% chance to increase by 1 for every kill with the Ebony Dagger.")
+        print("This will only occur if the weapon isn't broken, and this weapon has less durability.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
         # applies ebony dagger's effect
-        if self.target.health <= 0:
+        if self.target.health <= 0 and self.uses > 0:
             player.maxHealth += 1
             slowprint("You absorb " + self.target.name + "'s power.")
         
@@ -1121,7 +1122,7 @@ class Bomb(Consumable):
 
 class StunBomb(Consumable):
     name = "stun bomb"
-    value = 30
+    value = 40
 
     def inspect(self):
         print("Stuns every enemy, giving you an opportunity to escape. Allows you to escape from any non-boss fight.")
@@ -1284,13 +1285,17 @@ def gen_item(quality):
         else:
             itemNum -= item[1]
 
-def gen_loot():
+def gen_loot(quality):
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough
         return ScrollEnchant()
 
     item = choice(rareLoot)
     rareLoot.remove(item)
-    return item()
+    item = item()
+
+    if item.enchantable:
+        item.enchantment += (quality + randint(0, 1)) // 3
+    return item
 
 def gen_armor(quality):
     armorLoot = [(Cloak, 3), (HeavyArmor, 7), (BuffRing, 6)]
