@@ -757,7 +757,7 @@ class Ogre(Boss):
                 return
             player.dodgeChance -= 10
             
-            damage = player.hurt(self, 8, 1)
+            damage = player.hurt(self, 7, 2)
 
             if damage > 8:
                 if player.affect(BrokenBones()):
@@ -786,7 +786,7 @@ class Ogre(Boss):
                 slowprint("You dodge OGRE's club!")
                 return
 
-            damage = player.hurt(self, 5)
+            damage = player.hurt(self, 4, 2)
 
             if player.affect(Bleeding(), 3):
                 slowprint(f"OGRE hits you with their club, dealing {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
