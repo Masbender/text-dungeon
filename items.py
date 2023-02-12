@@ -1174,7 +1174,7 @@ class StunBomb(Consumable):
         for enemy in enemies:
             enemy.stunned = True
             enemy.affect(entities.Dazed(True), 2)
-            print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
+        print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True
     
