@@ -863,16 +863,26 @@ def gen_room(area, depth, type):
     
 class Generator:
 # generates floors
-    def gen_floor(self, area, depth, size):                                                 
-        # stores info about progression
+    def initialize_floor(self, area, depth, size):
         self.area = area
         self.depth = depth
+        self.size = size
 
-        self.modifier = ""
+        self.modifier = "" 
+        if self.size > 4 and randint(0, 1): # can assign a random modifier except on the first floor
+            self.modifier = choice(["dangerous", "large", "cursed"])
         self.entryMessage = ""
 
-        # stores info about the layout
-        self.size = size
+        # adds these features before finishing generation
+        self.addRooms = []
+        self.addItems = []
+        self.addEnemies = []
+
+        # selects the generation format early, so it can be overriden
+        self.generation = choice([self.gen_hall, self.gen_intersection, self.gen_square])
+
+    def generate_floor(self):
+        # stores the layout
         self.layoutNums = [] # this is the layout in integers
         self.layoutRooms = [] # layoutNums is converted into rooms
         self.startY = 0
@@ -884,13 +894,17 @@ class Generator:
         self.hiddenWalls = []
         self.sideRooms = []
 
-        # adds these features before finishing generation
-        self.addRooms = [LockedRoom(self.depth)]
-        self.addItems = [items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant, items.ScrollRemoveCurse, items.ScrollRepair])()]
-        self.addEnemies = []
+        # applies "large" modifier
+        if self.modifier == "large":
+            self.size += 1
+
+        # forms a square in layoutNums
+        for i in range(self.size):
+            self.layoutNums.append([0] * self.size)
 
         # mutates rats
         if self.area == "crossroads" and self.depth > 3:
+            # checks which mutations can be made
             mutationList = ["toxic", "stronger", "hungrier"]
             for mutation in entities.Rat.mutations:
                 mutationList.remove(mutation)
@@ -903,30 +917,9 @@ class Generator:
                 "stronger":"The rats grow stronger.\n",
                 "hungrier":"The rats are hungry.\n"
             }[mutation])
-        
-        # assigns modifier
-        if self.size > 4 and randint(0, 1):
-            self.modifier = choice(["dangerous", "large", "cursed"])
 
-            self.entryMessage += {
-                "dangerous":c.red("You feel unsafe, watch your back.\n"),
-                "large":c.blue("You hear your footsteps echo across the floor.\n"),
-                "cursed":c.red("A malevolent energy is lurking here.\n")
-            }[self.modifier]
-
-            if self.modifier == "large":
-                self.size += 1
-
-        # forms a square
-        for i in range(self.size):
-            self.layoutNums.append([0] * self.size)
-
-        # generates rooms
-        generation = choice([self.gen_hall, self.gen_intersection, self.gen_square])
-        generation()
-            
+        self.generation()
         self.count_rooms()
-        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
         # generates secret room
         if len(self.hiddenWalls) > 0:
@@ -947,11 +940,6 @@ class Generator:
                 
                 self.layoutRooms[y].append(room)
 
-        # generates starting room
-        #self.layoutRooms[self.startY][self.startX] = Room()
-        #if self.depth != 0:
-        #    self.layoutRooms[self.startY][self.startX] = StairsUp()
-
         self.addItems.extend(self.gen_random_items(self.size + randint(1, 2), self.size - randint(1, 2)))
         
         # spawns enemies
@@ -959,6 +947,8 @@ class Generator:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth % 3, self.depth % 3))
         else:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
+
+        return self.finalize_floor()
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -994,6 +984,7 @@ class Generator:
     
         # addds stairs down at the end
         self.layoutNums[y][x] = -1
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_intersection(self):
     # generates two intersecting halls
@@ -1013,6 +1004,7 @@ class Generator:
         self.startY = hallX
 
         self.layoutNums[choice([0, self.size - 1])][hallY] = -1
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_square(self):
     # generates a ring around that leaves one wall between it and the border
@@ -1034,6 +1026,7 @@ class Generator:
             endY = choice([1, self.size - 2])
 
         self.layoutNums[endY][endX] = -1
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_random(self):
     # generates a random layout
@@ -1085,6 +1078,7 @@ class Generator:
                 self.layoutNums[y][x] = 1
 
         self.layoutNums[y][x] = -1
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def count_rooms(self):
         for y in range(self.size):
@@ -1213,7 +1207,7 @@ class Generator:
 
             validRooms.remove(coords)
 
-    def finish_floor(self):
+    def finalize_floor(self):
         self.spawn_rooms()
         self.spawn_items()
         self.spawn_enemies()

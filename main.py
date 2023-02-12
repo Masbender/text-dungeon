@@ -4,7 +4,7 @@ from extra import clear_console
 from extra import gather_input
 import items
 import color
-from random import randint
+from random import randint, choice
 import pickle
 
 player = entities.player
@@ -71,7 +71,11 @@ else:
         generator = dungeon.Generator()
         area = areas[i // 3]
     
-        generator.gen_floor(area, i, 4 + ((i + 2) // 3))
+        generator.initialize_floor(area, i, 4 + ((i + 2) // 3))
+
+        # adds standard encounters
+        generator.addRooms.append(dungeon.LockedRoom(i))
+        generator.addItems.extend([items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant(), items.ScrollRemoveCurse(), items.ScrollRepair()])])
     
         if i % 3 == 0:
             message = c.blue({
@@ -90,7 +94,7 @@ else:
             generator.addRooms.append(dungeon.Chest(i))
             goldKeyLocation = i + randint(1, 3)
     
-        floors.append(generator.finish_floor())
+        floors.append(generator.generate_floor())
     
         if i % 3 == 2: # adds boss
             floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
