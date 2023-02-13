@@ -100,7 +100,7 @@ else:
             floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
-
+player.affect(entities.RatDisease())
 while True:
     player.currentFloor = floors[0]
     floors[0].enter_floor()

@@ -919,7 +919,6 @@ class Generator:
             }[mutation])
 
         self.generation()
-        self.count_rooms()
 
         # generates secret room
         if len(self.hiddenWalls) > 0:
@@ -984,6 +983,8 @@ class Generator:
     
         # addds stairs down at the end
         self.layoutNums[y][x] = -1
+        
+        self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_intersection(self):
@@ -1004,6 +1005,8 @@ class Generator:
         self.startY = hallX
 
         self.layoutNums[choice([0, self.size - 1])][hallY] = -1
+        
+        self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_square(self):
@@ -1026,6 +1029,8 @@ class Generator:
             endY = choice([1, self.size - 2])
 
         self.layoutNums[endY][endX] = -1
+        
+        self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_random(self):
@@ -1078,6 +1083,8 @@ class Generator:
                 self.layoutNums[y][x] = 1
 
         self.layoutNums[y][x] = -1
+        
+        self.count_rooms()
         self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def count_rooms(self):

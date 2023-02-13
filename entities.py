@@ -489,18 +489,78 @@ class Poisoned(Effect):
     def apply(self, target):
         self.target = target
         
-        self.target.update_strength(-1)
+        self.target.strength -= 1
 
     def update(self, enemies):
         self.target.health -= 1
 
     def reverse(self):
-        self.target.update_strength(1)
+        self.target.strength -= 1
 
     def inspect(self):
-        print("Lowers STR by 1.")
+        print("Lowers STR by 1, doesn't lower inventory size.")
         print("Deals 1 damage every turn.")
 
+class RatDisease(Effect):
+# has 4 stages, each inheriting the effects of the last:
+# 1) nothing, 2) -1CON, 3) -2INT, 4) lose max health over time
+    name = "rat disease lvl 1"
+    color = c.effect_bad
+
+    stage = 1
+    progression = 10
+
+    def update(self, enemies):
+        self.progression -= 1
+
+        if self.progression == 0:
+            self.progression = 10
+            self.stage += 1
+
+            if self.stage == 2:
+                self.target.update_strength(-1)
+                print(c.red("You feel weaker."))
+                self.name = "rat disease lvl 2"
+
+            elif self.stage == 3:
+                self.target.update_intelligence(-2)
+                print(c.red("Your mind becomes clouded."))
+                self.name = "rat disease lvl 3"
+
+            else:
+                self.target.maxHealth -= 2
+                self.target.health -= 3
+                self.name = "rat disease lvl 4"
+                if self.stage == 4:
+                    print(c.red("You begin to decay."))
+                else:
+                    print(c.red("You continue to decay."))
+
+    def reverse(self):
+        if self.stage > 1:
+            self.target.update_stregth(1)
+            print(c.green("Your strength returns."))
+
+        if self.stage > 2:
+            self.target.update_intelligence(2)
+            print(c.green("Your mind clears."))
+
+        if self.stage > 3:
+            self.target.maxHealth += self.stage - 3
+            print(c.red("Your body heals, but some damage remains."))
+
+    def inspect(self):
+        if self.stage == 2:
+            print("Lowers STR by 1.")
+        elif self.stage > 2:
+            print("Lowers STR by 1, and INT by 2.")
+
+        if self.stage > 3:
+            print("Your health decays over time.")
+            print(f"Your health decays in {self.progression} turns.")
+        else:
+            print(f"Progresses to level {self.level + 1} in {self.progression} turns.")
+            
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # starts with armor but it degrades when hurt
