@@ -495,7 +495,7 @@ class Poisoned(Effect):
         self.target.health -= 1
 
     def reverse(self):
-        self.target.strength -= 1
+        self.target.strength += 1
 
     def inspect(self):
         print("Lowers STR by 1, doesn't lower inventory size.")
@@ -559,7 +559,7 @@ class RatDisease(Effect):
             print("Your health decays over time.")
             print(f"Your health decays in {self.progression} turns.")
         else:
-            print(f"Progresses to level {self.level + 1} in {self.progression} turns.")
+            print(f"Progresses to stage {self.stage + 1} in {self.progression} turns.")
             
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
