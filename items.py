@@ -269,7 +269,7 @@ class CursedSword(Sword):
 
         player.affect(entities.Bleeding(), healthLost)
 
-        print(f"Your sacrifice makes of {c.red(healthLost)} the blade stronger, but you are now bleeding.")
+        print(f"Your sacrifice makes of {c.red(healthLost)} health the blade stronger, but you are now bleeding.")
         return True
     
     def attack(self, enemies):
@@ -1326,7 +1326,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2). (StunBomb, 3)]
+standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2), (StunBomb, 3)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 

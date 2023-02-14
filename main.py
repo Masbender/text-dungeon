@@ -35,20 +35,20 @@ else:
     
     if playerInput == "Warrior":
         player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
-        player.set_stats(1, 0, 0, 2, 0)
+        player.set_stats(1, 1, 0, 2, 0)
         player.inventory[1].consume(None)
         introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
     
     if playerInput == "Thief":
         player.inventory.extend([items.Sword(0), items.Bandage()])
-        player.set_stats(0, 1, 0, 1, 2)
+        player.set_stats(0, 1, 1, 1, 2)
         introMessage = "You manage to escape your cell, but you soon become lost in the halls of the Prison."
 
     if playerInput == "Assassin":
         player.inventory.extend([items.Dagger(1), items.Cloak(), items.StunBomb()])
         player.inventory[1].consume(None)
         player.inventory[0].uses = 10
-        player.set_stats(0, -1, 1, 0, 1)
+        player.set_stats(0, -1, 2, 0, 1)
         introMessage = "You have only recently been thrown into the cursed prison, yet all fresh air has already disappeared."
     
     if playerInput == "Sorcerer":

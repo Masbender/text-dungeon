@@ -576,7 +576,7 @@ class Draugr(Enemy):
 
     maxHealth = 18
     gold = 20
-    awareness = 2
+    awareness = 3
     stealth = 2
     
     resistance = 2
@@ -620,7 +620,7 @@ class Ghoul(Enemy):
 
     maxHealth = 16
     gold = 11
-    awareness = 2
+    awareness = 4
     stealth = 1
     
     dodgeChance = 10
@@ -738,7 +738,7 @@ class Thief(Enemy):
 
     maxHealth = 16
     gold = 14
-    awareness = 1
+    awareness = 2
     stealth = 4
 
     time = 0

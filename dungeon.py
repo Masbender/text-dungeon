@@ -131,8 +131,11 @@ class Battle:
             slowprint(c.red(f"There is no escape from this fight."))
         
         while not self.battleOver:
-            self.player_turn()
-
+            if player.stunned:
+                player.stunned = False
+                print(c.red("You fail to notice their presence.."))
+            else:
+                self.player_turn()
             
             canRun = True
             allStunned = True
@@ -380,11 +383,17 @@ class Floor:
             room = self.get_room()
             if room.threats != []:
                 isNoticed = False
+                isSurprised = True
                 for enemy in room.threats: # checks if player is noticed
                     if enemy.awareness >= player.stealth:
                         isNoticed = True
+                    if enemy.stealth <= player.awareness:
+                        isSurprised = False
                         
                 if isNoticed:
+                    if isSurprised:
+                        player.stunned = True
+                        player.affect(entities.Surprised(), 2)
                     battle = Battle(room.threats)
                     battle.start_battle()
 
