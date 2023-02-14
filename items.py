@@ -244,7 +244,7 @@ class CursedSword(Sword):
 
     damage = 5
     bleedChance = 3
-    bleedDuration = 5
+    bleedDuration = 7
 
     usePrompt = "sacrifice health"
     
@@ -258,17 +258,18 @@ class CursedSword(Sword):
 
     def consume(self, floor):
         self.uses = self.maxUses
-        self.enchantment -= 1
-
-        player.maxHealth -= 1
-        player.health -= 2
-        
+        healthLost = 1
         # becomes more expensive depending the level of curse
         if self.enchantment < 0:
-            player.maxHealth += self.enchantment
-            player.health += int(self.enchantment * 1.5)
+            healthLost -= self.enchantment
+            
+        self.enchantment -= 1
+        player.maxHealth -= healthLost
+        player.health -= healthLost
 
-        print("Your sacrifice makes the blade stronger, but hungrier.")
+        player.affect(entities.Bleeding(), healthLost)
+
+        print(f"Your sacrifice makes of {c.red(healthLost)} the blade stronger, but you are now bleeding.")
         return True
     
     def attack(self, enemies):
@@ -1325,7 +1326,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 6), (StunBomb, 3)]
+standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2). (StunBomb, 3)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 
