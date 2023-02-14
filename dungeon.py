@@ -894,6 +894,14 @@ class Generator:
         self.hiddenWalls = []
         self.sideRooms = []
 
+        if self.modifier != "":
+            self.entryMessage += {
+                "flooded":c.blue("The ground is flooded with water."),
+                "large":c.blue("Your footsteps echo across the floor."),
+                "dangerous":c.red("This floor is unusually crowded, watch your back."),
+                "cursed":c.red("A malevolent energy lurks in the items here.")
+            }[self.modifier] + "\n"
+
         # applies "large" modifier
         if self.modifier == "large":
             self.size += 1
@@ -944,6 +952,10 @@ class Generator:
         # spawns enemies
         if self.modifier == "dangerous":
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth % 3, self.depth % 3))
+        elif self.modifier == "flooded":
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 2, self.depth % 3, self.depth % 3))
+            choice(self.addEnemies).append(entities.SewerRat())
+            self.addEnemies.append([entities.SewerRat(), entities.SewerRat()])
         else:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
 

@@ -35,8 +35,8 @@ else:
     
     if playerInput == "Warrior":
         player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
-        player.inventory[1].consume(None)
         player.set_stats(1, 0, 0, 2, 0)
+        player.inventory[1].consume(None)
         introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
     
     if playerInput == "Thief":
@@ -62,6 +62,7 @@ else:
     
     # GENERATION START
     goldKeyLocation = randint(0, 2)
+    floodedFloor = randint(4, 5)
     
     areas = ["prison", "crossroads", "stronghold"]
     
@@ -93,6 +94,9 @@ else:
         elif i % 3 == 2: # adds gold chest
             generator.addRooms.append(dungeon.Chest(i))
             goldKeyLocation = i + randint(1, 3)
+
+        if i == floodedFloor:
+            generator.modifier = "flooded"
     
         floors.append(generator.generate_floor())
     
@@ -100,7 +104,6 @@ else:
             floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
-player.affect(entities.RatDisease())
 while True:
     player.currentFloor = floors[0]
     floors[0].enter_floor()

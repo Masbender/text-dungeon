@@ -857,7 +857,7 @@ class Rat(Enemy):
 # a weak enemy who spawns in large groups
 # can inflict self with decay, then infects the player
     name = "RAT"
-    warning = "You hear small creatures running around..."
+    warning = "You hear small creatures scampering around..."
     battleMessages = ["RAT snarls!", 
                       "RAT releases a battle cry!"]
     stealthMessages = [c.red("RAT") + " is sleeping. Some of their bones are visible.",
@@ -970,6 +970,57 @@ class Rat(Enemy):
         else:
             damage = player.hurt(self, 4)
             print(f"RAT leaps at you, biting you for {c.red(damage)} damage!")
+
+class SewerRat(Enemy):
+# a slightly tougher rat that can inflict bleeding and has an armor piercing attack
+# if the player is bleeding, it can inflict rat disease
+    name = "SEWER RAT"
+    warning = "You smell a rotten scent..."
+    battleMessages = ["SEWER RAT hisses!",
+                      "SEWER RAT has found its next meal!"]
+    stealthMessages = [c.red("SEWER RAT") + " is much less decayed than the other rats, but is much more mutated.",
+                       "You encounter " + c.red("SEWER RAT") + ", who looks severely infected.",
+                       c.red("SEWER RAT") + " eating the decayed corpse of another rat."]
+    
+    maxHealth = 14
+    gold = 9
+    awareness = 4
+    stealth = 1
+
+    armorClass = 1
+    dodgeChance = 5
+
+    def attack(self, enemies):
+        if player.dodge(self):
+            print("You dodge SEWER RAT's attack.")
+            return
+        
+        if randint(0, 1):
+            damage = player.hurt(self, 3, 2)
+            player.armor.degrade()
+
+            print(f"SEWER RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
+            return
+        
+        else:
+            damage = player.hurt(self, 3)
+
+            isBleeding = False
+            for effect in player.effects:
+                if type(effect) == Bleeding:
+                    isBleeding = True
+                    break
+
+            if isBleeding:
+                player.affect(RatDisease())
+                print(f"SEWER RAT bites you for {c.red(damage)} damage, infecting your wound with {c.effect(RatDisease)}!")
+                return
+            
+            else:
+                player.affect(Bleeding(), randint(4, 5))
+                print(f"SEWER RAT bites you for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                return
+
 
 class RatBeast(Enemy):
 # tough enemy, rages when low health, loses hp over time
