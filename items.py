@@ -431,7 +431,7 @@ class EbonyDagger(Dagger):
         super().attack(enemies)
 
         # applies ebony dagger's effect
-        if self.target.health <= 0 and self.uses > 0 and randint(0, 1):
+        if self.target.health <= 0 and self.uses > 0 and randint(0, 2) < 2:
             player.maxHealth += 1
             slowprint("You absorb " + self.target.name + "'s power.")
         
@@ -964,6 +964,9 @@ class HealingVial(Medicine):
     def inspect(self):
         print("Heals all of your health and cures most effects.")
 
+    def degrade(self):
+        self.uses -= 1
+
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
     name = "bandage"
@@ -1021,6 +1024,9 @@ class Rations(Medicine):
     def attack(self, enemies):
         print("You don't have enough time to eat!")
         return False
+
+    def degrade(self):
+        self.uses -= 1
 
 class Scroll(Item):
 # one use item that is more powerful with higher intelligence

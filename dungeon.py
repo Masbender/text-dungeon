@@ -393,7 +393,7 @@ class Floor:
                 if isNoticed:
                     if isSurprised:
                         player.stunned = True
-                        player.affect(entities.Surprised(), 2)
+                        player.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
 
