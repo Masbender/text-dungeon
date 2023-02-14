@@ -508,13 +508,15 @@ class RatDisease(Effect):
     color = c.effect_bad
 
     stage = 1
-    progression = 10
+    progression = 14
 
     def update(self, enemies):
         self.progression -= 1
 
         if self.progression == 0:
-            self.progression = 10
+            self.progression = 14 - self.stage
+            if self.progression < 8:
+                self.progression = 8
             self.stage += 1
 
             if self.stage == 2:
@@ -556,7 +558,6 @@ class RatDisease(Effect):
             print("Lowers STR by 1, and INT by 2.")
 
         if self.stage > 3:
-            print("Your health decays over time.")
             print(f"Your health decays in {self.progression} turns.")
         else:
             print(f"Progresses to stage {self.stage + 1} in {self.progression} turns.")

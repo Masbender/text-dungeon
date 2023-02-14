@@ -110,7 +110,9 @@ class Item:
         # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
 
         if shop:
-            price = int(price * 1.2) # 20% more expensive why buying
+            price = int(price * 1.2) # 20% more expensive when buying
+        else:
+            price = int(price / 1.2) # 20% less expensive when selling
         
         if player.appraisal < price:
             if shop:
