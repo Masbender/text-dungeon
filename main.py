@@ -101,7 +101,7 @@ else:
         floors.append(generator.generate_floor())
     
         if i % 3 == 2: # adds boss
-            floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
+            floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
 while True:

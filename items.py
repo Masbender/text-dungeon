@@ -908,13 +908,8 @@ class Medicine(Item):
 
     def consume(self, floor):
         self.degrade()
-        # heals and apples regeneration
-        healingDone = player.heal(self.healing + randint(-1, 1))
 
-        if self.effectApplied != None:
-            player.affect(self.effectApplied(), self.effectDuration)
-
-        # cures bleeding
+        # cures effects
         removedEffectsIndexes = []
         for i in range(len(player.effects)):
             if type(player.effects[i]) in self.effectsCured:
@@ -926,6 +921,12 @@ class Medicine(Item):
             removedEffects.append(player.effects[i].name)
             player.effects[i].reverse()
             player.effects.pop(i)
+
+        # heals and apples effects
+        healingDone = player.heal(self.healing + randint(-1, 1))
+
+        if self.effectApplied != None:
+            player.affect(self.effectApplied(), self.effectDuration)
 
         # prints out a message based on healing and removed effects
         message = f"The {self.name} restores {healingDone} health"
@@ -945,6 +946,22 @@ class Medicine(Item):
         print(message + ".")
 
         return True
+
+class HealingVial(Medicine):
+# cures most effects, heals all health
+    name = "vial of healing"
+    value = 70
+    maxUses = 1
+    usePrompt = "drink"
+
+    healing = 100
+    effectsCured = [entities.RatDisease, entities.BrokenBones, entities.Bleeding, entities.Burned, entities.Poisoned]
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("Heals all of your health and cures most effects.")
 
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
