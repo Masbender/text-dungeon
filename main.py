@@ -57,7 +57,6 @@ else:
         player.set_stats(-1, 0, 1, 0, 3)
         player.inventory[1].consume(None)
     
-    
     dungeon.sort_inventory()
     
     # GENERATION START

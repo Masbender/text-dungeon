@@ -819,6 +819,67 @@ class IllusionRing(Ring):
         player.illusionRing = False
         player.dodgeChance -= 5 + 5 * enchantment
 
+class ArtifactRing(Ring):
+# can accept up to two other rings, then provides the bonuses of each of them
+# any enchantment levels are split between the two rings
+    name = "Artifact Ring"
+    value = 100
+
+    usePrompt = "activate"
+
+    ring1 = None
+    ring2 = None
+
+    def inspect(self):
+        if self.ring2 == None:
+            print("Can absorb the abilities of two other rings.")
+        else:
+            self.ring2.enchantment = self.enchantment // 2
+            self.ring2.inspect()
+
+        if self.ring1 != None:
+            self.ring1.enchantment = (self.enchantment + 1) // 2
+            self.ring1.inspect()
+
+    def consume(self, floor):
+        if self.usePrompt == "activate":
+            options = ["cancel"]
+            rings = []
+            for item in player.inventory:
+                if issubclass(type(item), Ring) and item != self:
+                    options.append(item.get_name())
+                    rings.append(item)
+
+            if len(options) == 1:
+                print(c.red("You don't have any rings to insert into Artifact Ring."))
+            else:
+                playerInput = gather_input("Select a ring to insert.", options, True) - 1
+                if playerInput > -1:
+                    ring = rings[playerInput]
+                    if self.ring1 == None:
+                        self.ring1 = ring
+                    else:
+                        self.ring2 = ring
+                        self.usePrompt = "equip"
+                    player.inventory.remove(ring)
+                    if ring == player.ring:
+                        ring.unequip()
+                        player.ring = None
+                    self.enchantment += ring.enchantment
+                    print("Artifact Ring has absorbed the abilities of " + ring.get_name() + ".")
+        else:
+            super().consume(floor)
+
+    def equip(self):
+        self.ring1.enchantment = (self.enchantment + 1) // 2
+        self.ring1.equip()
+        self.ring2.enchantment = self.enchantment // 2
+        self.ring2.equip()
+
+    def unequip(self):
+        self.ring1.unequip()
+        self.ring2.unequip()
+
 class BuffRing(Ring):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
@@ -965,7 +1026,7 @@ class HealingVial(Medicine):
         print("Heals all of your health and cures most effects.")
 
     def degrade(self):
-        self.uses -= 1
+        player.inventory.remove(self)
 
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
@@ -1026,7 +1087,7 @@ class Rations(Medicine):
         return False
 
     def degrade(self):
-        self.uses -= 1
+        player.inventory.remove(self)
 
 class Scroll(Item):
 # one use item that is more powerful with higher intelligence
@@ -1334,7 +1395,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2), (StunBomb, 3)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
