@@ -48,6 +48,8 @@ class Creature:
     def update_strength(self, increase):
     # strength is added to damage dealt
         self.strength += increase
+        if issubclass(type(self), Player):
+            self.inventorySize += increase
 
     def update_dexterity(self, increase):
     # dexterity improves stealth and dodge
@@ -88,34 +90,35 @@ class Creature:
         return self.dodgeChance > number
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
-    # lowers health but applies armor class and strength
-        # uses attackers strength as default
+        # uses attacker strength by default, but can be overridden
         if strength == None:
             strength = attacker.strength
-
-        finalDamage = damage
-
-        # applies strength
-        if strength > 0:
-            finalDamage += randint(strength // 2, strength)
-        elif strength < 0:
-            finalDamage += randint(strength, strength // 2)
-
-        # applies piercing
-        damageReduction = self.armorClass
-        if damageReduction > 0:
-            damageReduction -= piercing
-            if damageReduction < 0:
-                damageReduction = 0
-
-        # applies armor class and randomnes
-        finalDamage += + randint(-1, 1) - damageReduction 
-        if finalDamage < 0:
-            finalDamage = 0
-
-        # applies damage
-        self.health -= finalDamage
-        return finalDamage
+            
+        reduction = self.armorClass
+        if reduction > 0 and piercing > 0: # piercing is only applied if AC > 0
+            reduction -= piercing
+            if reduction < 0: # piercing can't lead to -AC
+                reduction = 0
+                
+        reduction /= 2.0 # each point of AC is only 0.5 damage reduction
+        
+        # applies reduction and strength, each point of strength is 0.75 extra damage
+        finalDamage = damage - reduction + (strength * 0.75)
+        
+        # all attacks do at least 0.5 damage, (50% to do 1 damage)
+        if finalDamage < 0.5:
+            finalDamage = 0.5
+        
+        # if there is a decimal, it is treated as a chance to do extra damage
+        # example: 5.4 damage has a 40% to do 6 damage, and 60% to do 5
+        if (finalDamage != int(finalDamage)):
+            dif = finalDamage - int(finalDamage)
+            if randint(0, 99) < dif * 100:
+                finalDamage += 1
+        
+        # calculations are made with floats but are returned as ints
+        self.health -= int(finalDamage)
+        return int(finalDamage)
 
     def heal(self, healthRestored):
     # heals health but makes sure it doesn't exceed max health
@@ -222,7 +225,7 @@ class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     # more identifying information
     battleMessages = ["ENEMY notices you!"] # note that ENEMY is only colored in stealth due to the need to alert the player
-    stealthMessages = [c.threat("ENEMY") + " not notice you"]
+    stealthMessages = [c.red("ENEMY") + " not notice you"]
     warning = "You feel uneasy..."
     undead = False
     isSpecial = False # determines if the game should give a (!) with this enemy
@@ -299,7 +302,7 @@ class Bleeding(Effect):
 # does 1 damage per turn
     name = "bleeding"
     natural = True
-    level = 0
+    level = 1
     color = c.effect_bad
 
     def update(self, enemies):
@@ -335,19 +338,33 @@ class Dazed(Effect):
 # lowers DEX
     name = "dazed"
     natural = True
-    level = 1
+    level = 2
     color = c.effect_bad
+
+    def __init__(self, allowRun = False):
+        self.allowRun = allowRun
     
     def apply(self, target):
         self.target = target
 
         self.target.update_dexterity(-1)
+        self.target.update_perception(-1)
+
+        self.allowRun = self.allowRun and self.target.isSpecial and not issubclass(type(target), Boss)
+
+        if self.allowRun:
+            self.target.isSpecial = False
+        
 
     def reverse(self):
         self.target.update_dexterity(1)
+        self.target.update_perception(1)
+
+        if self.allowRun:
+            self.target.isSpecial = True
 
     def inspect(self):
-        print("Lowers DEX by 1, reducing your stealth and dodge chance.")
+        print("Lowers DEX and PER by 1.")
 
 class Surprised(Effect):
 # lowers DEX and AC
@@ -399,11 +416,11 @@ class Decay(Effect):
         print(f"This effect becomse stronger in {self.turnsToProgress} turns.")
 
 class BrokenBones(Effect):
-# lowers DEX, STR, permanent
+# lowers DEX, STR, CON, permanently
 # instantly kills skeletons
     name = "broken bones"
     natural = True
-    level = 3
+    level = 5
     color = c.effect_bad
 
     def apply(self, target):
@@ -413,21 +430,23 @@ class BrokenBones(Effect):
             self.target.health = 0
             slowprint(self.target.name + " dies")
 
-        self.target.update_dexterity(-4)
+        self.target.update_dexterity(-1)
         self.target.update_strength(-1)
+        self.target.update_constitution(-1)
         
     def reverse(self):
-        self.target.update_dexterity(4)
+        self.target.update_dexterity(1)
         self.target.update_strength(1)
+        self.target.update_constitution(1)
 
     def inspect(self):
-        print("Lowers DEX by 4 and STR by 1.")
+        print("Lowers STR, CON, and DEX by 1.")
 
 class Burned(Effect):
 # lowers AC by 1
     name = "burned"
     natural = True
-    level = -2
+    level = 0
     color = c.effect_bad
 
     def apply(self, target):
@@ -446,7 +465,7 @@ class OnFire(Effect):
 # also applies burned
     name = "on fire"
     natural = True
-    level = 3
+    level = 4
     color = c.effect_bad
 
     def apply(self, target):
@@ -476,12 +495,73 @@ class Poisoned(Effect):
         self.target.health -= 1
 
     def reverse(self):
-        self.target.strength +=1 
+        self.target.strength += 1
 
     def inspect(self):
-        print("Lowers STR by 1.")
+        print("Lowers STR by 1, doesn't lower inventory size.")
         print("Deals 1 damage every turn.")
 
+class RatDisease(Effect):
+# has 4 stages, each inheriting the effects of the last:
+# 1) nothing, 2) -1CON, 3) -2INT, 4) lose max health over time
+    name = "rat disease lvl 1"
+    color = c.effect_bad
+
+    stage = 1
+    progression = 14
+
+    def update(self, enemies):
+        self.progression -= 1
+
+        if self.progression == 0:
+            self.progression = 14 - self.stage
+            if self.progression < 8:
+                self.progression = 8
+            self.stage += 1
+
+            if self.stage == 2:
+                self.target.update_strength(-1)
+                print(c.red("You feel weaker."))
+                self.name = "rat disease lvl 2"
+
+            elif self.stage == 3:
+                self.target.update_intelligence(-2)
+                print(c.red("Your mind becomes clouded."))
+                self.name = "rat disease lvl 3"
+
+            else:
+                self.target.maxHealth -= 2
+                self.target.health -= 3
+                self.name = "rat disease lvl 4"
+                if self.stage == 4:
+                    print(c.red("You begin to decay."))
+                else:
+                    print(c.red("You continue to decay."))
+
+    def reverse(self):
+        if self.stage > 1:
+            self.target.update_stregth(1)
+            print(c.green("Your strength returns."))
+
+        if self.stage > 2:
+            self.target.update_intelligence(2)
+            print(c.green("Your mind clears."))
+
+        if self.stage > 3:
+            self.target.maxHealth += self.stage - 3
+            print(c.red("Your body heals, but some damage remains."))
+
+    def inspect(self):
+        if self.stage == 2:
+            print("Lowers STR by 1.")
+        elif self.stage > 2:
+            print("Lowers STR by 1, and INT by 2.")
+
+        if self.stage > 3:
+            print(f"Your health decays in {self.progression} turns.")
+        else:
+            print(f"Progresses to stage {self.stage + 1} in {self.progression} turns.")
+            
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
 # starts with armor but it degrades when hurt
@@ -489,18 +569,18 @@ class Draugr(Enemy):
     name = "DRAUGR"
     battleMessages = ["DRAUGR readies their axe with malicious intent!",
                      "DRAUGR charges at you with their axe!"]
-    stealthMessages = [c.threat("DRAUGR") + " is on the hunt for human.",
-                      c.threat("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
+    stealthMessages = [c.red("DRAUGR") + " is on the hunt for human.",
+                      c.red("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
     undead = True
     isSpecial = True
 
     maxHealth = 18
     gold = 20
-    awareness = 2
+    awareness = 3
     stealth = 2
     
     resistance = 2
-    armorClass = 2
+    armorClass = 3
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
         damageDealt = super().hurt(attacker, damage, piercing, strength)
@@ -509,6 +589,7 @@ class Draugr(Enemy):
             self.resistance -= 1
             self.armorClass -= 1
             self.maxHealth -= 1
+            self.health -= 1
             slowprint("DRAUGR's armor degrades.")
         
         return damageDealt
@@ -521,10 +602,10 @@ class Draugr(Enemy):
         if randint(1, 3) == 1:
             if player.affect(Bleeding(), 4):
                 damage = player.hurt(self, 4)
-                slowprint(f"DRAUGR hits you with their axe for {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                slowprint(f"DRAUGR hits you with their axe for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
             damage = player.hurt(self, 5)
-            slowprint(f"DRAUGR hits you with their axe for {c.harm(damage)} damage!")
+            slowprint(f"DRAUGR hits you with their axe for {c.red(damage)} damage!")
 
 class Ghoul(Enemy):
 # an uncommon, more aware enemy that appears in the prison
@@ -533,13 +614,13 @@ class Ghoul(Enemy):
     warning = "You smell a foul stench..."
     battleMessages = ["You confront GHOUL, a foul, agile beast!",
                      "GHOUL detects your presence! It can barely see but has an excellent sense of smell."]
-    stealthMessages = [c.threat("GHOUL") + " is roaming.",
-                      c.threat("GHOUL") + " is waiting for human, they have yet to notice you."]
+    stealthMessages = [c.red("GHOUL") + " is roaming.",
+                      c.red("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
 
     maxHealth = 16
     gold = 11
-    awareness = 2
+    awareness = 4
     stealth = 1
     
     dodgeChance = 10
@@ -556,7 +637,7 @@ class Ghoul(Enemy):
             return
 
         damage = player.hurt(self, 4)
-        slowprint(f"GHOUL bites you for {c.harm(damage)} damage!")
+        slowprint(f"GHOUL bites you for {c.red(damage)} damage!")
 
 class Skeleton(Enemy):
 # a common enemy type throughout the dungeon
@@ -575,13 +656,13 @@ class Skeleton(Enemy):
     
     def __init__(self):
         super().__init__()
-        self.immuneTo.extend([Bleeding, Burned])
+        self.immuneTo.extend([Bleeding, Poisoned])
 
         if self.name == "SKELETON": # doesn't apply to subclasses
             self.weapon = choice(["sword", "spear", "mace"])
             self.battleMessages = [f"SKELETON grips their {self.weapon}!",
                                   "SKELETON finally gets to see some action!"]
-            self.stealthMessages = [c.threat("SKELETON") + f" is holding a {self.weapon}, and is searching for a target."]
+            self.stealthMessages = [c.red("SKELETON") + f" is holding a {self.weapon}, and is searching for a target."]
 
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
@@ -619,10 +700,10 @@ class Skeleton(Enemy):
         # does damage
         if effect == None:
             damage = player.hurt(self, self.damage, piercing)
-            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage!")
+            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.red(damage)} damage!")
         else:
             damage = player.hurt(self, self.damage, piercing)
-            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.harm(damage)} damage, leaving you {c.effect(effect)}!")
+            slowprint(f"{self.name} attacks you with their {self.weapon} for {c.red(damage)} damage, leaving you {c.effect(effect)}!")
 
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
@@ -630,13 +711,13 @@ class SkeletonGuard(Skeleton):
     warning = "You hear the clanking of bones and metal..."
     battleMessages = ["SKELETON GUARD raises their shield!",
                     "SKELETON GUARD will not let it's training go to waste!"]
-    stealthMessages = [c.threat("SKELETON GUARD") + " promised not to fall asleep this time... but has failed.",
-                       c.threat("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
+    stealthMessages = [c.red("SKELETON GUARD") + " promised not to fall asleep this time... but has failed.",
+                       c.red("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
     isSpecial = True
 
-    maxHealth = 15
+    maxHealth = 17
     gold = 16
-    awareness = 4
+    awareness = 5
     stealth = -1
 
     armorClass = 2
@@ -652,12 +733,12 @@ class Thief(Enemy):
     warning = "You are being watched..."
     battleMessages = ["THIEF prepares a poison dart!",
                      "THIEF eyes your gold pouch!"]
-    stealthMessages = [c.threat("THIEF") + " is looking for a victim.",
-                      c.threat("THIEF") + " is preparing poisons, and is unaware of your presence."]
+    stealthMessages = [c.red("THIEF") + " is looking for a victim.",
+                      c.red("THIEF") + " is preparing poisons, and is unaware of your presence."]
 
     maxHealth = 16
     gold = 14
-    awareness = 1
+    awareness = 2
     stealth = 4
 
     time = 0
@@ -682,7 +763,7 @@ class Thief(Enemy):
                 return
 
             damage = player.hurt(self, 4)
-            slowprint(f"THIEF stabs you for {c.harm(damage)} damage!")
+            slowprint(f"THIEF stabs you for {c.red(damage)} damage!")
         else:
             self.hasDart = False
             if player.dodge(self):
@@ -698,13 +779,12 @@ class Thief(Enemy):
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "OGRE"
-    warning = "You hear sounds that can only belong to a massive beast..."
+    warning = "You hear the sounds of an ogre..."
     battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
 
-    maxHealth = 35
+    maxHealth = 34
     gold = 60
     
-    strength = 1
     armorClass = 1
     resistance = 2
     dodgeChance = -10
@@ -731,18 +811,21 @@ class Ogre(Boss):
         if self.isCharging:
             self.isCharging = False
 
+            player.dodgeChance += 10
             if player.dodge(self):
                 slowprint("You manage to dodge OGRE's heavy swing.")
+                player.dodgeChance -= 10
                 return
+            player.dodgeChance -= 10
             
-            damage = player.hurt(self, 8, 1)
+            damage = player.hurt(self, 7, 2)
 
             if damage > 8:
                 if player.affect(BrokenBones()):
-                    slowprint(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} and inflicting {c.effect(BrokenBones)}!")
+                    slowprint(f"OGRE hits you with a heavy strike, dealing {c.red(damage)} and inflicting {c.effect(BrokenBones)}!")
                     return
             
-            slowprint(f"OGRE hits you with a heavy strike, dealing {c.harm(damage)} damage!")
+            slowprint(f"OGRE hits you with a heavy strike, dealing {c.red(damage)} damage!")
             
         elif chosenMove == "heavy":
             slowprint("OGRE prepares a heavy swing!")
@@ -755,36 +838,37 @@ class Ogre(Boss):
 
             damage = player.hurt(self, 3, 3)
             if player.affect(Dazed(), 2):
-                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)} damage and leaving you {c.effect(Dazed)}!")
+                slowprint(f"OGRE slams the ground, dealing {c.red(damage)} damage and leaving you {c.effect(Dazed)}!")
             else:
-                slowprint(f"OGRE slams the ground, dealing {c.harm(damage)}!")            
+                slowprint(f"OGRE slams the ground, dealing {c.red(damage)} damage!")            
 
         else:
             if player.dodge(self):
                 slowprint("You dodge OGRE's club!")
                 return
 
-            damage = player.hurt(self, 5)
+            damage = player.hurt(self, 4, 2)
 
             if player.affect(Bleeding(), 3):
-                slowprint(f"OGRE hits you with their club, dealing {c.harm(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                slowprint(f"OGRE hits you with their club, dealing {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
             else:
-                slowprint(f"OGRE hits you with their club, delaing {c.harm(damage)} damage!")
+                slowprint(f"OGRE hits you with their club, delaing {c.red(damage)} damage!")
 
 class Rat(Enemy):
 # a weak enemy who spawns in large groups
-# can inflict self with dexay, then infect the player
+# can inflict self with decay, then infects the player
     name = "RAT"
-    warning = "You hear small creatures running around..."
-    battleMessages = ["RAT snarls!",]
-    stealthMessages = [c.threat("RAT") + " is sleeping. Some of their bones are visible.",
-                      c.threat("RAT") + " is eating. They are a foul, decayed creature.",
-                      "You find " + c.threat("RAT") + ", who is much more mutated than any rat on the surface.",
-                      "You see " + c.threat("RAT") + ", who is not in very good condition.",
-                      c.threat("RAT") + " is roaming."]
+    warning = "You hear small creatures scampering around..."
+    battleMessages = ["RAT snarls!", 
+                      "RAT releases a battle cry!"]
+    stealthMessages = [c.red("RAT") + " is sleeping. Some of their bones are visible.",
+                      c.red("RAT") + " is eating. They are a foul, decayed creature.",
+                      "You find " + c.red("RAT") + ", who is much more mutated than any rat on the surface.",
+                      "You see " + c.red("RAT") + ", who is not in very good condition.",
+                      c.red("RAT") + " is roaming."]
 
     maxHealth = 12
-    gold = 10
+    gold = 7
     awareness = 2
     stealth = 1
     
@@ -796,6 +880,9 @@ class Rat(Enemy):
     def __init__(self):
         if "stronger" in self.mutations:
             self.maxHealth += 4
+        
+        self.isToxic = "toxic" in self.mutations
+        self.isHungry = "hungrier" in self.mutations
 
         self.maxHealth -= randint(1, 4)
 
@@ -812,68 +899,204 @@ class Rat(Enemy):
     def attack(self, enemies):
         # inflicts self with decay
         if self.corruption == 1:
-            self.corruption += 1
             effect = Decay
             if self.isToxic:
                 effect = Poisoned
 
             self.affect(effect())
             print(f"RAT becomes infected with {c.effect(effect)}.")
-            return
 
-        # dodge
+        # rats are easier to dodge
+        player.dodgeChance += 15
         if player.dodge(self):
             print("RAT leaps at you, but you avoid them.")
+            player.dodgeChance -= 15
             return
+        player.dodgeChance -= 15
 
-        # inflicts plater with decay
-        if self.corruption > 1 and randint(0, 1):
+        # inflicts player with decay
+        if self.corruption == 1:
+            self.corruption += 1
+            
+            bonusDuration = 0
             effect = Decay
             if self.isToxic:
                 effect = Poisoned
+                bonusDuration += 4
 
             # effect last longer if you already have it
-            bonusDuration = 0
             for i in range(len(player.effects)):
                 if type(player.effects[i]) == effect:
-                    bonusDuration = player.effectDurations[i] - 1
+                    bonusDuration = player.effects[i].duration - 1
                     break
 
             if player.affect(effect(), 4 + bonusDuration):
                 damage = player.hurt(self, 4)
-                print(f"RAT bites you for {c.damage(damage)} damage, infecting you with {c.effect(effect)}!")
+                print(f"RAT bites you for {c.red(damage)} damage, infecting you with {c.effect(effect)}!")
+                return
+            else:
+                damage = player.hurt(self, 4)
+                print(f"RAT bites you for {c.red(damage)} damage, but you resist {c.effect(effect)}!")
                 return
         
         # eats teammate
-        if self.health < 10 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
-            possibleTargets = enemies
-            possibleTargets.remove(self)
-            target = choice(possibleTargets)
+        if self.health < 8 and randint(0, 1) and len(enemies) > 1 and self.isHungry:
+            selfIndex = enemies.index(self)
+            
+            enemies.remove(self)
+            target = choice(enemies)
+
+            enemies.insert(selfIndex, self)
 
             damage = target.hurt(self, 3)
             healing = self.heal(5)
-            print(f"RAT bites their teammate {target.name} for {c.harm(damage)}, healing themselves {c.heal(healing)} health!")
+            print(f"RAT bites their teammate {target.name} for {c.red(damage)} damage, healing themselves {c.green(healing)} health!")
             return
             
         # nibbles through armor
         if randint(0, 2) == 2 and player.armor != None:
-            damage = player.hurt(self, 4, 2)
+            piercing = 2
+            if player.armorClass > 4:
+                piercing += 1
+            damage = player.hurt(self, 4, piercing)
             player.armor.degrade()
-            print(f"RAT nibbles through your armor, {c.harm('degrading')} it and dealing {c.harm(damage)} damage!")
+            print(f"RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
             return
 
         # standard attack
         if self.isHungry and randint(0, 1):
             damage = player.hurt(self, 4)
             healing = self.heal(2)
-            print(f"RAT bites you for {c.harm(damage)} damage, restoring {c.heal(healing)} health!")
+            print(f"RAT bites you for {c.red(damage)} damage, restoring {c.green(healing)} health!")
         else:
             damage = player.hurt(self, 4)
-            print(f"RAT leaps at you, biting you for {c.harm(damage)} damage!")
+            print(f"RAT leaps at you, biting you for {c.red(damage)} damage!")
+
+class SewerRat(Enemy):
+# a slightly tougher rat that can inflict bleeding and has an armor piercing attack
+# if the player is bleeding, it can inflict rat disease
+    name = "SEWER RAT"
+    warning = "You smell a rotten scent..."
+    battleMessages = ["SEWER RAT hisses!",
+                      "SEWER RAT has found its next meal!"]
+    stealthMessages = [c.red("SEWER RAT") + " is much less decayed than the other rats, but is much more mutated.",
+                       "You encounter " + c.red("SEWER RAT") + ", who looks severely infected.",
+                       c.red("SEWER RAT") + " eating the decayed corpse of another rat."]
+    
+    maxHealth = 14
+    gold = 9
+    awareness = 4
+    stealth = 1
+
+    armorClass = 1
+    dodgeChance = 5
+
+    def attack(self, enemies):
+        if player.dodge(self):
+            print("You dodge SEWER RAT's attack.")
+            return
+        
+        if randint(0, 1):
+            damage = player.hurt(self, 3, 2)
+            player.armor.degrade()
+
+            print(f"SEWER RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
+            return
+        
+        else:
+            damage = player.hurt(self, 3)
+
+            isBleeding = False
+            for effect in player.effects:
+                if type(effect) == Bleeding:
+                    isBleeding = True
+                    break
+
+            if isBleeding:
+                player.affect(RatDisease())
+                print(f"SEWER RAT bites you for {c.red(damage)} damage, infecting your wound with {c.effect(RatDisease)}!")
+                return
+            
+            else:
+                player.affect(Bleeding(), randint(4, 5))
+                print(f"SEWER RAT bites you for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
+                return
+
+
+class RatBeast(Enemy):
+# tough enemy, rages when low health, loses hp over time
+# can bite and ram, starts injured and with a random effect
+    name = "RAT BEAST"
+    warning = "You hear a loud wheezing..."
+    battleMessages = ["RAT BEAST lumbers towards you!",
+                     "RAT BEAST lets out a loud roar!"]
+    stealthMessages = [c.red("RAT BEAST") + " is wandering.",
+                      c.red("RAT BEAST") + " is looking for their next meal.",
+                      "You encounter a " + c.red("RAT BEAST") + ", a rat the size of a bear."]
+
+    maxHealth = 32
+    gold = 15
+    awareness = 5
+    stealth = 1
+
+    immunity = -1
+    armorClass = 1
+
+    isRaged = False
+
+    def __init__(self):
+        self.maxHealth -= randint(0, 2)
+        super().__init__()
+        self.health -= randint(0, 4)
+
+        effect = choice([Bleeding, Decay, Dazed, Poisoned, Regeneration, WellFed, Burned])
+        self.affect(effect(), randint(4, 6))
+
+    def do_turn(self, enemies):
+        super().do_turn(enemies)
+
+        if randint(0, 1):
+            print("RAT BEAST decays.")
+            self.health -= randint(2, 3)
+            self.maxHealth -= randint(1, 2)
+
+        if self.health < 16 and not self.isRaged:
+            self.isRaged = True
+            self.strength += 2
+            print(choice([
+                "RAT BEAST is becoming desperate!",
+                "RAT BEAST is enraged!"
+            ]))
+
+    def attack(self, enemies):
+        if randint(0, 1):
+            if player.dodge(self):
+                print("RAT BEAST lunges at you, but you dodge.")
+                return
+
+            damage = player.hurt(self, 6)
+            if randint(0, 1):
+                player.affect(Bleeding(), randint(5, 7))
+                print(f"RAT BEAST bites you for {c.red(damage)} damage, inflicting {c.effect(Bleeding)}!")
+            else:
+                print(f"RAT BEAST bites you for {c.red(damage)} damage!")
+
+        else:
+            player.dodgeChance += 5
+            if player.dodge(self):
+                print(f"You evade RAT BEAST, and they hit a wall, leaving them {c.effect(Dazed)}.")
+                self.affect(Dazed(), 2)
+                player.dodgeChance -= 5
+                return
+            player.dodgeChance -= 5
+
+            damage = player.hurt(self, 5, 3)
+            player.affect(Dazed(), randint(1, 2))
+            print(f"RAT BEAST rams you for {c.red(damage)} damage, leaving you {c.effect(Dazed)}!")
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
-    "crossroads":[([Rat, Rat], 6), ([Rat, Rat, Rat], 6)]
+    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast,], 6)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 

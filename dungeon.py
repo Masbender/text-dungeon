@@ -34,8 +34,9 @@ def sort_inventory():
     weapons = []
     wands = []
     healing = []
-    scrolls = []
+    consumables = []
     apparel = []
+    scrolls = []
     misc = []
 
     for item in player.inventory:
@@ -49,10 +50,12 @@ def sort_inventory():
             scrolls.append(item)
         elif issubclass(type(item), items.Armor) or issubclass(type(item), items.Ring):
             apparel.append(item)
+        elif issubclass(type(item), items.Consumable):
+            consumables.append(item)
         else:
             misc.append(item)
 
-    player.inventory = weapons + wands + healing + scrolls + apparel + misc
+    player.inventory = weapons + wands + healing + consumables + apparel + scrolls + misc
 
 
 def item_list():
@@ -121,25 +124,33 @@ class Battle:
         self.isSurpriseAttack = isSurprise
 
     def start_battle(self):
-        slowprint(c.desc(choice(self.enemies[0].battleMessages)))
+        slowprint(c.blue(choice(self.enemies[0].battleMessages)))
         separator()
 
-        canRun = True
         if self.enemies[0].isSpecial:
-            slowprint(c.warning(f"There is no escape from this fight."))
-            canRun = False
+            slowprint(c.red(f"There is no escape from this fight."))
         
         while not self.battleOver:
-            self.player_turn()
-
+            if player.stunned:
+                player.stunned = False
+                print(c.red("You fail to notice their presence.."))
+            else:
+                self.player_turn()
+            
+            canRun = True
             allStunned = True
-            removedEnemies = []
             for enemy in self.enemies:
                 if not enemy.stunned: # tracks if any enemies are not stunned
                     allStunned = False
+                if enemy.isSpecial:
+                    canRun = False
             
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
+
+            # checks if enemies should die
+            removedEnemies = []
+            for enemy in self.enemies:
                 if enemy.health <= 0:
                     slowprint(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
@@ -167,7 +178,7 @@ class Battle:
     def print_battle(self):
         for creature in self.enemies:
             print(creature.portrait)
-            print((c.threat("(!) ") * creature.isSpecial) + f"{c.threat(creature.name)} : [{c.health_status(creature.health, creature.maxHealth)} ♥] [{creature.armorClass} AC]")
+            print((c.red("(!) ") * creature.isSpecial) + f"{c.red(creature.name)} : [{c.health_status(creature.health, creature.maxHealth)} ♥] [{creature.armorClass} AC]")
             
             print_effects(creature)
 
@@ -189,7 +200,7 @@ class Battle:
         update_effects(player, self.enemies)
 
     def run_prompt(self): # if all enemies are stunned, the player can choose to run
-        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False)
+        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False, False)
 
         if playerInput == "run":
             self.battleOver = True
@@ -226,7 +237,7 @@ class Floor:
             for I in range(len(self.map)):
                 # player is represented as 'o'
                 if i == self.posY and I == self.posX:
-                    lines[i].append(c.player('o'))
+                    lines[i].append(c.blue('o'))
                 # unknown is represented as '?'
                 elif self.map[i][I] == '?':
                     lines[i].append('?')
@@ -238,10 +249,10 @@ class Floor:
                     lines[i].append('↓')
                 # shops and chests are represented as yellow !
                 elif self.map[i][I].specialAction == "shop" or self.map[i][I].specialAction == "unlock chest":
-                    lines[i].append(c.special('!'))
+                    lines[i].append(c.yellow('!'))
                 # enemies are represented as red !
                 elif self.map[i][I].check_detection():
-                    lines[i].append(c.threat('!'))
+                    lines[i].append(c.red('!'))
                 # locked rooms appear as locks
                 elif type(self.map[i][I]) == LockedRoom and self.map[i][I].blocked:
                     lines[i].append('x')
@@ -328,27 +339,27 @@ class Floor:
             options.append(f"inventory [{len(player.inventory)}/{player.inventorySize}]")
             
         if room.loot != []:
-            options.append(c.loot("take item"))
+            options.append(c.yellow("take item"))
             # prints items
             if len(room.loot) == 1:
-                print(f"There is a {c.loot(room.loot[0].get_name())} here.")
+                print(f"There is a {c.yellow(room.loot[0].get_name())} here.")
             else:
                 # gets a list of item names
                 names = []
                 for item in room.loot:
-                    names.append(c.loot(item.get_name()))
+                    names.append(c.yellow(item.get_name()))
                     
                 print(f"There is a {', '.join(names[0:-1])}, and a {names[-1]} here.")            
 
         # presents options to player and gathers input
         if room.specialAction != "":
-            options.append(c.special(room.specialAction))
+            options.append(c.yellow(room.specialAction))
 
         if room.threats != []:
-            options.append(c.threat("surprise attack"))
+            options.append(c.red("surprise attack"))
             
             for enemy in room.threats:
-                print(c.desc(choice(enemy.stealthMessages)))
+                print(choice(enemy.stealthMessages))
     
         return options
 
@@ -358,8 +369,8 @@ class Floor:
         options = ["cancel", "↑", "→", "↓", "←"]
 
         self.print_map()
-        separator(end="")
-        playerInput = gather_input("\nWhat direction do you move?", options) - 1
+        separator()
+        playerInput = gather_input("What direction do you move?", options, True) - 1
 
         if playerInput > -1: # -1 is cancel
             # - MOVE -
@@ -372,11 +383,17 @@ class Floor:
             room = self.get_room()
             if room.threats != []:
                 isNoticed = False
+                isSurprised = True
                 for enemy in room.threats: # checks if player is noticed
                     if enemy.awareness >= player.stealth:
                         isNoticed = True
+                    if enemy.stealth <= player.awareness:
+                        isSurprised = False
                         
                 if isNoticed:
+                    if isSurprised:
+                        player.stunned = True
+                        player.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
 
@@ -388,14 +405,52 @@ class Floor:
         
     def action_view_stats(self):
     # called when player decides to view stats
-        print(f"resistance : {player.resistance} | decreases the duration of poisons and injuries")
-        print(f"dodge : {player.dodgeChance}% | chance to avoid attacks")
-        print(f"stealth : {player.stealth} | your ability to be unnoticed")
-        print(f"awareness : {player.awareness} | detects enemies on the map")
-        print(f"appraisal : {player.appraisal} gold | helps you detect fair prices")
+        message = ""
+        # strength
+        message += f"{c.compare(player.strength, player.baseSTR)} STR : "
+        message += f"you do {player.strength * 0.75} extra damage with weapons "
+        message += f"and you can carry up to {c.compare(player.inventorySize, player.strength + 10)} items"
+
+        # constitution
+        message += f"\n\n{c.compare(player.constitution, player.baseCON)} CON : "
+        message += f"your maximum health is {c.compare(player.maxHealth, 20 + player.constitution * 2)}, "
+        message += f"and your resistance level is {c.compare(player.resistance, player.constitution)}\n\t"
+
+        minor = [] # minor resistances
+        major = [] # major resistances
+
+        for effect in [entities.Poisoned, entities.Bleeding, entities.Burned, entities.Dazed, entities.OnFire, entities.BrokenBones]:
+            if effect.level < player.resistance:
+                if player.resistance - effect.level > 3:
+                    major.append(effect.name)
+                else:
+                    minor.append(effect.name)
+
+        if len(minor) > 0:
+            message += f"you have minor resistance to ({', '.join(minor)}) "
+        else:
+            message += "you have no minor resistances "
+
+        if len(major) > 0:
+            message += f"and major resistance to ({', '.join(major)})"
+        else:
+            message += "and no major resistances"
+        
+        message += f"\n\n{c.compare(player.dexterity, player.baseDEX)} DEX : "
+        message += f"you have a {c.compare(player.dodgeChance, player.dexterity * 5)}% chance to dodge attacks, and your stealth is level {c.compare(player.stealth, player.dexterity)}"
+        
+        message += f"\n\n{c.compare(player.perception, player.basePER)} PER : "
+        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you can appraise items with a value of {c.compare(player.appraisal, player.perception * 25 + 50)} gold or less"
+        
+        message += f"\n\n{c.compare(player.intelligence, player.baseINT)} INT : "
+        message += f"your gear degrades {100 - player.intelligence * 10}% of the time"
+
+        print(message)
+
+        print(f"\nYou have {player.armorClass} AC, granting {player.armorClass / 2} damage resistance.")
         
         if player.gold > 0:
-            print(f"You have {c.highlight(str(player.gold))} gold.\n")
+            print(f"You have {c.yellow(str(player.gold))} gold.\n")
 
         # prints effects
         for i in range(len(player.effects)):
@@ -424,7 +479,7 @@ class Floor:
         # gathers input if more than one item
         chosenItem = 0
         if len(room.loot) > 1:
-            chosenItem = gather_input("What do you pickup?", options) - 1
+            chosenItem = gather_input("What do you pickup?", options, True) - 1
 
         if chosenItem > -1: # -1 is cancel
             # moves item to inventory
@@ -438,7 +493,7 @@ class Floor:
         while True:
             options = ["back"] + item_list()
             
-            playerInput = gather_input("\nSelect an item:", options) - 1
+            playerInput = gather_input("Select an item:", options, True) - 1
 
             # exits the loop if player selects "back"
             if playerInput == -1:
@@ -462,12 +517,12 @@ class Floor:
             print(chosenItem.get_name())
             chosenItem.inspect()
             if chosenItem.enchantment > 0:
-                print(f"This item is {c.blessed('blessed')}.")
+                print(f"This item is {c.green('blessed')}.")
             elif chosenItem.enchantment < 0:
-                print(f"This item is {c.cursed('cursed')}, and cannot be dropped.")
+                print(f"This item is {c.red('cursed')}, and cannot be dropped.")
 
             # asks for input
-            playerInput = gather_input("What do you do with " + chosenItem.get_name() + "?", options, False)
+            playerInput = gather_input("\nWhat do you do with " + chosenItem.get_name() + "?", options, True, False)
 
             if playerInput == chosenItem.usePrompt:
                 chosenItem.consume(self)
@@ -498,11 +553,11 @@ class Floor:
         # displays items and forms options
         for item in room.stock:
             options.append("buy " + item.get_name())
-            print(f"{item.get_name()}, costs {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
+            print(f"{item.get_name()}, {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
 
-        print(f"\nYou have {c.highlight(str(player.gold))} gold.")
+        print(f"\nYou have {c.yellow(str(player.gold))} gold.")
 
-        playerInput = gather_input(f"What would you like to buy?", options) - 1
+        playerInput = gather_input(f"What would you like to buy?", options, True) - 1
 
         if playerInput > -1:
             golemsDeal = room.stock[playerInput]
@@ -512,24 +567,24 @@ class Floor:
             playersPrice = 0
 
             while True:
-                print(f"{golemsDeal.get_name()} costs {c.deal_bad(golemsDeal.get_price(True, True))} gold.\n")
+                print(f"{golemsDeal.get_name()} costs {c.red(golemsDeal.get_price(True, True))} gold.\n")
                 
                 if len(playersDeal) > 0:
-                    print(f"Your deal (worth {c.deal_good(str(playersPrice))} gold):")
+                    print(f"Your deal (worth {c.green(str(playersPrice))} gold):")
                     for item in playersDeal:
                         print(f"{item.get_name()} is worth {item.get_price(False, True)} gold,")
                 
                 if playersPrice < golemsPrice:
-                    print(f"This deal will cost you {c.deal_bad(str(golemsPrice - playersPrice))} gold.")
+                    print(f"This deal will cost you {c.red(str(golemsPrice - playersPrice))} gold.")
                 else:
-                    print(c.deal_good("This deal will not cost you any gold."))
+                    print(c.green("This deal will not cost you any gold."))
 
                 options = ["cancel", "accept deal", "undo"]
 
                 for item in player.inventory:
-                    options.append(f"{item.get_name()}, worth {item.get_price(False, False)} gold")
+                    options.append(f"{item.get_name()}, {item.get_price(False, False)} gold")
 
-                playerInput = gather_input(f"Do you add any items to the deal? (You have {c.highlight(str(player.gold))} gold)", options) - 3
+                playerInput = gather_input(f"\nDo you add any items to the deal? (You have {c.yellow(str(player.gold))} gold)", options, True) - 3
 
                 if playerInput == -3:
                     for item in playersDeal:
@@ -540,14 +595,14 @@ class Floor:
 
                 elif playerInput == -2:
                     if playersPrice + player.gold < golemsPrice:
-                        print(c.warning(choice(["\"YOU DARE TRY TO SCAM ME?\"", "\"DO YOU THINK I'M A FOOL?\"", "\"YOU CLEARLY CAN'T AFFORD THIS.\""])))
+                        print(c.red(choice(["\"YOU DARE TRY TO SCAM ME?\"", "\"DO YOU THINK I'M A FOOL?\"", "\"YOU CLEARLY CAN'T AFFORD THIS.\""])))
                     else:
                         goldSpent = 0
                         if playersPrice < golemsPrice:
                             goldSpent = golemsPrice - playersPrice
                             player.gold -= goldSpent
                             
-                        print(f"You buy {c.highlight(golemsDeal.get_name())} for {c.highlight(goldSpent)} gold.")
+                        print(f"You buy {c.yellow(golemsDeal.get_name())} for {c.yellow(goldSpent)} gold.")
 
                         if goldSpent > 0:
                             print("The golem absorbs the gold.")
@@ -609,7 +664,7 @@ class Floor:
         
         if room.areEnemiesAware:
             slowprint("You have already fought these enemies, they will not be surprised.")
-            playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"])
+            playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"], True)
 
             if playerInput == 0:
                 return
@@ -644,13 +699,13 @@ class Floor:
             options = self.get_options()
             
             print_player_info()
-            playerInput = gather_input("What do you do?", options, False)
+            playerInput = gather_input("What do you do?", options, False, False)
 
             actions = {
                 "move":self.action_move, "wait":self.action_wait, 
                 "view stats":self.action_view_stats, f"inventory [{len(player.inventory)}/{player.inventorySize}]":self.action_inventory,
-                c.loot("take item"):self.action_take_item, c.special("shop"):self.action_shop,
-                c.special("unlock chest"):self.action_unlock_chest, c.threat("surprise attack"):self.action_surprise
+                c.yellow("take item"):self.action_take_item, c.yellow("shop"):self.action_shop,
+                c.yellow("unlock chest"):self.action_unlock_chest, c.red("surprise attack"):self.action_surprise
             }
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
@@ -659,7 +714,7 @@ class Floor:
             elif playerInput == "debug : reveal map":
                 self.map = self.layout
 
-            elif playerInput == c.special("descend stairs"):
+            elif playerInput == c.yellow("descend stairs"):
                 break
 
 class Room:
@@ -687,13 +742,13 @@ class Room:
 
 class Chest(Room):
     blocked = False
-    description = "There is a " + c.special("chest") + " here with a " + c.highlight("gold lock") + "."
+    description = "There is a " + c.yellow("chest") + " here with a " + c.yellow("gold lock") + "."
     specialAction = "unlock chest"
 
-    def __init__(self):
+    def __init__(self, depth):
         self.loot = []
         self.threats = []
-        self.hiddenLoot = [items.gen_loot()]
+        self.hiddenLoot = [items.gen_loot(depth)]
 
     def unlock_chest(self):
         if unlock(items.GoldKey):
@@ -724,7 +779,7 @@ class Wall(Room):
         for item in player.inventory:
             options.append(item.get_name())
         
-        itemUsed = gather_input("How do you destroy it?", options)
+        itemUsed = gather_input("How do you destroy it?", options, True)
 
         # checks if item works then uses it
         tunnelDug = False
@@ -756,7 +811,7 @@ class LockedRoom(Room):
 
 class Stairs(Room):
     blocked = False
-    description = "There are " + c.highlight("stairs") + " here that lead down."
+    description = "There are " + c.yellow("stairs") + " here that lead down."
     specialAction = "descend stairs"
     
     def __init__(self):
@@ -765,14 +820,14 @@ class Stairs(Room):
 
 class Shop(Room):
     blocked = False
-    description = "You stumble upon the " + c.highlight("SHOPKEEPER") + ", an ancient stone golem."
+    description = "You stumble upon the " + c.yellow("SHOPKEEPER") + ", an ancient stone golem."
     specialAction = "shop"
 
     def __init__(self, depth):
         self.loot = []
         self.threats = []
 
-        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot()]
+        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot(depth)]
         if self.stock[0].enchantable:
             self.stock[0].enchantment += 1
         
@@ -805,7 +860,7 @@ def gen_room(area, depth, type):
     elif type == 3:
         room.description = "This is a secret room."
         
-        loot.append(items.gen_loot())
+        loot.append(items.gen_loot(depth))
         
         for i in range(randint(1, 2)):
             loot.append(items.gen_item(depth + 3 - i))
@@ -817,16 +872,26 @@ def gen_room(area, depth, type):
     
 class Generator:
 # generates floors
-    def gen_floor(self, area, depth, size):                                                 
-        # stores info about progression
+    def initialize_floor(self, area, depth, size):
         self.area = area
         self.depth = depth
+        self.size = size
 
-        self.modifier = ""
+        self.modifier = "" 
+        if self.size > 4 and randint(0, 1): # can assign a random modifier except on the first floor
+            self.modifier = choice(["dangerous", "large", "cursed"])
         self.entryMessage = ""
 
-        # stores info about the layout
-        self.size = size
+        # adds these features before finishing generation
+        self.addRooms = []
+        self.addItems = []
+        self.addEnemies = []
+
+        # selects the generation format early, so it can be overriden
+        self.generation = choice([self.gen_hall, self.gen_intersection, self.gen_square])
+
+    def generate_floor(self):
+        # stores the layout
         self.layoutNums = [] # this is the layout in integers
         self.layoutRooms = [] # layoutNums is converted into rooms
         self.startY = 0
@@ -838,13 +903,25 @@ class Generator:
         self.hiddenWalls = []
         self.sideRooms = []
 
-        # adds these features before finishing generation
-        self.addRooms = [LockedRoom(self.depth)]
-        self.addItems = [items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant, items.ScrollRemoveCurse, items.ScrollRepair])()]
-        self.addEnemies = []
+        if self.modifier != "":
+            self.entryMessage += {
+                "flooded":c.blue("The ground is flooded with water."),
+                "large":c.blue("Your footsteps echo across the floor."),
+                "dangerous":c.red("This floor is unusually crowded, watch your back."),
+                "cursed":c.red("A malevolent energy lurks in the items here.")
+            }[self.modifier] + "\n"
+
+        # applies "large" modifier
+        if self.modifier == "large":
+            self.size += 1
+
+        # forms a square in layoutNums
+        for i in range(self.size):
+            self.layoutNums.append([0] * self.size)
 
         # mutates rats
         if self.area == "crossroads" and self.depth > 3:
+            # checks which mutations can be made
             mutationList = ["toxic", "stronger", "hungrier"]
             for mutation in entities.Rat.mutations:
                 mutationList.remove(mutation)
@@ -852,35 +929,13 @@ class Generator:
             mutation = choice(mutationList)
 
             entities.Rat.mutations.append(mutation)
-            self.entryMessage += c.warning({
+            self.entryMessage += c.red({
                 "toxic":"The rats have mutated.\n",
                 "stronger":"The rats grow stronger.\n",
                 "hungrier":"The rats are hungry.\n"
             }[mutation])
-        
-        # assigns modifier
-        if self.size > 4 and randint(0, 1):
-            self.modifier = choice(["dangerous", "large", "cursed"])
 
-            self.entryMessage += {
-                "dangerous":c.warning("You feel unsafe, watch your back.\n"),
-                "large":c.desc("You hear your footsteps echo across the floor.\n"),
-                "cursed":c.warning("A malevolent energy is lurking here.\n")
-            }[self.modifier]
-
-            if self.modifier == "large":
-                self.size += 1
-
-        # forms a square
-        for i in range(self.size):
-            self.layoutNums.append([0] * self.size)
-
-        # generates rooms
-        generation = choice([self.gen_hall, self.gen_intersection, self.gen_square])
-        generation()
-            
-        self.count_rooms()
-        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
+        self.generation()
 
         # generates secret room
         if len(self.hiddenWalls) > 0:
@@ -901,18 +956,19 @@ class Generator:
                 
                 self.layoutRooms[y].append(room)
 
-        # generates starting room
-        #self.layoutRooms[self.startY][self.startX] = Room()
-        #if self.depth != 0:
-        #    self.layoutRooms[self.startY][self.startX] = StairsUp()
-
         self.addItems.extend(self.gen_random_items(self.size + randint(1, 2), self.size - randint(1, 2)))
         
         # spawns enemies
         if self.modifier == "dangerous":
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size, self.depth % 3, self.depth % 3))
+        elif self.modifier == "flooded":
+            self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 2, self.depth % 3, self.depth % 3))
+            choice(self.addEnemies).append(entities.SewerRat())
+            self.addEnemies.append([entities.SewerRat(), entities.SewerRat()])
         else:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
+
+        return self.finalize_floor()
     
     def gen_hall(self):
     # generates a snake-like hall
@@ -948,6 +1004,9 @@ class Generator:
     
         # addds stairs down at the end
         self.layoutNums[y][x] = -1
+        
+        self.count_rooms()
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_intersection(self):
     # generates two intersecting halls
@@ -967,6 +1026,9 @@ class Generator:
         self.startY = hallX
 
         self.layoutNums[choice([0, self.size - 1])][hallY] = -1
+        
+        self.count_rooms()
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_square(self):
     # generates a ring around that leaves one wall between it and the border
@@ -988,6 +1050,9 @@ class Generator:
             endY = choice([1, self.size - 2])
 
         self.layoutNums[endY][endX] = -1
+        
+        self.count_rooms()
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def gen_random(self):
     # generates a random layout
@@ -1039,6 +1104,9 @@ class Generator:
                 self.layoutNums[y][x] = 1
 
         self.layoutNums[y][x] = -1
+        
+        self.count_rooms()
+        self.gen_rooms(((self.size * self.size) - len(self.rooms)) // 3)
 
     def count_rooms(self):
         for y in range(self.size):
@@ -1091,10 +1159,10 @@ class Generator:
         
         # spawns gear
         #chosenGear = []
-        lootPools = [items.gen_weapon, items.gen_armor, items.gen_wand]
+        lootPools = [items.gen_weapon, items.gen_armor]
         for i in range(gearAmount):
             lootpool = None
-            if i < 3: # always generates at least one weapon, armor, and wand
+            if i < 2: # always generates at least one weapon, armor, and wand
                 lootPool = lootPools[i]
             else:
                 lootPool = choice(lootPools)
@@ -1105,7 +1173,7 @@ class Generator:
 
             # can't have more than 2 of the same item per floor
             #while chosenGear.count(type(randomItem)) > 1:
-            randomItem = lootPool(self.depth)
+            #randomItem = lootPool(self.depth)
 
             # cursed modifier has a 1 in 3 chance to degrade every item
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
@@ -1118,7 +1186,7 @@ class Generator:
         for i in range(itemAmount):
             randomItem = items.gen_item(self.depth)
             spawnedItems.append(randomItem)
-
+        
         return spawnedItems
 
     def spawn_enemies(self):
@@ -1167,7 +1235,7 @@ class Generator:
 
             validRooms.remove(coords)
 
-    def finish_floor(self):
+    def finalize_floor(self):
         self.spawn_rooms()
         self.spawn_items()
         self.spawn_enemies()

@@ -62,9 +62,9 @@ class Item:
         message += self.name
 
         if self.enchantment > 0:
-            message += c.blessed(f" (+{self.enchantment})")
+            message += c.green(f" (+{self.enchantment})")
         elif self.enchantment < 0:
-            message += c.cursed(f" (-{-self.enchantment})")
+            message += c.red(f" (-{-self.enchantment})")
 
         return message
         
@@ -110,7 +110,9 @@ class Item:
         # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
 
         if shop:
-            price = int(price * 1.2) # 20% more expensive why buying
+            price = int(price * 1.2) # 20% more expensive when buying
+        else:
+            price = int(price / 1.2) # 20% less expensive when selling
         
         if player.appraisal < price:
             if shop:
@@ -224,36 +226,57 @@ class Sword(Weapon):
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            if self.target.affect(entities.Bleeding, self.bleedDuration):
-                slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+            if self.target.affect(entities.Bleeding(), self.bleedDuration):
+                slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
-class JudgementSword(Sword):
+class CursedSword(Sword):
 # same as sword but extra damage and burning against undead
-    name = "Bane of the Undead"
+    name = "Cursed Blade"
     value = 100
     maxUses = 20
 
+    enchantment = -1
+    enchantable = False
+
     damage = 5
     bleedChance = 3
-    bleedDuration = 5
+    bleedDuration = 7
 
-    def inspect(self):
-        super().inspect()
-        print("Burns undead enemies.")
-
-    def attack(self, enemies):
-        super().attack(enemies)
-
-        # sets undead on fire
-        if self.target.undead:
-            self.target.affect(entities.Burned())
-            self.target.health -= 3
-            slowprint(f"{self.target.name} is burned by the sword, taking {c.harm(3)} extra damage.")
+    usePrompt = "sacrifice health"
     
+    def inspect(self):
+        self.enchantment *= -1
+        super().inspect()
+        self.enchantment *= -1
+        print("Becomes stronger when cursed, and weaker when blessed.")
+        print("You can sacrifice your max health to repair and curse the sword further.")
+        print(f"You currently have {c.health_status(player.health, player.maxHealth)} health.")
+
+    def consume(self, floor):
+        self.uses = self.maxUses
+        healthLost = 1
+        # becomes more expensive depending the level of curse
+        if self.enchantment < 0:
+            healthLost -= self.enchantment
+            
+        self.enchantment -= 1
+        player.maxHealth -= healthLost
+        player.health -= healthLost
+
+        player.affect(entities.Bleeding(), healthLost)
+
+        print(f"Your sacrifice makes of {c.red(healthLost)} health the blade stronger, but you are now bleeding.")
+        return True
+    
+    def attack(self, enemies):
+        self.enchantment *= -1
+        super().attack(enemies)
+        self.enchantment *= -1
+
         return True
 
 class Spear(Weapon):
@@ -279,7 +302,30 @@ class Spear(Weapon):
             
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        return True
+
+class EnchantedSpear(Spear):
+# same as spear but heals you when you attack alive enemies
+    name = "Enchanted Spear"
+    value = 100
+    maxUses = 20
+
+    damage = 5
+    armorPiercing = 3
+
+    def inspect(self):
+        super().inspect()
+        print("It heals you when you attack non-undead enemies.")
+
+    def attack(self, enemies):
+        super().attack(enemies)
+
+        if not self.target.undead:
+            healing = player.heal(randint(1, 2))
+            if healing > 0:
+                print(f"You heal {c.green(healing)} health.")
+
         return True
 
 class Mace(Weapon):
@@ -307,10 +353,10 @@ class Mace(Weapon):
 
         if randint(0, 11) < self.stunChance and self.uses > 0:
             self.target.stunned = True
-            slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage, leaving them {c.harm('stunned')}.")
+            slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.red('stunned')}.")
             return True
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -330,7 +376,7 @@ class FlamingMace(Mace):
         super().attack(enemies)
 
         if randint(0, 1):
-            if self.target.affect(entities.OnFire, randint(2, 3)):
+            if self.target.affect(entities.OnFire(), randint(2, 3)):
                 slowprint(f"{self.target.name} is set on fire.")
 
         return True
@@ -365,27 +411,27 @@ class Dagger(Weapon):
 
         damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
-        slowprint(f"You attack {self.target.name} for {c.harm(damageDealt)} damage.")
+        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
     name = "Ebony Dagger"
     value = 100
-    maxUses = 20
+    maxUses = 15
 
     damage = 5
     sneakBonus = 3
 
     def inspect(self):
         super().inspect()
-        print("Your max health increases by 1 for every kill with the Ebony Dagger.")
+        print(f"Getting kills with this weapon can increase your max health.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
         # applies ebony dagger's effect
-        if self.target.health <= 0:
+        if self.target.health <= 0 and self.uses > 0 and randint(0, 2) < 2:
             player.maxHealth += 1
             slowprint("You absorb " + self.target.name + "'s power.")
         
@@ -472,10 +518,10 @@ class HarmWand(Wand):
 
         if self.enchantment > 0:
             target.affect(entities.Bleeding(), self.enchantment)
-            print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
+            print(f"Your wand of harm does {c.red(5 + self.enchantment)} damage to {target.name}, leaving them {c.effect(entities.Bleeding)}.")
             return True
 
-        print(f"Your wand of harm does {c.harm(5 + self.enchantment)} damage to {target.name}.")
+        print(f"Your wand of harm does {c.red(5 + self.enchantment)} damage to {target.name}.")
         return True
 
 class PoisonWand(Wand):
@@ -497,7 +543,7 @@ class PoisonWand(Wand):
 
         if self.enchantment > 0:
             target.health -= self.enchantment
-            print(f"Your wand of poison does {c.harm(self.enchantment)} damage to {target.name}, and inflicts {c.effect(entities.Poisoned)}.")
+            print(f"Your wand of poison does {c.red(self.enchantment)} damage to {target.name}, and inflicts {c.effect(entities.Poisoned)}.")
             return True
 
         print(f"Your wand of poison inflicts {target.name} with {c.effect(entities.Poisoned)}.")
@@ -732,7 +778,7 @@ class InfernoRing(Ring):
     value = 100
 
     def inspect(self):
-        print("Increases your strength (STR) by 2.")
+        print("Increases your strength (STR) by 2, but doesn't increase inventory size.")
         print("When you are attacked, you might be burned (-1 AC).")
         print("The duration of burned depends on this items enchantment level.")
 
@@ -772,6 +818,67 @@ class IllusionRing(Ring):
 
         player.illusionRing = False
         player.dodgeChance -= 5 + 5 * enchantment
+
+class ArtifactRing(Ring):
+# can accept up to two other rings, then provides the bonuses of each of them
+# any enchantment levels are split between the two rings
+    name = "Artifact Ring"
+    value = 100
+
+    usePrompt = "activate"
+
+    ring1 = None
+    ring2 = None
+
+    def inspect(self):
+        if self.ring2 == None:
+            print("Can absorb the abilities of two other rings.")
+        else:
+            self.ring2.enchantment = self.enchantment // 2
+            self.ring2.inspect()
+
+        if self.ring1 != None:
+            self.ring1.enchantment = (self.enchantment + 1) // 2
+            self.ring1.inspect()
+
+    def consume(self, floor):
+        if self.usePrompt == "activate":
+            options = ["cancel"]
+            rings = []
+            for item in player.inventory:
+                if issubclass(type(item), Ring) and item != self:
+                    options.append(item.get_name())
+                    rings.append(item)
+
+            if len(options) == 1:
+                print(c.red("You don't have any rings to insert into Artifact Ring."))
+            else:
+                playerInput = gather_input("Select a ring to insert.", options, True) - 1
+                if playerInput > -1:
+                    ring = rings[playerInput]
+                    if self.ring1 == None:
+                        self.ring1 = ring
+                    else:
+                        self.ring2 = ring
+                        self.usePrompt = "equip"
+                    player.inventory.remove(ring)
+                    if ring == player.ring:
+                        ring.unequip()
+                        player.ring = None
+                    self.enchantment += ring.enchantment
+                    print("Artifact Ring has absorbed the abilities of " + ring.get_name() + ".")
+        else:
+            super().consume(floor)
+
+    def equip(self):
+        self.ring1.enchantment = (self.enchantment + 1) // 2
+        self.ring1.equip()
+        self.ring2.enchantment = self.enchantment // 2
+        self.ring2.equip()
+
+    def unequip(self):
+        self.ring1.unequip()
+        self.ring2.unequip()
 
 class BuffRing(Ring):
 # boosts one stat by 1 level
@@ -863,13 +970,8 @@ class Medicine(Item):
 
     def consume(self, floor):
         self.degrade()
-        # heals and apples regeneration
-        healingDone = player.heal(self.healing + randint(-1, 1))
 
-        if self.effectApplied != None:
-            player.affect(self.effectApplied(), self.effectDuration)
-
-        # cures bleeding
+        # cures effects
         removedEffectsIndexes = []
         for i in range(len(player.effects)):
             if type(player.effects[i]) in self.effectsCured:
@@ -881,6 +983,12 @@ class Medicine(Item):
             removedEffects.append(player.effects[i].name)
             player.effects[i].reverse()
             player.effects.pop(i)
+
+        # heals and apples effects
+        healingDone = player.heal(self.healing + randint(-1, 1))
+
+        if self.effectApplied != None:
+            player.affect(self.effectApplied(), self.effectDuration)
 
         # prints out a message based on healing and removed effects
         message = f"The {self.name} restores {healingDone} health"
@@ -900,6 +1008,25 @@ class Medicine(Item):
         print(message + ".")
 
         return True
+
+class HealingVial(Medicine):
+# cures most effects, heals all health
+    name = "vial of healing"
+    value = 70
+    maxUses = 1
+    usePrompt = "drink"
+
+    healing = 100
+    effectsCured = [entities.RatDisease, entities.BrokenBones, entities.Bleeding, entities.Burned, entities.Poisoned]
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("Heals all of your health and cures most effects.")
+
+    def degrade(self):
+        player.inventory.remove(self)
 
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
@@ -959,6 +1086,9 @@ class Rations(Medicine):
         print("You don't have enough time to eat!")
         return False
 
+    def degrade(self):
+        player.inventory.remove(self)
+
 class Scroll(Item):
 # one use item that is more powerful with higher intelligence
     maxUses = 1
@@ -1011,7 +1141,7 @@ class ScrollEnchant(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        itemIndex = gather_input("What item do you bless?", options)
+        itemIndex = gather_input("What item do you bless?", options, True)
 
         if itemIndex == 0: # 0 cancels
             return False
@@ -1055,7 +1185,7 @@ class ScrollRepair(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        chosenItem = gather_input("What item do you repair?", options)
+        chosenItem = gather_input("What item do you repair?", options, True)
 
         if chosenItem == 0: # 0 cancels
             return False
@@ -1080,14 +1210,21 @@ class ScrollRepair(Scroll):
             else:
                 print(item.name + " does not work with the scroll of repair")
                 return False
-        
-class Bomb(Item):
-    name = "bomb"
-    value = 40
+
+class Consumable(Item):
+# a one use item that varies slightly from the scroll
     maxUses = 1
+
+    def degrade(self):
+        player.inventory.remove(self)
+        return True
 
     def status(self):
         return ""
+        
+class Bomb(Consumable):
+    name = "bomb"
+    value = 40
 
     def inspect(self):
         print("Bombs can destroy walls, possibly revealing secrets.")
@@ -1102,16 +1239,32 @@ class Bomb(Item):
                 damage = 8
 
             damage = enemy.hurt(player, damage, 1, 0)
-            print(f"The bomb does {c.harm(damage)} damage to {enemy.name}!")
+            print(f"The bomb does {c.red(damage)} damage to {enemy.name}!")
 
-        player.inventory.remove(self)
+        self.degrade()
         return True
 
     def dig(self):
-        player.inventory.remove(self)
+        self.degrade()
         print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
+class StunBomb(Consumable):
+    name = "stun bomb"
+    value = 40
+
+    def inspect(self):
+        print("Stuns every enemy, giving you an opportunity to escape. Allows you to escape from any non-boss fight.")
+        print(f"Leaves enemies {c.effect(entities.Dazed)}, lowering their DEX and PER.")
+
+    def attack(self, enemies):
+        for enemy in enemies:
+            enemy.stunned = True
+            enemy.affect(entities.Dazed(True), 2)
+        print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
+        self.degrade()
+        return True
+    
 class IronKey(Item):
     name = "iron key"
     value = 20
@@ -1155,7 +1308,7 @@ class KnowledgeBook(Item):
         print(f"{player.baseSTR} STR | {player.baseCON} CON | {player.baseDEX} DEX | {player.basePER} PER | {player.baseINT} INT")
         
         options = ["cancel", "STR", "CON", "DEX", "PER", "INT"]
-        chosenStat = gather_input("What stat do you improve?", options, False)
+        chosenStat = gather_input("What stat do you improve?", options, True, False)
 
         if chosenStat == "cancel":
             return False
@@ -1163,7 +1316,7 @@ class KnowledgeBook(Item):
         if chosenStat == "STR":
             player.update_strength(1)
             player.baseSTR += 1
-            print("Your attacks are stronger now.")
+            print("Your attacks are stronger, you can carry more items.")
         elif chosenStat == "CON":
             player.update_constitution(1)
             player.baseCON += 1
@@ -1240,10 +1393,9 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 5)]
+standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2), (StunBomb, 3)]
 
-
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, SorcerersRock, EbonyDagger, FlamingMace, JudgementSword]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
@@ -1251,28 +1403,31 @@ def gen_item(quality):
     itemNum = randint(1, 16) + quality
 
     # makes sure that the chosen number isn't too high
-    if itemNum > 16: # 16 is placeholder value until more items are added
+    if itemNum > 20: # 16 is placeholder value until more items are added
         itemNum = 16
 
     # goes through each item until it finds one with a larger number than selected
     for item in standardLoot:
         if itemNum <= item[1]:
-            print(itemNum <= item[1])
             chosenItem = item[0]
             return chosenItem()
         else:
             itemNum -= item[1]
 
-def gen_loot():
+def gen_loot(quality):
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough
         return ScrollEnchant()
 
     item = choice(rareLoot)
     rareLoot.remove(item)
-    return item()
+    item = item()
+
+    if item.enchantable:
+        item.enchantment += (quality + randint(0, 1)) // 3
+    return item
 
 def gen_armor(quality):
-    armorLoot = [(Cloak, 3), (HeavyArmor, 6), (BuffRing, 5), (MagicRobe, 2)]
+    armorLoot = [(Cloak, 3), (HeavyArmor, 7), (BuffRing, 6)]
 
     finalArmor = None
     armor = gen_standard(armorLoot)
@@ -1322,4 +1477,4 @@ def gen_standard(gearList):
             itemNum -= item[1]
 
 def gen_gear(quality):
-    return choice([gen_armor, gen_wand, gen_weapon])(quality)
+    return choice([gen_armor, gen_weapon])(quality)
