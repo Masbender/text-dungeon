@@ -4,7 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 .vscode/launch.json
-*.p
+level.p
+player.p
 
 # replit files
 venv
