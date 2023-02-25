@@ -13,18 +13,22 @@ c = color
 load = False
 floors = []
 
-
-if input("Load previous save? (y/n) : ").lower() == 'y':
-    file1 = open("player.p", "rb")
-    file2 = open("level.p", "rb")
-    entities.player = pickle.load(file1)
-    player = entities.player
-    items.player = player
-    dungeon.player = player
-    floors = pickle.load(file2)
-    file1.close()
-    file2.close()
-else:
+load_save = input("Load previous save? (y/n) : ").lower()
+if load_save == 'y':
+    try:
+        file1 = open("player.p", "rb")
+        file2 = open("level.p", "rb")
+        entities.player = pickle.load(file1)
+        player = entities.player
+        items.player = player
+        dungeon.player = player
+        floors = pickle.load(file2)
+        file1.close()
+        file2.close()
+    except:
+        print("Error while loading save, creating new save instead.")
+        load_save = 'n'
+if load_save == 'n':
     # placeholder character selection
     print("\nGuard is a well equipped soldier.\nThey were patrolling the prison when they found themselves lost in the dungeon.\n")
     print("Thief is well rounded but poorly equipped.\nThey escaped their cell but got lost in the dungeon.\n")
@@ -104,6 +108,14 @@ else:
     # GENERATION END
 
 while True:
+    player.floor = None
+    file1 = open("player.p", "wb")
+    file2 = open("level.p", "wb")
+    pickle.dump(player, file1)
+    pickle.dump(floors, file2)
+    file1.close()
+    file2.close()
+
     player.currentFloor = floors[0]
     floors[0].enter_floor()
     floors.pop(0)
@@ -120,11 +132,4 @@ while True:
 
     for item in player.inventory:
         item.recharge()
-
-    player.floor = None
-    file1 = open("player.p", "wb")
-    file2 = open("level.p", "wb")
-    pickle.dump(player, file1)
-    pickle.dump(floors, file2)
-    file1.close()
-    file2.close()
+    
