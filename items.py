@@ -403,11 +403,9 @@ class Dagger(Weapon):
             slowprint(f"{self.target.name} dodges your attack!")
             return True
 
-        for effect in self.target.effects:
-            if isinstance(effect, entities.Surprised):
-                damageDealt += self.sneakBonus
-                slowprint("Sneak attack!")
-                break
+        if self.target.has_effect(entities.Surprised):
+            damageDealt += self.sneakBonus
+            slowprint("Sneak attack!")
 
         damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
 
@@ -1000,7 +998,7 @@ class Medicine(Item):
                 for i in range(len(removedEffects)):
                     if i == len(removedEffects) - 1:
                         message += ", and "
-                    else:
+                    elif i > 0:
                         message += ", "
 
                     message += removedEffects[i]

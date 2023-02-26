@@ -32,6 +32,7 @@ class Creature:
     health = 0
     effects = None
     stunned = False
+    canHeal = True
 
     #portrait
     portrait = """ _____
@@ -85,6 +86,12 @@ class Creature:
         self.update_intelligence(int - self.intelligence)
         self.update_perception(per - self.perception)
 
+    def has_effect(self, effectType):
+        for effect in self.effects:
+            if type(effect) == effectType:
+                return True
+        return False
+
     def dodge(self, attacker):
         number = randint(0, 99)
         return self.dodgeChance > number
@@ -122,6 +129,9 @@ class Creature:
 
     def heal(self, healthRestored):
     # heals health but makes sure it doesn't exceed max health
+        if not self.canHeal:
+            return 0
+        
         finalHealthRestored = healthRestored
         if self.health + healthRestored > self.maxHealth:
             finalHealthRestored = self.maxHealth - self.health
@@ -500,6 +510,22 @@ class Poisoned(Effect):
     def inspect(self):
         print("Lowers STR by 1, doesn't lower inventory size.")
         print("Deals 1 damage every turn.")
+
+class HealingBlocked(Effect):
+# prevents healing
+    name = "healing blocked"
+    color = c.effect_bad
+
+    def apply(self, target):
+        self.target = target
+        
+        self.target.canHeal = False
+
+    def reverse(self):
+        self.target.canHeal = True
+
+    def inspect(self):
+        print("Prevents healing.")
 
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
@@ -1006,11 +1032,7 @@ class SewerRat(Enemy):
         else:
             damage = player.hurt(self, 3)
 
-            isBleeding = False
-            for effect in player.effects:
-                if type(effect) == Bleeding:
-                    isBleeding = True
-                    break
+            isBleeding = player.has_effect(Bleeding)
 
             if isBleeding:
                 player.affect(RatDisease())
