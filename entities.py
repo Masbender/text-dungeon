@@ -1109,10 +1109,59 @@ class RatBeast(Enemy):
             player.affect(Dazed(), randint(1, 2))
             print(f"RAT BEAST rams you for {c.red(damage)} damage, leaving you {c.effect(Dazed)}!")
 
+class Goblin(Enemy):
+# dexterous enemy, has a dart the blocks healing and has a bandage
+    name = "GOBLIN"
+    warning = "You hear goblins..."
+    stealthMessages = [c.red("GOBLIN") + " is waiting.",
+                      c.red("GOBLIN") + " is keeping watch.",
+                      c.red("GOBLIN") + " is sleeping."]
 
+    maxHealth = 14
+    gold = 6
+    awareness = 4
+    stealth = 4
+
+    armorClass = 2
+    dodgeChance = 5
+
+    hasDart = True
+    hasBandage = True
+
+    def attack(self, enemies):
+        if self.hasBandage and self.health < 9:
+            self.hasBandage = False
+            healing = self.heal(4)
+            self.affect(Regeneration(), 4)
+            print(f"GOBLIN uses a bandage, restoring {c.green(healing)} health and applying {c.effect(Regeneration)}.")
+
+        elif self.hasDart and player.health < 13 and not player.has_effect(HealingBlocked):
+            self.hasDart = False
+            if player.dodge(self):
+                print("You dodge GOBLIN's dart.")
+                return
+            player.affect(HealingBlocked(), 5)
+            print(f"GOBLIN hits you with a dart, inflicting you with {c.effect(HealingBlocked)}!")
+
+        else:
+            if player.dodge(self):
+                print("You dodge GOBLIN's attack.")
+                return
+            damage = player.hurt(self, 4, 2)
+            print(f"GOBLIN attacks you for {c.red(damage)} damage!")
+
+class BuffedGoblin(Goblin):
+# same as goblin, but spawns alone and is stronger
+    maxHealth = 16
+    gold = 14
+
+    armorClass = 3
+    dodgeChance = 15
+    strength = 2
+    
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
-    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast,], 6)]
+    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast], 3), ([BuffedGoblin], 3)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
