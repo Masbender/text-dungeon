@@ -234,7 +234,7 @@ player = Player() # creates the one and only instance of player
 class Enemy(Creature):
 # subclasses of Enemy require a method named attack()
     # more identifying information
-    battleMessages = ["ENEMY notices you!"] # note that ENEMY is only colored in stealth due to the need to alert the player
+    battleMessages = [] # names are only colored in stealth due to the need to alert the player
     stealthMessages = [c.red("ENEMY") + " not notice you"]
     warning = "You feel uneasy..."
     undead = False
@@ -593,8 +593,6 @@ class Draugr(Enemy):
 # starts with armor but it degrades when hurt
 # can inflict bleeding
     name = "DRAUGR"
-    battleMessages = ["DRAUGR readies their axe with malicious intent!",
-                     "DRAUGR charges at you with their axe!"]
     stealthMessages = [c.red("DRAUGR") + " is on the hunt for human.",
                       c.red("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
     undead = True
@@ -638,8 +636,6 @@ class Ghoul(Enemy):
 # can dodge attacks and inflicts decay
     name = "GHOUL"
     warning = "You smell a foul stench..."
-    battleMessages = ["You confront GHOUL, a foul, agile beast!",
-                     "GHOUL detects your presence! It can barely see but has an excellent sense of smell."]
     stealthMessages = [c.red("GHOUL") + " is roaming.",
                       c.red("GHOUL") + " is waiting for human, they have yet to notice you."]
     undead = True
@@ -734,11 +730,9 @@ class Skeleton(Enemy):
 class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
     name = "SKELETON GUARD"
-    warning = "You hear the clanking of bones and metal..."
-    battleMessages = ["SKELETON GUARD raises their shield!",
-                    "SKELETON GUARD will not let it's training go to waste!"]
-    stealthMessages = [c.red("SKELETON GUARD") + " promised not to fall asleep this time... but has failed.",
-                       c.red("SKELETON GUARD") + " is determined to let none pass, but seems to have have failed."]
+    warning = "You hear the shuffling of bones..."
+    stealthMessages = [c.red("SKELETON GUARD") + " had promised not to fall asleep this time.",
+                       c.red("SKELETON GUARD") + " is determined to let none pass, but hasn't noticed you."]
     isSpecial = True
 
     maxHealth = 17
@@ -757,10 +751,11 @@ class Thief(Enemy):
 # hits you with a poison dart when at full health, might run away later in combat
     name = "THIEF"
     warning = "You are being watched..."
-    battleMessages = ["THIEF prepares a poison dart!",
-                     "THIEF eyes your gold pouch!"]
+    battleMessages = ["\"I see you got some items there, the collector will be pleased.\"",
+                     "You encounter THIEF!"]
     stealthMessages = [c.red("THIEF") + " is looking for a victim.",
-                      c.red("THIEF") + " is preparing poisons, and is unaware of your presence."]
+                      c.red("THIEF") + " is preparing poisons, and is unaware of your presence.",
+                      "A goblin " + c.red("THIEF") + " is roaming."]
 
     maxHealth = 16
     gold = 14
@@ -806,7 +801,8 @@ class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "OGRE"
     warning = "You hear the sounds of an ogre..."
-    battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\""]
+    battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\"",
+                     "\"Me hungry, human tasty. You'll be good, in a pasty.\""]
 
     maxHealth = 34
     gold = 60
@@ -884,9 +880,8 @@ class Rat(Enemy):
 # a weak enemy who spawns in large groups
 # can inflict self with decay, then infects the player
     name = "RAT"
-    warning = "You hear small creatures scampering around..."
-    battleMessages = ["RAT snarls!", 
-                      "RAT releases a battle cry!"]
+    warning = "You hear rats scampering around..."
+    battleMessages = ["You encounter a group of RATS!"]
     stealthMessages = [c.red("RAT") + " is sleeping. Some of their bones are visible.",
                       c.red("RAT") + " is eating. They are a foul, decayed creature.",
                       "You find " + c.red("RAT") + ", who is much more mutated than any rat on the surface.",
@@ -1002,8 +997,8 @@ class SewerRat(Enemy):
 # a slightly tougher rat that can inflict bleeding and has an armor piercing attack
 # if the player is bleeding, it can inflict rat disease
     name = "SEWER RAT"
-    warning = "You smell a rotten scent..."
-    battleMessages = ["SEWER RAT hisses!",
+    warning = "You hear rats scampering around..."
+    battleMessages = ["You encounter SEWER RAT!",
                       "SEWER RAT has found its next meal!"]
     stealthMessages = [c.red("SEWER RAT") + " is much less decayed than the other rats, but is much more mutated.",
                        "You encounter " + c.red("SEWER RAT") + ", who looks severely infected.",
@@ -1050,8 +1045,6 @@ class RatBeast(Enemy):
 # can bite and ram, starts injured and with a random effect
     name = "RAT BEAST"
     warning = "You hear a loud wheezing..."
-    battleMessages = ["RAT BEAST lumbers towards you!",
-                     "RAT BEAST lets out a loud roar!"]
     stealthMessages = [c.red("RAT BEAST") + " is wandering.",
                       c.red("RAT BEAST") + " is looking for their next meal.",
                       "You encounter a " + c.red("RAT BEAST") + ", a rat the size of a bear."]
@@ -1115,6 +1108,7 @@ class RatBeast(Enemy):
             damage = player.hurt(self, 5, 3)
             player.affect(Dazed(), randint(1, 2))
             print(f"RAT BEAST rams you for {c.red(damage)} damage, leaving you {c.effect(Dazed)}!")
+
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],

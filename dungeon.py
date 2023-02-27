@@ -124,7 +124,10 @@ class Battle:
         self.isSurpriseAttack = isSurprise
 
     def start_battle(self):
-        slowprint(c.blue(choice(self.enemies[0].battleMessages)))
+        if self.enemies[0].battleMessages == []:
+            slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
+        else:
+            slowprint(c.blue(choice(self.enemies[0].battleMessages)))
         separator()
 
         if self.enemies[0].isSpecial:
