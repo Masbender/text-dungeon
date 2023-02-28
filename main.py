@@ -29,23 +29,21 @@ if load_save == 'y':
         print("Error while loading save, creating new save instead.")
         load_save = 'n'
 if load_save == 'n':
-    # placeholder character selection
-    print("\nGuard is a well equipped soldier.\nThey were patrolling the prison when they found themselves lost in the dungeon.\n")
-    print("Thief is well rounded but poorly equipped.\nThey escaped their cell but got lost in the dungeon.\n")
-    print("Assassin is specialized in stealth.\nAfter the prison was cursed, they were the first to be sentenced to the dungeon.\n")
-    playerInput = gather_input("Choose a character:", ["Warrior", "Thief", "Assassin"], False, False)
+    # placeholder character 
+    playerInput = gather_input("Choose a character:", ["Guard", "Thief"], False, False)
     
     introMessage = ""
     
-    if playerInput == "Warrior":
+    if playerInput == "Guard":
         player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
         player.set_stats(1, 1, 0, 2, 0)
         player.inventory[1].consume(None)
         introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
     
     if playerInput == "Thief":
-        player.inventory.extend([items.Sword(0), items.Bandage()])
-        player.set_stats(0, 1, 1, 1, 2)
+        player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bandage()])
+        player.set_stats(0, 0, 2, 1, 1)
+        player.inventory[1].consume(None)
         introMessage = "You manage to escape your cell, but you soon become lost in the halls of the Prison."
 
     if playerInput == "Assassin":
