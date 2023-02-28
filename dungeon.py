@@ -124,6 +124,7 @@ class Battle:
         self.isSurpriseAttack = isSurprise
 
     def start_battle(self):
+        clear_console()
         if self.enemies[0].battleMessages == []:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
@@ -136,7 +137,7 @@ class Battle:
         while not self.battleOver:
             if player.stunned:
                 player.stunned = False
-                print(c.red("You fail to notice their presence.."))
+                print(c.red("You fail to notice their presence..."))
             else:
                 self.player_turn()
             

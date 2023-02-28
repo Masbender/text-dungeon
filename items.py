@@ -655,12 +655,12 @@ class HeavyArmor(Armor):
 
     def equip(self):
         player.armorClass += self.armorClass + self.enchantment
-        player.update_dexterity(-self.dexLoss)
+        player.update_dex(-self.dexLoss)
 
     def unequip(self):
         # this is where it unequips
         player.armorClass -= self.armorClass + self.enchantment
-        player.update_dexterity(self.dexLoss)
+        player.update_dex(self.dexLoss)
 
 class MagicRobe(Armor):
 # provides 0 base armor, but increases wand recharge
@@ -718,18 +718,18 @@ class ShadowCloak(Armor):
 
     def equip(self):
         enchantment = self.enchantment
-        if enchantment < 0: # ensures that -1 enchantment means -1 stealth
+        if enchantment < 0: # ensures that -1 enchantment means -1 dex
             enchantment -= 1
 
         # applies stats
-        player.update_dexterity(enchantment)
+        player.update_dex(enchantment + 1)
 
     def unequip(self):
         enchantment = self.enchantment
-        if enchantment < 0: # ensures that -1 enchantment means -1 stealth
+        if enchantment < 0: # ensures that -1 enchantment means -1 dex
             enchantment -= 1
         
-        player.update_dexterity(-enchantment)
+        player.update_dex(-enchantment - 1)
         
 class Ring(Item):
     maxUses = 1
@@ -771,7 +771,7 @@ class InfernoRing(Ring):
 
     def inspect(self):
         print(f"Increases your strength (STR) by {self.enchantment + 1}, but doesn't increase inventory size.")
-        print("When you are attacked you get burned (-1AC).")
+        print("When you are attacked you get burned (-1 AC).")
 
     def equip(self):
         player.strength += self.enchantment + 1
@@ -1305,23 +1305,23 @@ class KnowledgeBook(Item):
             return False
 
         if chosenStat == "STR":
-            player.update_strength(1)
+            player.update_str(1)
             player.baseSTR += 1
             print("Your attacks are stronger, you can carry more items.")
         elif chosenStat == "CON":
-            player.update_constitution(1)
+            player.update_con(1)
             player.baseCON += 1
             print("Your health has been increased, diseases and injuries heal quicker.")
         elif chosenStat == "DEX":
-            player.update_dexterity(1)
+            player.update_dex(1)
             player.baseDEX += 1
             print("You are stealthier, you are better at dodging.")
         elif chosenStat == "PER":
-            player.update_perception(1)
+            player.update_per(1)
             player.basePER += 1
             print("You're more aware, you are a better at bargaining.")
         elif chosenStat == "INT":
-            player.update_intelligence(1)
+            player.update_int(1)
             player.baseINT += 1
             print("Your items break less, scrolls are stronger.")
         
@@ -1374,10 +1374,10 @@ class SeeingOrb(Item):
         return True
 
     def pickup(self):
-        player.update_perception(1)
+        player.update_per(1)
 
     def discard(self):
-        player.update_perception(-1)
+        player.update_per(-1)
 
     def inspect(self):
         print("Looking into the orb will reveal the entire layout of the floor.")

@@ -46,20 +46,20 @@ class Creature:
         self.immuneTo = []
         self.effects = []
 
-    def update_strength(self, increase):
+    def update_str(self, increase):
     # strength is added to damage dealt
         self.strength += increase
         if issubclass(type(self), Player):
             self.inventorySize += increase
 
-    def update_dexterity(self, increase):
+    def update_dex(self, increase):
     # dexterity improves stealth and dodge
         self.dexterity += increase
 
         self.stealth += increase
         self.dodgeChance += 5 * increase
 
-    def update_constitution(self, increase):
+    def update_con(self, increase):
     # constitution improves health and resistance
         self.constitution += increase
 
@@ -67,11 +67,11 @@ class Creature:
         self.maxHealth += 2 * increase
         self.health += 2 * increase
 
-    def update_intelligence(self, increase):
+    def update_int(self, increase):
     # intelligence is how likely a used item or armor is to not break
         self.intelligence += increase
     
-    def update_perception(self, increase):
+    def update_per(self, increase):
     # perception improves awareness and appraisal
         self.perception += increase
 
@@ -80,11 +80,11 @@ class Creature:
     
     def set_stats(self, str, con, dex, per, int):
     # sets all 5 stats at once
-        self.update_strength(str - self.strength)
-        self.update_dexterity(dex - self.dexterity)
-        self.update_constitution(con - self.constitution)
-        self.update_intelligence(int - self.intelligence)
-        self.update_perception(per - self.perception)
+        self.update_str(str - self.strength)
+        self.update_dex(dex - self.dexterity)
+        self.update_con(con - self.constitution)
+        self.update_int(int - self.intelligence)
+        self.update_per(per - self.perception)
 
     def has_effect(self, effectType):
         for effect in self.effects:
@@ -357,8 +357,8 @@ class Dazed(Effect):
     def apply(self, target):
         self.target = target
 
-        self.target.update_dexterity(-1)
-        self.target.update_perception(-1)
+        self.target.update_dex(-1)
+        self.target.update_per(-1)
 
         self.allowRun = self.allowRun and self.target.isSpecial and not issubclass(type(target), Boss)
 
@@ -367,8 +367,8 @@ class Dazed(Effect):
         
 
     def reverse(self):
-        self.target.update_dexterity(1)
-        self.target.update_perception(1)
+        self.target.update_dex(1)
+        self.target.update_per(1)
 
         if self.allowRun:
             self.target.isSpecial = True
@@ -377,22 +377,20 @@ class Dazed(Effect):
         print("Lowers DEX and PER by 1.")
 
 class Surprised(Effect):
-# lowers DEX and AC
+# lowers dodge chance
     name = "surprised"
     color = c.effect_bad
 
     def apply(self, target):
         self.target = target
 
-        self.target.update_dexterity(-2)
-        self.target.armorClass -= 1
+        self.target.dodgeChance -= 20
 
     def reverse(self):
-        self.target.update_dexterity(2)
-        self.target.armorClass += 1
+        self.target.dodgeChance += 20
 
     def inspect(self):
-        print("Lowers armor class by 1 and DEX by 2.")
+        print("Lowers dodge chance by 20%.")
 
 class Decay(Effect):
 # lowers CON, gets stronger over time
@@ -407,7 +405,7 @@ class Decay(Effect):
 
         self.name = "decay lvl " + str(self.decayLevel)
 
-        self.target.update_constitution(-self.decayLevel)
+        self.target.update_con(-self.decayLevel)
 
     def update(self, enemies):
         self.turnsToProgress -= 1
@@ -416,10 +414,10 @@ class Decay(Effect):
             self.decayLevel += 1
             self.name = "decay lvl " + str(self.decayLevel)
             self.turnsToProgress = self.decayLevel + 1
-            self.target.update_constitution(-1)
+            self.target.update_con(-1)
 
     def reverse(self):
-        self.target.update_constitution(self.decayLevel)
+        self.target.update_con(self.decayLevel)
 
     def inspect(self):
         print(f"Lowers your CON by {self.decayLevel}.")
@@ -440,14 +438,14 @@ class BrokenBones(Effect):
             self.target.health = 0
             slowprint(self.target.name + " dies")
 
-        self.target.update_dexterity(-1)
-        self.target.update_strength(-1)
-        self.target.update_constitution(-1)
+        self.target.update_dex(-1)
+        self.target.update_str(-1)
+        self.target.update_con(-1)
         
     def reverse(self):
-        self.target.update_dexterity(1)
-        self.target.update_strength(1)
-        self.target.update_constitution(1)
+        self.target.update_dex(1)
+        self.target.update_str(1)
+        self.target.update_con(1)
 
     def inspect(self):
         print("Lowers STR, CON, and DEX by 1.")
@@ -511,6 +509,28 @@ class Poisoned(Effect):
         print("Lowers STR by 1, doesn't lower inventory size.")
         print("Deals 1 damage every turn.")
 
+class Chilled(Effect):
+# does 1 damage per turn and lowers DEX
+    name = "chilled"
+    natural = True
+    level = 2
+    color = c.effect_bad
+
+    def apply(self, target):
+        self.target = target
+        
+        self.target.update_dex(-1)
+
+    def update(self, enemies):
+        self.target.health -= 1
+
+    def reverse(self):
+        self.target.update_dex(1)
+
+    def inspect(self):
+        print("Lowers DEX by 1.")
+        print("Deals 1 damage every turn.")
+
 class HealingBlocked(Effect):
 # prevents healing
     name = "healing blocked"
@@ -535,10 +555,13 @@ class Rage(Effect):
     def apply(self, target):
         self.target = target
 
-        self.target.update_strength(2)
+        self.target.update_str(2)
 
     def reverse(self):
-        self.target.update_strength(-2)
+        self.target.update_str(-2)
+
+    def inspect(self):
+        print("Increases STR by 2.")
 
 class SteelFlesh(Effect):
 # +2 CON
@@ -548,10 +571,13 @@ class SteelFlesh(Effect):
     def apply(self, target):
         self.target = target
 
-        self.target.update_constitution(2)
+        self.target.update_con(2)
 
     def reverse(self):
-        self.target.update_constitution(-2)
+        self.target.update_con(-2)
+
+    def inspect(self):
+        print("Increases CON by 2.")
 
 class Invisibility(Effect):
 # +2 DEX
@@ -561,10 +587,13 @@ class Invisibility(Effect):
     def apply(self, target):
         self.target = target
 
-        self.target.update_dexterity(2)
+        self.target.update_dex(2)
 
     def reverse(self):
-        self.target.update_dexterity(-2)
+        self.target.update_dex(-2)
+
+    def inspect(self):
+        print("Increases DEX by 2.")
 
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
@@ -585,12 +614,12 @@ class RatDisease(Effect):
             self.stage += 1
 
             if self.stage == 2:
-                self.target.update_strength(-1)
+                self.target.update_str(-1)
                 print(c.red("You feel weaker."))
                 self.name = "rat disease lvl 2"
 
             elif self.stage == 3:
-                self.target.update_intelligence(-2)
+                self.target.update_int(-2)
                 print(c.red("Your mind becomes clouded."))
                 self.name = "rat disease lvl 3"
 
@@ -609,7 +638,7 @@ class RatDisease(Effect):
             print(c.green("Your strength returns."))
 
         if self.stage > 2:
-            self.target.update_intelligence(2)
+            self.target.update_int(2)
             print(c.green("Your mind clears."))
 
         if self.stage > 3:
@@ -1240,7 +1269,57 @@ class Alchemist(Enemy):
             target.affect(potion(), 5)
             
             print(f"ALCHEMIST gives {target.name} a potion of {c.effect(potion)}!")
+
+class AncientDraugr(Enemy):
+# a rare enemy that can appear in the crossroads
+# can throw axe, then switches to magic
+    name = "ANCIENT DRAUGR"
+    battleMessages = ["You encounter ANCIENT DRAUGR!",
+                     "ANCIENT DRAUGR has killed many, and doesn't intend to stop!"]
+    stealthMessages = [c.red("ANCIENT DRAUGR") + " is on the hunt for human.",
+                      "You see " + c.red("ANCIENT DRAUGR") + ". The air is getting colder."]
+    undead = True
+    isSpecial = True
+
+    maxHealth = 26
+    gold = 20
+    awareness = 6
+    stealth = 2
     
+    resistance = 2
+    armorClass = 4
+
+    hasAxe = True
+        
+    def attack(self, enemies):
+        if self.hasAxe:
+            if self.health < 20 and randint(0, 1):
+                # axe throw
+                self.hasAxe = False
+                player.dodgeChance += 10
+                if player.dodge(self):
+                    print("ANCIENT DRAUGR throws their axe, but you dodge it.")
+                    player.dodgeChance -= 10
+                    return
+                player.dodgeChance -= 10
+                    
+                damage = player.hurt(self, 6)
+                player.affect(Bleeding(), 7)
+                print(f"ANCIENT DRAUGR throws their axe at you, dealing {c.red(damage)} damage and inflicting {c.effect(Bleeding)}!")
+            else:
+                # standard attack
+                if player.dodge(self):
+                    print("You dodge ANCIENT DRAUGR's attack.")
+                    return
+
+                damage = player.hurt(self, 5, 1)
+                print(f"ANCIENT DRAUGR attacks you with their axe for {c.red(damage)} damage!")
+        else:
+            # magic attack
+            damage = player.hurt(self, randint(3, 4), 3)
+            player.affect(Chilled(), 4)
+            print(f"ANCIENT DRAUGR uses frost magic, dealing {damage} damage and inflicting {c.effect(Chilled)}!")
+
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
     "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast], 3), ([BuffedGoblin], 3)]
@@ -1249,7 +1328,7 @@ enemyPool = {
 
 specialEnemyPool = {
     "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)],
-    "crossroads":[([Alchemist, Goblin, Goblin], 12)]
+    "crossroads":[([Alchemist, Goblin, Goblin], 8), ([AncientDraugr], 4)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
