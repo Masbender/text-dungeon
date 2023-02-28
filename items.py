@@ -387,11 +387,11 @@ class Dagger(Weapon):
         super().__init__("dagger", level)
 
         if type(self) == Dagger:
-            self.sneakBonus = level + 1
+            self.sneakBonus = level + 2
 
     def inspect(self):
         print(f"It does {self.damage + self.enchantment} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
-        print("Daggers use dexterity (DEX) instead of strength (STR).")
+        print("Daggers do not gain any bonuses from strength (STR).")
         if self.uses < 0:
             print("Because it's broken it does less damage and doesn't gain bonus damage..")
 
@@ -406,7 +406,7 @@ class Dagger(Weapon):
             damageDealt += self.sneakBonus
             slowprint("Sneak attack!")
 
-        damageDealt = self.target.hurt(player, damageDealt, 0, player.dexterity)
+        damageDealt = self.target.hurt(player, damageDealt, 0, 0)
 
         slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
@@ -418,7 +418,7 @@ class EbonyDagger(Dagger):
     maxUses = 20
 
     damage = 5
-    sneakBonus = 3
+    sneakBonus = 4
 
     def inspect(self):
         super().inspect()

@@ -34,12 +34,6 @@ class Creature:
     stunned = False
     canHeal = True
 
-    #portrait
-    portrait = """ _____
-|  O_O |
-| [__] |
-|_LL_L_|"""
-
     def __init__(self):
         self.health = self.maxHealth
 

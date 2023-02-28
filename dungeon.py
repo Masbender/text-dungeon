@@ -181,7 +181,7 @@ class Battle:
 
     def print_battle(self):
         for creature in self.enemies:
-            print(creature.portrait)
+            print()
             print((c.red("(!) ") * creature.isSpecial) + f"{c.red(creature.name)} : [{c.health_status(creature.health, creature.maxHealth)} ♥] [{creature.armorClass} AC]")
             
             print_effects(creature)
