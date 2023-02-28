@@ -527,6 +527,45 @@ class HealingBlocked(Effect):
     def inspect(self):
         print("Prevents healing.")
 
+class Rage(Effect):
+# +2 STR
+    name = "rage"
+    color = c.effect_good
+
+    def apply(self, target):
+        self.target = target
+
+        self.target.update_strength(2)
+
+    def reverse(self):
+        self.target.update_strength(-2)
+
+class SteelFlesh(Effect):
+# +2 CON
+    name = "steel flesh"
+    color = c.effect_good
+
+    def apply(self, target):
+        self.target = target
+
+        self.target.update_constitution(2)
+
+    def reverse(self):
+        self.target.update_constitution(-2)
+
+class Invisibility(Effect):
+# +2 DEX
+    name = "invisibility"
+    color = c.effect_good
+
+    def apply(self, target):
+        self.target = target
+
+        self.target.update_dexterity(2)
+
+    def reverse(self):
+        self.target.update_dexterity(-2)
+
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
 # 1) nothing, 2) -1CON, 3) -2INT, 4) lose max health over time
@@ -1113,6 +1152,9 @@ class Goblin(Enemy):
 # dexterous enemy, has a dart the blocks healing and has a bandage
     name = "GOBLIN"
     warning = "You hear goblins..."
+    battleMessages = ["You encounter GOBLIN!",
+                     "\"Killing you will get me a raise!\"",
+                     "\"You can't escape the collector!\""]
     stealthMessages = [c.red("GOBLIN") + " is waiting.",
                       c.red("GOBLIN") + " is keeping watch.",
                       c.red("GOBLIN") + " is sleeping."]
@@ -1141,7 +1183,7 @@ class Goblin(Enemy):
                 print("You dodge GOBLIN's dart.")
                 return
             player.affect(HealingBlocked(), 5)
-            print(f"GOBLIN hits you with a dart, inflicting you with {c.effect(HealingBlocked)}!")
+            print(f"GOBLIN hits you with a poisoned dart, inflicting you with {c.effect(HealingBlocked)}!")
 
         else:
             if player.dodge(self):
@@ -1158,6 +1200,46 @@ class BuffedGoblin(Goblin):
     armorClass = 3
     dodgeChance = 15
     strength = 2
+
+class Alchemist(Enemy):
+# buffs allies with Rage (+2 STR), Steel Flesh (+2 CON), and Invisibility (+2 DEX)
+# runs away if alone
+    name = "ALCHEMIST"
+    warning = "You hear goblins..."
+    battleMessages = ["You encounter ALCHEMIST!",
+                      "\"The goblins just can't get enough of my potions!\"",
+                     "\"I make potions for the master and his minions, but I wouldn't mind killing you for him as well.\"",
+                     "The ALCHEMIST drinks one of their potions."]
+    stealthMessages = [c.red("ALCHEMIST") + " is mixing potions.",
+                      c.red("ALCHEMIST") + " is selling potions to the goblins."]
+    
+    maxHealth = 20
+    gold = 15
+    stealth = 2
+    awareness = 2
+
+    armorClass = 1
+    dodgeChance = 10
+
+    def __init__(self):
+        super().__init__()
+        self.affect(Regeneration(), 5)
+
+    def attack(self, enemies):
+        if len(enemies) == 1:
+            self.health = 0
+            print("ALCHEMIST runs away!")
+        else:
+            options = []
+            for enemy in enemies:
+                if enemy != self:
+                    options.append(enemy)
+            target = choice(options)
+
+            potion = choice([Rage, SteelFlesh, Invisibility])
+            target.affect(potion(), 5)
+            
+            print(f"ALCHEMIST gives {target.name} a potion of {c.effect(potion)}!")
     
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
@@ -1167,7 +1249,7 @@ enemyPool = {
 
 specialEnemyPool = {
     "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)],
-    "crossroads":[([SkeletonGuard], 12)]
+    "crossroads":[([Alchemist, Goblin, Goblin], 12)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
