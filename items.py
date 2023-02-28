@@ -312,19 +312,18 @@ class EnchantedSpear(Spear):
     maxUses = 20
 
     damage = 5
-    armorPiercing = 3
+    armorPiercing = 2
 
     def inspect(self):
         super().inspect()
-        print("It heals you when you attack non-undead enemies.")
+        print("It heals you when you attack enemies.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
-        if not self.target.undead:
-            healing = player.heal(randint(1, 2))
-            if healing > 0:
-                print(f"You heal {c.green(healing)} health.")
+        healing = player.heal(randint(1, 2))
+        if healing > 0:
+            print(f"You heal {c.green(healing)} health.")
 
         return True
 
@@ -416,7 +415,7 @@ class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
     name = "Ebony Dagger"
     value = 100
-    maxUses = 15
+    maxUses = 20
 
     damage = 5
     sneakBonus = 3
@@ -707,20 +706,15 @@ class ShadowCloak(Armor):
 # same as cloak, but enchantments affect stealth, not armor
 # starts enchanted
     name = "Cloak of Shadows"
-    value = 55
-    enchantValue = 0.82 # 55 * 0.82 = 45.1, which rounds to 45. 55 + 45 = 100, the standard artifact value
+    value = 100
     maxUses = 30
-
-    def __init__(self):
-        super().__init__()
-        self.enchantment += 1
 
     def inspect(self):
         enchantment = self.enchantment
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
             
-        print(f"When equipped it gives you 0 armor class but increases your stealth by {1 + enchantment}.")
+        print(f"When equipped it gives you 0 armor class but increases your DEX by {1 + enchantment}.")
 
     def equip(self):
         enchantment = self.enchantment
@@ -728,14 +722,14 @@ class ShadowCloak(Armor):
             enchantment -= 1
 
         # applies stats
-        player.stealth += 1 + enchantment
+        player.update_dexterity(enchantment)
 
     def unequip(self):
         enchantment = self.enchantment
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
         
-        player.stealth -= 1 + enchantment
+        player.update_dexterity(-enchantment)
         
 class Ring(Item):
     maxUses = 1
@@ -776,16 +770,15 @@ class InfernoRing(Ring):
     value = 100
 
     def inspect(self):
-        print("Increases your strength (STR) by 2, but doesn't increase inventory size.")
-        print("When you are attacked, you might be burned (-1 AC).")
-        print("The duration of burned depends on this items enchantment level.")
+        print(f"Increases your strength (STR) by {self.enchantment + 1}, but doesn't increase inventory size.")
+        print("When you are attacked you get burned (-1AC).")
 
     def equip(self):
-        player.strength += 2
+        player.strength += self.enchantment + 1
         player.infernoRing = True
 
     def unequip(self):
-        player.strength -= 2
+        player.strength -= self.enchantment + 1
         player.infernoRing = False
 
 class IllusionRing(Ring):

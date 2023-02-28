@@ -223,8 +223,8 @@ class Player(Creature):
             self.armor.degrade()
 
         # applies inferno ring's effect
-        if self.infernoRing and randint(1, 3) == 1:
-            self.affect(Burned(), 6 - self.ring.enchantment)
+        if self.infernoRing:
+            self.affect(Burned(), 2)
             slowprint(f"You are {c.effect(Burned)} by your Ring of Rage!")
 
         return damageDealt
@@ -810,7 +810,7 @@ class Thief(Enemy):
         
         self.time += 1
         if randint(1, 4) < self.time:
-            self.health = 0
+            enemies.remove(self)
             slowprint("THIEF runs away!")
             
         elif self.time == 3:
@@ -1227,7 +1227,7 @@ class Alchemist(Enemy):
 
     def attack(self, enemies):
         if len(enemies) == 1:
-            self.health = 0
+            enemies.remove(self)
             print("ALCHEMIST runs away!")
         else:
             options = []
