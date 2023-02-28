@@ -1275,9 +1275,9 @@ class AncientDraugr(Enemy):
     undead = True
     isSpecial = True
 
-    maxHealth = 26
+    maxHealth = 28
     gold = 20
-    awareness = 6
+    awareness = 8
     stealth = 2
     
     resistance = 2
@@ -1287,7 +1287,7 @@ class AncientDraugr(Enemy):
         
     def attack(self, enemies):
         if self.hasAxe:
-            if self.health < 20 and randint(0, 1):
+            if self.health < 26 and randint(0, 1):
                 # axe throw
                 self.hasAxe = False
                 player.dodgeChance += 10
