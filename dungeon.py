@@ -129,10 +129,10 @@ class Battle:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
             slowprint(c.blue(choice(self.enemies[0].battleMessages)))
-        separator()
 
         if self.enemies[0].isSpecial:
             slowprint(c.red(f"There is no escape from this fight."))
+        separator()
         
         while not self.battleOver:
             if player.stunned:
@@ -245,14 +245,18 @@ class Floor:
                 # unknown is represented as '?'
                 elif self.map[i][I] == '?':
                     lines[i].append('?')
-                # walls are represented as ' '
+                # walls are represented as '■'
                 elif type(self.map[i][I]) == Wall and self.map[i][I].blocked:
-                    lines[i].append('■')
+                    if len(self.map[i][I].loot) > 0:
+                        # walls with hidden loot are yellow
+                        lines[i].append(c.yellow('■'))
+                    else:
+                        lines[i].append('■')
                 # stairs are represented as ↓ or ↑
-                elif self.map[i][I].specialAction == "descend stairs":
+                elif "descend" in self.map[i][I].specialAction:
                     lines[i].append('↓')
                 # shops and chests are represented as yellow !
-                elif self.map[i][I].specialAction == "shop" or self.map[i][I].specialAction == "unlock chest":
+                elif self.map[i][I].specialAction in ["shop", "unlock chest", "refine gold chunk"]:
                     lines[i].append(c.yellow('!'))
                 # enemies are represented as red !
                 elif self.map[i][I].check_detection():
@@ -260,7 +264,7 @@ class Floor:
                 # locked rooms appear as locks
                 elif type(self.map[i][I]) == LockedRoom and self.map[i][I].blocked:
                     lines[i].append('x')
-                # rooms are represented as '+'
+                # rooms are represented as ' '
                 else:
                     lines[i].append(' ')
         # prints the map
@@ -718,8 +722,12 @@ class Floor:
             elif playerInput == "debug : reveal map":
                 self.map = self.layout
 
-            elif playerInput == c.yellow("descend stairs"):
+            elif "descend" in playerInput:
+                room.interact() # if it leads somewhere else it is in .interact()
                 break
+
+            else:
+                room.interact()
 
 class Room:
     blocked = False # determines if it counts as a wall or not
@@ -744,6 +752,33 @@ class Room:
 
         return detected
 
+    def interact(self): # called when player uses special action
+        pass
+
+class Refinery(Room):
+# used to refine gold chunks
+    description = "There is an old, Dwarven refinery here. It looks rather simple, and you think that you could operate it."
+    specialAction = "refine gold chunk"
+
+    def __init__(self):
+        self.loot = []
+        self.threats = []
+
+    def interact(self):
+        goldIndex = -1
+        for i in range(len(player.inventory)):
+            if type(player.inventory[i]) == items.GoldChunk:
+                goldIndex = i
+                break
+
+        if goldIndex == -1:
+            print(c.red("You have nothing to refine!"))
+        else:
+            player.inventory.pop(goldIndex)
+            gold = randint(20, 50)
+            player.gold += gold
+            print(f"The refinery produces {c.yellow(gold)} gold from your gold chunk.")
+            
 class Chest(Room):
     blocked = False
     description = "There is a " + c.yellow("chest") + " here with a " + c.yellow("gold lock") + "."
@@ -813,11 +848,36 @@ class LockedRoom(Room):
         else:
             return False
 
+class Chasm(Room):
+    description = "There is a large chasm here, it would be risky to descend it without proper equipment."
+    specialAction = "descend chasm"
+
+    def interact(self):
+        g = dungeon.Generator()
+        g.initialize_floor("crossroads", 5, 7)
+        
+        hasRope = False
+        for item in player.inventory:
+            if type(item) == items.Rope:
+                player.inventory.remove(item)
+                hasRope = True
+                break
+
+        if hasRope:
+            g.entryMessage = c.blue("Using your rope, you manage to safely descend the chasm.\n")
+        else:
+            g.entryMessage = c.red("While trying to climb down the chasm, you slip and break your bones.\n")
+            player.affect(entities.BrokenBones())
+        
+        g.generate_mines()
+        floor = g.finalize_floor()
+        floor.enter_floor()
+
 class Stairs(Room):
     blocked = False
     description = "There are " + c.yellow("stairs") + " here that lead down."
     specialAction = "descend stairs"
-    
+
     def __init__(self):
         self.loot = []
         self.threats = []
@@ -831,12 +891,17 @@ class Shop(Room):
         self.loot = []
         self.threats = []
 
-        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5), items.gen_loot(depth)]
+        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5)]
         if self.stock[0].enchantable:
             self.stock[0].enchantment += 1
         
         if self.stock[1].enchantable:
             self.stock[1].enchantment += randint(1, 2)
+
+        if depth == 1:
+            self.stock.append(items.Rope())
+        elif depth == 4:
+            self.stock.append(items.StorageBook())
 
 def gen_room(area, depth, type):
     loot = []
@@ -972,8 +1037,42 @@ class Generator:
         else:
             self.addEnemies.extend(entities.gen_enemies(self.area, self.size - 1, self.depth % 3, self.depth % 3))
 
-        return self.finalize_floor()
-    
+    def generate_mines(self):
+        self.modifier = ""
+        self.generation = self.gen_mine
+        self.entryMessage += c.blue("The walls are rough and lined with gold, the air is still and filled with silence. You have enter The Mines.")
+        
+        self.generate_floor()
+        self.layoutRooms[self.size // 2][0] = Refinery()
+
+        self.addEnemies = [[entities.AncientDraugr()]] # only an ancient draugr
+        self.addItems = [items.Pickaxe(), items.Bomb()] # no loot
+        self.addRooms = [] # no side rooms
+
+        walls = self.hiddenWalls + self.adjacentWalls
+        for i in range(10):
+            wall = choice(walls)
+            walls.remove(wall)
+            self.layoutRooms[wall[0]][wall[1]].loot.append(items.GoldChunk())
+
+        walls = self.hiddenWalls + self.adjacentWalls
+        for i in range(15):
+            wall = choice(walls)
+            if len(self.layoutRooms[wall[0]][wall[1]].threats) > 0:
+                walls.remove(wall)
+            self.layoutRooms[wall[0]][wall[1]].threats.append(entities.Worm())
+
+    def gen_mine(self):
+    # generates two intersecting halls in the middle, without generating side rooms
+        for i in range(self.size): 
+            self.layoutNums[i][self.size // 2] = 1
+            self.layoutNums[self.size // 2][i] = 1
+
+        self.layoutNums[self.size - 1][self.size // 2] = -1
+        self.startX = self.size // 2
+        self.startY = 0
+        self.count_rooms()
+           
     def gen_hall(self):
     # generates a snake-like hall
         genOver = False

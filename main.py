@@ -70,36 +70,40 @@ if load_save == 'n':
     floors = []
     
     for i in range(6):
-        generator = dungeon.Generator()
+        g = dungeon.Generator()
         area = areas[i // 3]
     
-        generator.initialize_floor(area, i, 4 + ((i + 2) // 3))
+        g.initialize_floor(area, i, 4 + ((i + 2) // 3))
 
         # adds standard encounters
-        generator.addRooms.append(dungeon.LockedRoom(i))
-        generator.addItems.extend([items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant(), items.ScrollRemoveCurse(), items.ScrollRepair()])])
+        g.addRooms.append(dungeon.LockedRoom(i))
+        g.addItems.extend([items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant(), items.ScrollRemoveCurse(), items.ScrollRepair()])])
     
         if i % 3 == 0:
             message = c.blue({
                 "prison":"Welcome to the Dungeon. " + introMessage,
                 "crossroads":"You have entered the Crossroads. The halls are sewer like and the sounds of rats are everywhere."
             }[area] + "\n")
-            generator.entryMessage = message + generator.entryMessage
+            g.entryMessage = message + g.entryMessage
     
         if i == goldKeyLocation: # adds gold key
-            generator.addItems.append(items.GoldKey())
+            g.addItems.append(items.GoldKey())
         
         if i % 3 == 1: # adds shops
-            generator.addRooms.append(dungeon.Shop(i))
+            g.addRooms.append(dungeon.Shop(i))
     
         elif i % 3 == 2: # adds gold chest
-            generator.addRooms.append(dungeon.Chest(i))
+            g.addRooms.append(dungeon.Chest(i))
             goldKeyLocation = i + randint(1, 3)
 
         if i == floodedFloor:
-            generator.modifier = "flooded"
-    
-        floors.append(generator.generate_floor())
+            g.modifier = "flooded"
+
+        if i == 3:
+            g.addRooms.append(dungeon.Chasm())
+
+        g.generate_floor()
+        floors.append(g.finalize_floor())
     
         if i % 3 == 2: # adds boss
             floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))

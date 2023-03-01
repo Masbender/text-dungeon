@@ -864,7 +864,7 @@ class Ogre(Boss):
     name = "OGRE"
     warning = "You hear the sounds of an ogre..."
     battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\"",
-                     "\"Me hungry, human tasty. You'll be good, in a pasty.\""]
+                     "\"Me hungry, human tasty.\""]
 
     maxHealth = 34
     gold = 60
@@ -1263,6 +1263,56 @@ class Alchemist(Enemy):
             target.affect(potion(), 5)
             
             print(f"ALCHEMIST gives {target.name} a potion of {c.effect(potion)}!")
+
+class Worm(Enemy):
+# appears in the walls of the mines
+# can block healing and latch onto the player to drain their health
+    name = "WORM"
+    warning = "You hear movement in the walls..."
+    battleMessages = ["You have disturbed WORM!",
+                      "WORM has awoken!",
+                      "You encounter WORM!"]
+    stealthMessages = ["You see a sleeping " + c.red("WORM") +"."]
+
+    maxHealth = 17
+    gold = 3
+    awareness = 7
+    stealth = 1
+
+    resistance = 3
+    armorClass = 1
+
+    isLatched = False
+
+    def hurt(self, attacker, damage, piercing = 0, strength = None):
+        damageDealt = super().hurt(attacker, damage, piercing, strength)
+
+        if self.isLatched:
+            player.affect(Bleeding(), 6)
+            print(f"WORM detaches from you, leaving you {c.effect(Bleeding)}!")
+            self.name = "WORM"
+            self.isLatched = False
+        
+        return damageDealt
+
+    def attack(self, enemies):
+        if self.isLatched:
+            damage = player.hurt(self, 4, 4)
+            healing = self.heal(damage)
+            print(f"WORM drains you for {c.red(damage)} damage, healing them for {c.green(healing)} health!")
+        else:
+            if player.dodge(self):
+                print("You dodge WORM's attack!")
+                return
+
+            if randint(0, 1):
+                damage = player.hurt(self, 5, 1)
+                player.affect(HealingBlocked(), 4)
+                print(f"WORM's venomous bite does {c.red(damage)} damage, and inflicts {c.effect(HealingBlocked)}!")
+            else:
+                self.isLatched = True
+                self.name = "WORM (latched)"
+                print(c.red(f"WORM latches onto you!"))
 
 class AncientDraugr(Enemy):
 # a rare enemy that can appear in the crossroads

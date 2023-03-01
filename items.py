@@ -1033,9 +1033,9 @@ class Bandage(Medicine):
     def status(self):
         message = ""
         if self.uses == 1:
-            message = "(worn)"
+            message = "(damaged)"
         elif self.uses == 2:
-            message = "(used)"
+            message = "(worn)"
 
         return message
 
@@ -1255,6 +1255,58 @@ class StunBomb(Consumable):
         print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True
+
+class StorageBook(Consumable):
+# consuming grants +1 inventory size
+    name = "\"Forbidden Techniques: Storage\""
+    value = 60
+
+    usePrompt = "read"
+
+    def inspect(self):
+        print("Contains forbidden knowledge on the art of storage.")
+        print("Reading will increase your inventory size.")
+
+    def consume(self, floor):
+        player.inventorySize += 1
+        print("The books knowledge is too powerful for any mortal being, before long it burns up into ashes.")
+        print("You still managed to read some of it before it burned up, and have gained +1 inventory size.")
+        self.degrade()
+        return True
+
+class Pickaxe(Item):
+# can destroy tiles and is reusable
+    name = "pickaxe"
+    value = 70
+    maxUses = 3
+
+    def status(self):
+        message = ""
+        if self.uses == 1:
+            message = "(damaged)"
+        elif self.uses == 2:
+            message = "(worn)"
+
+        return message
+
+    def dig(self):
+        self.degrade()
+        print("It takes a while, but you dig a tunnel through the wall.")
+        return True
+
+    def inspect(self):
+        print("Can destroy walls, has multiple uses.")
+
+class Rope(Item):
+# used to descend the chasm safely
+    name = "rope"
+    value = 20
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print("Useful when there's no stairs.")
     
 class IronKey(Item):
     name = "iron key"
@@ -1277,6 +1329,16 @@ class GoldKey(Item):
 
     def inspect(self):
         print(f"This key can open a gold chest.")
+
+class GoldChunk(Item):
+    name = "gold chunk"
+    value = 50
+
+    def status(self):
+        return ""
+
+    def inspect(self):
+        print(f"This is a chunk of unrefined gold.")
 
 # number 1 through 16 is chosen
 # if standardLoot = [(Rations, 8), (Bandage, 14), (Bomb, 16)]
