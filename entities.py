@@ -174,6 +174,8 @@ class Player(Creature):
     name = "YOU"
     maxHealth = 20
 
+    gold = 40
+
     inventorySize = 10
     inventory = []
     ring = None
@@ -661,7 +663,7 @@ class Draugr(Enemy):
     isSpecial = True
 
     maxHealth = 18
-    gold = 20
+    gold = 16
     awareness = 3
     stealth = 2
     
@@ -703,7 +705,7 @@ class Ghoul(Enemy):
     undead = True
 
     maxHealth = 16
-    gold = 11
+    gold = 10
     awareness = 4
     stealth = 1
     
@@ -798,7 +800,7 @@ class SkeletonGuard(Skeleton):
     isSpecial = True
 
     maxHealth = 17
-    gold = 16
+    gold = 15
     awareness = 5
     stealth = -1
 
@@ -820,7 +822,7 @@ class Thief(Enemy):
                       "A goblin " + c.red("THIEF") + " is roaming."]
 
     maxHealth = 16
-    gold = 14
+    gold = 6
     awareness = 2
     stealth = 4
 
@@ -867,7 +869,7 @@ class Ogre(Boss):
                      "\"Me hungry, human tasty.\""]
 
     maxHealth = 34
-    gold = 60
+    gold = 40
     
     armorClass = 1
     resistance = 2
@@ -951,7 +953,7 @@ class Rat(Enemy):
                       c.red("RAT") + " is roaming."]
 
     maxHealth = 12
-    gold = 7
+    gold = 5
     awareness = 2
     stealth = 1
     
@@ -1067,7 +1069,7 @@ class SewerRat(Enemy):
                        c.red("SEWER RAT") + " eating the decayed corpse of another rat."]
     
     maxHealth = 14
-    gold = 9
+    gold = 5
     awareness = 4
     stealth = 1
 
@@ -1112,7 +1114,7 @@ class RatBeast(Enemy):
                       "You encounter a " + c.red("RAT BEAST") + ", a rat the size of a bear."]
 
     maxHealth = 32
-    gold = 15
+    gold = 14
     awareness = 5
     stealth = 1
 
@@ -1183,7 +1185,7 @@ class Goblin(Enemy):
                       c.red("GOBLIN") + " is sleeping."]
 
     maxHealth = 14
-    gold = 6
+    gold = 9
     awareness = 4
     stealth = 4
 
@@ -1218,7 +1220,7 @@ class Goblin(Enemy):
 class BuffedGoblin(Goblin):
 # same as goblin, but spawns alone and is stronger
     maxHealth = 16
-    gold = 14
+    gold = 13
 
     armorClass = 3
     dodgeChance = 15
@@ -1237,7 +1239,7 @@ class Alchemist(Enemy):
                       c.red("ALCHEMIST") + " is selling potions to the goblins."]
     
     maxHealth = 20
-    gold = 15
+    gold = 10
     stealth = 2
     awareness = 2
 
@@ -1326,7 +1328,7 @@ class AncientDraugr(Enemy):
     isSpecial = True
 
     maxHealth = 28
-    gold = 20
+    gold = 26
     awareness = 8
     stealth = 2
     

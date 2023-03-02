@@ -10,7 +10,7 @@ player = entities.player
 class Item:
     name = "item"
     value = 10
-    enchantValue = 0.5 # +50% of price per level of enchantment
+    enchantValue = 0.4 # +20% of price per level of enchantment
     maxUses = 1
 
     enchantable = False
@@ -44,10 +44,12 @@ class Item:
             self.discard()
             if player.armor == self:
                 player.armor = None
+                self.unequip()
             elif player.ring == self:
                 player.ring = None
-            else:
-                player.inventory.remove(self)
+                self.unequip()
+            
+            player.inventory.remove(self)
         return True
 
     def status(self):
@@ -108,14 +110,14 @@ class Item:
 
 class Weapon(Item):
     enchantable = True
-    enchantValue = 0.4
+    enchantValue = 0.2
     
     def __init__(self, name, level):
         if type(self) in [Sword, Mace, Spear, Dagger]:
             material = ["bronze", "iron", "steel", "mithril"][level]
     
             self.name = material + " " + name
-            self.value = 15 + (25 * level)
+            self.value = 50 * level
             self.maxUses = 15 + (10 * level)
     
             self.damage = 4 + level
@@ -614,11 +616,13 @@ class Armor(Item):
 class HeavyArmor(Armor):
 # gives defense to player but lowers DEX
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    enchantValue = 0.25
+    
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
 
         self.name = material + " armor"
-        self.value = 20 + (30 * level)
+        self.value = 5 + (55 * level)
         self.maxUses = 20 + (12 * level)
 
         self.armorClass = level + 1
@@ -664,8 +668,8 @@ class MagicRobe(Armor):
 class Cloak(Armor):
 # provides 0 base armor, but +1 stealth
     name = "cloak"
-    value = 30
-    enchantValue = 0.8
+    value = 50
+    enchantValue = 0.6
     maxUses = 25
 
     def inspect(self):
@@ -853,9 +857,9 @@ class BuffRing(Ring):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
     def __init__(self, ID = -1):
-        self.value = 40
+        self.value = 50
         self.maxUses = 1
-        self.enchantValue = 1
+        self.enchantValue = 0.9
         # decides what stat is boosted
         self.statID = ID
         if ID < 0:
@@ -1000,7 +1004,7 @@ class HealingVial(Medicine):
 class Bandage(Medicine):
 # cures bleeding, heals some health, and applies regeneration
     name = "bandage"
-    value = 35
+    value = 40
     maxUses = 3
 
     healing = 6
@@ -1034,7 +1038,7 @@ class Bandage(Medicine):
 class Rations(Medicine):
 # heals a lot of health but can't be used in combat
     name = "rations"
-    value = 20
+    value = 25
     maxUses = 1
 
     usePrompt = "consume"
@@ -1074,7 +1078,7 @@ class Scroll(Item):
 class ScrollRemoveCurse(Scroll):
 # reverses curses from all items, has an INT in 4 chance to enchant
     name = "scroll of remove curse"
-    value = 40
+    value = 35
 
     def inspect(self):
         print("Reverses every curse into blessings on all of your items.")
@@ -1098,7 +1102,7 @@ class ScrollRemoveCurse(Scroll):
 class ScrollEnchant(Scroll):
 # adds 1 + INT/2 levels of enchantment to an item
     name = "scroll of enchantment"
-    value = 60
+    value = 65
 
     def inspect(self):
         print("This scroll will bless one of your items.")
@@ -1140,7 +1144,7 @@ class ScrollEnchant(Scroll):
 class ScrollRepair(Scroll):
 # fully repairs and item, higher levels of int increase its max uses
     name = "scroll of repair"
-    value = 45
+    value = 50
 
     def inspect(self):
         print("This scroll will fully restore the uses of one item.")
@@ -1193,7 +1197,7 @@ class Consumable(Item):
         
 class Bomb(Consumable):
     name = "bomb"
-    value = 40
+    value = 45
 
     def inspect(self):
         print("Bombs can destroy walls, possibly revealing secrets.")
@@ -1220,7 +1224,7 @@ class Bomb(Consumable):
 
 class StunBomb(Consumable):
     name = "stun bomb"
-    value = 40
+    value = 35
 
     def inspect(self):
         print("Stuns every enemy, giving you an opportunity to escape. Allows you to escape from any non-boss fight.")
@@ -1237,7 +1241,7 @@ class StunBomb(Consumable):
 class StorageBook(Consumable):
 # consuming grants +1 inventory size
     name = "\"Forbidden Techniques: Storage\""
-    value = 60
+    value = 45
 
     usePrompt = "read"
 

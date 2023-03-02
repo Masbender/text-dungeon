@@ -456,9 +456,6 @@ class Floor:
         print(message)
 
         print(f"\nYou have {player.armorClass} AC, granting {player.armorClass / 2} damage resistance.")
-        
-        if player.gold > 0:
-            print(f"You have {c.yellow(str(player.gold))} gold.\n")
 
         # prints effects
         for i in range(len(player.effects)):
@@ -501,7 +498,9 @@ class Floor:
         while True:
             options = ["back"] + item_list()
             
-            playerInput = gather_input("Select an item:", options, True) - 1
+            if player.gold > 0:
+                print(f"You have {c.yellow(str(player.gold))} gold.\n")
+            playerInput = gather_input("Select an item to inspect or use:", options, True) - 1
 
             # exits the loop if player selects "back"
             if playerInput == -1:
@@ -789,7 +788,7 @@ class Shop(Room):
             self.stock[0].enchantment = randint(1, 2)
         
         # has an item or gear that can't be cursed
-        self.stock.append(choice([items.gen_gear, items.gen_item])(depth))
+        self.stock.append(items.gen_gear(depth))
         if self.stock[1].enchantment < 0:
             self.stock[1].enchantment = 0
 
@@ -799,6 +798,9 @@ class Shop(Room):
         # has a healing item
         self.stock.append(choice([items.Bandage, items.Rations])())
 
+        if depth > 1:
+            self.stock.append(items.ScrollRepair())
+        
         if depth == 1:
             self.stock.append(items.Rope())
         elif depth == 4:
