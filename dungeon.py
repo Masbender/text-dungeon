@@ -549,117 +549,6 @@ class Floor:
                     player.ring = None
 
                 print("You unequip the " + chosenItem.get_name() + ".")
-        
-    def action_shop(self):
-    # called when the player talks to the shopkeeper
-        room = self.get_room()
-
-        slowprint("The golem doesn't even look alive, but you approach it anyways.\n")
-
-        slowprint("The golem shows you it's wares:")
-        options = ["cancel"]
-        # displays items and forms options
-        for item in room.stock:
-            options.append("buy " + item.get_name())
-            print(f"{item.get_name()}, {item.get_price(True, True)} gold") # item.get_price(buyPrice?, returnString?)
-
-        print(f"\nYou have {c.yellow(str(player.gold))} gold.")
-
-        playerInput = gather_input(f"What would you like to buy?", options, True) - 1
-
-        if playerInput > -1:
-            golemsDeal = room.stock[playerInput]
-            golemsPrice = golemsDeal.get_price(True, False)
-
-            playersDeal = []
-            playersPrice = 0
-
-            while True:
-                print(f"{golemsDeal.get_name()} costs {c.red(golemsDeal.get_price(True, True))} gold.\n")
-                
-                if len(playersDeal) > 0:
-                    print(f"Your deal (worth {c.green(str(playersPrice))} gold):")
-                    for item in playersDeal:
-                        print(f"{item.get_name()} is worth {item.get_price(False, True)} gold,")
-                
-                if playersPrice < golemsPrice:
-                    print(f"This deal will cost you {c.red(str(golemsPrice - playersPrice))} gold.")
-                else:
-                    print(c.green("This deal will not cost you any gold."))
-
-                options = ["cancel", "accept deal", "undo"]
-
-                for item in player.inventory:
-                    options.append(f"{item.get_name()}, {item.get_price(False, False)} gold")
-
-                playerInput = gather_input(f"\nDo you add any items to the deal? (You have {c.yellow(str(player.gold))} gold)", options, True) - 3
-
-                if playerInput == -3:
-                    for item in playersDeal:
-                        item.pickup()
-                        player.inventory.append(item)
-                    sort_inventory()
-                    break
-
-                elif playerInput == -2:
-                    if playersPrice + player.gold < golemsPrice:
-                        print(c.red(choice(["\"YOU DARE TRY TO SCAM ME?\"", "\"DO YOU THINK I'M A FOOL?\"", "\"YOU CLEARLY CAN'T AFFORD THIS.\""])))
-                    else:
-                        goldSpent = 0
-                        if playersPrice < golemsPrice:
-                            goldSpent = golemsPrice - playersPrice
-                            player.gold -= goldSpent
-                            
-                        print(f"You buy {c.yellow(golemsDeal.get_name())} for {c.yellow(goldSpent)} gold.")
-
-                        if goldSpent > 0:
-                            print("The golem absorbs the gold.")
-
-                        if len(player.inventory) < player.inventorySize:
-                            player.inventory.append(golemsDeal)
-                            golemsDeal.pickup
-
-                            sort_inventory()
-                        else:
-                            print("You drop the item because you are carrying too many things!")
-                            room.loot.append(golemsDeal)
-
-                        room.stock.remove(golemsDeal)
-                        break
-
-                elif playerInput == -1:
-                    if len(playersDeal) > 0:
-                        removedItem = playersDeal[-1]
-
-                        playersPrice -= removedItem.get_price(False, False)
-                        print(f"You remove {removedItem.get_name()} from the deal.")
-
-                        removedItem.pickup()
-                        player.inventory.append(removedItem)
-
-                        sort_inventory()
-
-                        playersDeal.pop(-1)
-                    else:
-                        print("There is nothing to undo!")
-
-                else:
-                    addedItem = player.inventory[playerInput]
-                    playersDeal.append(addedItem)
-                    playersPrice += addedItem.get_price(False, False)
-
-                    if addedItem == player.armor:
-                        addedItem.unequip()
-                        player.armor = None
-
-                    elif addedItem == player.ring:
-                        addedItem.unequip()
-                        player.ring = None
-
-                    addedItem.discard()
-                    player.inventory.remove(addedItem)
-
-                    print(f"You add {addedItem.get_name()} to the deal.")
 
     def action_unlock_chest(self):
     # called when player uses an item
@@ -712,7 +601,7 @@ class Floor:
             actions = {
                 "move":self.action_move, "wait":self.action_wait, 
                 "view stats":self.action_view_stats, f"inventory [{len(player.inventory)}/{player.inventorySize}]":self.action_inventory,
-                c.yellow("take item"):self.action_take_item, c.yellow("shop"):self.action_shop,
+                c.yellow("take item"):self.action_take_item,
                 c.yellow("unlock chest"):self.action_unlock_chest, c.red("surprise attack"):self.action_surprise
             }
             
@@ -739,7 +628,8 @@ class Room:
     def __init__(self, loot = [], threats = [], description = ""):
         self.loot = loot
         self.threats = threats
-        self.description = description
+        if description != "":
+            self.description = description
 
     def unblock(self): # called if the room needs a bomb or key to unlock
         return True
@@ -853,8 +743,8 @@ class Chasm(Room):
     specialAction = "descend chasm"
 
     def interact(self):
-        g = dungeon.Generator()
-        g.initialize_floor("crossroads", 5, 7)
+        g = Generator()
+        g.initialize_floor("mines", 5, 7)
         
         hasRope = False
         for item in player.inventory:
@@ -891,17 +781,62 @@ class Shop(Room):
         self.loot = []
         self.threats = []
 
-        self.stock = [items.gen_gear(depth + 3), items.gen_gear(depth), items.gen_item(depth + 5)]
+        self.stock = []
+
+        # has an enchanted gear of a next-area material
+        self.stock.append(items.gen_gear(depth + 3))
         if self.stock[0].enchantable:
-            self.stock[0].enchantment += 1
+            self.stock[0].enchantment = randint(1, 2)
         
-        if self.stock[1].enchantable:
-            self.stock[1].enchantment += randint(1, 2)
+        # has an item or gear that can't be cursed
+        self.stock.append(choice([items.gen_gear, items.gen_item])(depth))
+        if self.stock[1].enchantment < 0:
+            self.stock[1].enchantment = 0
+
+        # has an item from the next area
+        self.stock.append(items.gen_item(depth + 4))
+
+        # has a healing item
+        self.stock.append(choice([items.Bandage, items.Rations])())
 
         if depth == 1:
             self.stock.append(items.Rope())
         elif depth == 4:
             self.stock.append(items.StorageBook())
+        
+        # items are more expensive in later floors
+        for item in self.stock:
+            item.value = int(item.value * (1 + 0.2 * (depth // 3)))
+
+    def interact(self):
+        while True:
+            options = ["cancel"]
+
+            for item in self.stock:
+                options.append(item.get_name() + f", costs {c.yellow(item.get_price())} gold")
+
+            print(c.blue("The golem shows you it's wares."))
+            playerInput = gather_input(f"You have {c.yellow(player.gold)} gold.", options, True) - 1
+
+            if playerInput == -1: # cancel
+                break
+            else:
+                purchase = self.stock[playerInput]
+
+                if player.gold < purchase.get_price():
+                    print(c.red(f"You need {purchase.get_price() - player.gold} more gold to purchase {purchase.get_name()}!"))
+
+                elif len(player.inventory) == player.inventorySize:
+                    print(c.red(f"Your inventory is full!"))
+                    break
+
+                else:
+                    self.stock.remove(purchase)
+                    player.gold -= purchase.get_price()
+                    player.inventory.append(purchase)
+                    sort_inventory()
+                    print(f"You purchase {purchase.get_name()} for {purchase.get_price()} gold.")
+                    break
 
 def gen_room(area, depth, type):
     loot = []

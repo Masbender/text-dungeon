@@ -102,31 +102,9 @@ class Item:
     def recharge(self):
     # runs for every item when player descends a floor
         return False
-
-    def get_price(self, shop = False, returnString = False):
-    # returns value based on uses and enchantment
-    # shop indicates if the item is yours or a vendors
-        price = int((self.value + (self.value * self.enchantValue * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
-        # price = (value + (1/3 of value per level)) * (ratio of uses to max uses, ranging from 50% to 100%)
-
-        if shop:
-            price = int(price * 1.2) # 20% more expensive when buying
-        else:
-            price = int(price / 1.2) # 20% less expensive when selling
-        
-        if player.appraisal < price:
-            if shop:
-                price = int(price * 1.3) # 30% more expensive when buying if unappraised
-            else:
-                price = int(price / 1.3) # 30% less expensive when selling if unappraised
-
-            if returnString:
-                return str(price) + '?'
-
-        if returnString:
-            return str(price)
-        else:
-            return price
+    
+    def get_price(self):
+        return int((self.value + (self.value * self.enchantValue * self.enchantment)) * (self.uses / self.maxUses / 2 + 0.5))
 
 class Weapon(Item):
     enchantable = True

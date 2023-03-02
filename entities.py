@@ -1366,13 +1366,15 @@ class AncientDraugr(Enemy):
 
 enemyPool = {
     "prison":[([Skeleton], 6), ([Thief], 3), ([Ghoul], 3)],
-    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast], 3), ([BuffedGoblin], 3)]
+    "crossroads":[([Rat, Rat], 3), ([Rat, Rat, Rat], 3), ([RatBeast], 3), ([BuffedGoblin], 3)],
+    "mines":[([Worm], 12)]
 } # each number means _ in 12 chance
 # enemies are ordered weakest to strongest
 
 specialEnemyPool = {
     "prison":[([SkeletonGuard], 6), ([Skeleton, Skeleton], 3), ([Draugr], 3)],
-    "crossroads":[([Alchemist, Goblin, Goblin], 8), ([AncientDraugr], 4)]
+    "crossroads":[([Alchemist, Goblin, Goblin], 8), ([AncientDraugr], 4)],
+    "mines":[([AncientDraugr], 12)]
 } # special enemies are stronger and less common
 
 def gen_enemies(area, normalEnemies, specialEnemies, dangerModifier = 0):
