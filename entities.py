@@ -1043,8 +1043,8 @@ class Rat(Enemy):
             piercing = 2
             if player.armorClass > 4:
                 piercing += 1
-            damage = player.hurt(self, 4, piercing)
             player.armor.degrade()
+            damage = player.hurt(self, 4, piercing)
             print(f"RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
             return
 
@@ -1081,9 +1081,9 @@ class SewerRat(Enemy):
             print("You dodge SEWER RAT's attack.")
             return
         
-        if randint(0, 1):
-            damage = player.hurt(self, 3, 2)
+        if randint(0, 1) and player.armor != None:
             player.armor.degrade()
+            damage = player.hurt(self, 3, 2)
 
             print(f"SEWER RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
             return
