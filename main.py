@@ -77,7 +77,7 @@ if load_save == 'n':
 
         # adds standard encounters
         g.addRooms.append(dungeon.LockedRoom(i))
-        g.addItems.extend([items.IronKey(), items.KnowledgeBook(), choice([items.ScrollEnchant(), items.ScrollRemoveCurse(), items.ScrollRepair()])])
+        g.addItems.extend([items.IronKey(), items.KnowledgeBook(), items.ScrollEnchant()])
     
         if i % 3 == 0:
             message = c.blue({

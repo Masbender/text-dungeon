@@ -726,7 +726,7 @@ class LockedRoom(Room):
         self.loot = []
         self.threats = []
 
-        self.loot = [items.gen_gear(depth + 1), items.gen_item(depth + 2)]
+        self.loot = [items.gen_gear(depth + 1), choice([items.gen_item(depth + 2), items.ScrollRepair()])]
 
     def unblock(self): # requires a certain key
         print(f"This room is locked and requires a iron key.")

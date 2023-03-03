@@ -863,10 +863,10 @@ class BuffRing(Ring):
         # decides what stat is boosted
         self.statID = ID
         if ID < 0:
-            self.statID = randint(0, 4)
+            self.statID = randint(0, 5)
             
-        self.stat = ["stealth", "dodge", "health", "resistance", "awareness"][self.statID]
-        self.name = "ring of " + ["shadows", "evasion", "resilience", "immunity", "vision"][self.statID]
+        self.stat = ["stealth", "dodge", "health", "resistance", "awareness", "critChance"][self.statID]
+        self.name = "ring of " + ["shadows", "evasion", "resilience", "immunity", "vision", "power"][self.statID]
 
         super().__init__()
 
@@ -880,7 +880,8 @@ class BuffRing(Ring):
             f"Increases your chance to dodge by {5 + 5 * enchantment}%.",
             f"Increases your health by {2 + 2 * enchantment}.",
             f"Increases your resistance to disease and injury by {1 + enchantment} level(s).",
-            f"Increases your awareness of nearby threats by {1 + enchantment} level(s)."
+            f"Increases your awareness of nearby threats by {1 + enchantment} level(s).",
+            f"Increases your chance to get a critical hit by {5 + 5 * enchantment}%."
         ][self.statID])
 
     def consume(self, floor):
@@ -908,6 +909,9 @@ class BuffRing(Ring):
         elif self.stat == "awareness":
             player.awareness += 1 + enchantment
 
+        elif self.stat == "critChance":
+            player.critChance += 5 + 5 * enchantment
+
     def unequip(self):
         enchantment = self.enchantment
         if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
@@ -928,6 +932,9 @@ class BuffRing(Ring):
 
         elif self.stat == "awareness":
             player.awareness -= 1 + enchantment
+
+        elif self.stat == "critChance":
+            player.critChance -= 5 + 5 * enchantment
 
 class Medicine(Item): 
     usePrompt = "use"
@@ -1211,7 +1218,15 @@ class Bomb(Consumable):
             if issubclass(type(enemy), entities.Boss):
                 damage = 8
 
+            # bombs are unaffected by crit chance
+            crit = player.critChance
+            player.critChance = 0
+            
             damage = enemy.hurt(player, damage, 1, 0)
+
+            # restores crit chance
+            player.critChance = crit
+            
             print(f"The bomb does {c.red(damage)} damage to {enemy.name}!")
 
         self.degrade()
@@ -1235,6 +1250,36 @@ class StunBomb(Consumable):
             enemy.stunned = True
             enemy.affect(entities.Dazed(True), 2)
         print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
+        self.degrade()
+        return True
+
+class FireBomb(Consumable):
+    name = "fire bomb"
+    value = 55
+
+    def inspect(Self):
+        print("Damages all enemies and sets them on fire.")
+
+    def attack(self, enemies):
+        for enemy in enemies:
+            damage = 14
+
+            # does less damage against bosses (discourages spamming bombs)
+            if issubclass(type(enemy), entities.Boss):
+                damage = 7
+
+            # bombs are unaffected by crit chance
+            crit = player.critChance
+            player.critChance = 0
+            
+            damage = enemy.hurt(player, damage, 2, 0)
+
+            # restores crit chance
+            player.critChance = crit
+            
+            enemy.affect(entities.OnFire(), 5)
+            print(f"The fire bomb does {c.red(damage)} damage to {enemy.name}, and sets them {c.effect(entities.OnFire)}!")
+
         self.degrade()
         return True
 
@@ -1428,18 +1473,14 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 5), (Bandage, 3), (ScrollRepair, 1), (ScrollRemoveCurse, 1), (ScrollEnchant, 1), (Bomb, 4), (Bandage, 2), (StunBomb, 3)]
+standardLoot = [(Rations, 3), (ScrollRemoveCurse, 1), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
     # higher quality items have higher numbers
-    itemNum = randint(1, 16) + quality
-
-    # makes sure that the chosen number isn't too high
-    if itemNum > 20: # 16 is placeholder value until more items are added
-        itemNum = 16
+    itemNum = randint(1, 10) + quality
 
     # goes through each item until it finds one with a larger number than selected
     for item in standardLoot:
@@ -1448,6 +1489,9 @@ def gen_item(quality):
             return chosenItem()
         else:
             itemNum -= item[1]
+
+    # if number is too high it returns the last one
+    return standardLoot[-1][0]
 
 def gen_loot(quality):
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough

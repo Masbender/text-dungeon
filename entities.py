@@ -671,7 +671,8 @@ class Draugr(Enemy):
     gold = 16
     awareness = 3
     stealth = 2
-    
+
+    critChance = 10
     resistance = 2
     armorClass = 3
 
@@ -830,6 +831,7 @@ class Thief(Enemy):
     gold = 6
     awareness = 2
     stealth = 4
+    critChance = 5
 
     time = 0
     hasDart = True
@@ -1196,6 +1198,7 @@ class Goblin(Enemy):
 
     armorClass = 2
     dodgeChance = 5
+    critChance = 5
 
     hasDart = True
     hasBandage = True
