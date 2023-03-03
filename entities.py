@@ -19,7 +19,7 @@ class Creature:
     armorClass = 0 # reduced from incoming damage
     dodgeChance = 0 # percent chance to dodge
     resistance = 0 # resistance to some effects
-    appraisal = 50 # highest value item that the value can be identified
+    critChance = 0 # % chance to do x2 damage
 
     # these are mainly used for the player, mostly modify basic stats
     strength = 0 # increases damage
@@ -70,7 +70,7 @@ class Creature:
         self.perception += increase
 
         self.awareness += increase
-        self.appraisal += increase * 25
+        self.critChance += 5 * increase
     
     def set_stats(self, str, con, dex, per, int):
     # sets all 5 stats at once
@@ -92,6 +92,11 @@ class Creature:
 
     def hurt(self, attacker, damage, piercing = 0, strength = None):
         # uses attacker strength by default, but can be overridden
+        if attacker.critChance > 0:
+            if randint(0, 100) < attacker.critChance:
+                damage *= 2
+                print(attacker.name + " got a CRITICAL STIKE!")
+        
         if strength == None:
             strength = attacker.strength
             

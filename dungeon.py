@@ -448,7 +448,7 @@ class Floor:
         message += f"you have a {c.compare(player.dodgeChance, player.dexterity * 5)}% chance to dodge attacks, and your stealth is level {c.compare(player.stealth, player.dexterity)}"
         
         message += f"\n\n{c.compare(player.perception, player.basePER)} PER : "
-        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you can appraise items with a value of {c.compare(player.appraisal, player.perception * 25 + 50)} gold or less"
+        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you have a {c.compare(player.critChance, player.perception * 5)}% chance to deal double damage"
         
         message += f"\n\n{c.compare(player.intelligence, player.baseINT)} INT : "
         message += f"your gear degrades {100 - player.intelligence * 10}% of the time"

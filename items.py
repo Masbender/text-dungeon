@@ -1363,7 +1363,7 @@ class KnowledgeBook(Item):
         elif chosenStat == "PER":
             player.update_per(1)
             player.basePER += 1
-            print("You're more aware, you are a better at bargaining.")
+            print("You're more aware, your attacks are better timed.")
         elif chosenStat == "INT":
             player.update_int(1)
             player.baseINT += 1
