@@ -1285,19 +1285,77 @@ class FireBomb(Consumable):
 
 class StorageBook(Consumable):
 # consuming grants +1 inventory size
+# purchased from the golem in the crossroads
     name = "\"Forbidden Techniques: Storage\""
     value = 45
 
     usePrompt = "read"
 
     def inspect(self):
-        print("Contains forbidden knowledge on the art of storage.")
+        print("Contains knowledge on how to manipulate the physical world.")
         print("Reading will increase your inventory size.")
 
     def consume(self, floor):
         player.inventorySize += 1
-        print("The books knowledge is too powerful for any mortal being, before long it burns up into ashes.")
-        print("You still managed to read some of it before it burned up, and have gained +1 inventory size.")
+        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Shortly after being read, the book burns to ashes. You gain +1 inventory size.")
+        self.degrade()
+        return True
+        
+class ImmunityBook(Consumable):
+# consuming grants +1 immunity
+# found in the mines
+    name = "\"Forbidden Techniques: Immunity\""
+    value = 60
+
+    usePrompt = "read"
+
+    def inspect(self):
+        print("Contains knowledge on how to escape the limits of mortality.")
+        print("Reading will increase your resistance.")
+
+    def consume(self, floor):
+        player.immunity += 1
+        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Shortly after being read, the book burns to ashes. You gain +1 resistance.")
+        self.degrade()
+        return True
+
+class EvasionBook(Consumable):
+# consuming grants +5% dodge chance
+# found as an artifact
+    name = "\"Forbidden Techniques: Evasion\""
+    value = 100
+
+    usePrompt = "read"
+
+    def inspect(self):
+        print("Contains knowledge on how to harness your shadow form.")
+        print("Reading will increase your dodge chance.")
+
+    def consume(self, floor):
+        player.dodgeChance += 5
+        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
+        self.degrade()
+        return True
+
+class VisionBook(Consumable):
+# consuming grants +1 awareness
+# purchased from the collector
+    name = "\"Forbidden Techniques: Vision\""
+    value = 100
+
+    usePrompt = "read"
+
+    def inspect(self):
+        print("Contains knowledge on sensing the presence of others shadow forms.")
+        print("Reading will increase your awareness.")
+
+    def consume(self, floor):
+        player.awareness += 1
+        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Shortly after being read, the book burns to ashes. You gain +1 awareness.")
         self.degrade()
         return True
 
@@ -1475,7 +1533,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 3), (ScrollRemoveCurse, 1), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, EvasionBook]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):

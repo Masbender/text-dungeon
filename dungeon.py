@@ -865,8 +865,11 @@ def gen_room(area, depth, type):
     # secret room
     elif type == 3:
         room.description = "This is a secret room."
-        
-        loot.append(items.gen_loot(depth))
+
+        if area == "mines":
+            loot.append(items.ImmunityBook())
+        else:
+            loot.append(items.gen_loot(depth))
         
         for i in range(randint(1, 2)):
             loot.append(items.gen_item(depth + 3 - i))
