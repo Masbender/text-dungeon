@@ -1315,7 +1315,7 @@ class ImmunityBook(Consumable):
         print("Reading will increase your resistance.")
 
     def consume(self, floor):
-        player.immunity += 1
+        player.resistance += 1
         print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
         print("Shortly after being read, the book burns to ashes. You gain +1 resistance.")
         self.degrade()
@@ -1336,7 +1336,7 @@ class EvasionBook(Consumable):
     def consume(self, floor):
         player.dodgeChance += 5
         print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
-        print("Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
+        print(f"Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
         self.degrade()
         return True
 
