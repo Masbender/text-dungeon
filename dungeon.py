@@ -797,9 +797,6 @@ class Shop(Room):
 
         # has a healing item
         self.stock.append(choice([items.Bandage, items.Rations])())
-
-        if depth > 1:
-            self.stock.append(items.ScrollRepair())
         
         if depth == 1:
             self.stock.append(items.Rope())
@@ -808,7 +805,7 @@ class Shop(Room):
         
         # items are more expensive in later floors
         for item in self.stock:
-            item.value = int(item.value * (1 + 0.2 * (depth // 3)))
+            item.value = int(item.value * (1.3 ** (depth // 3)))
 
     def interact(self):
         while True:
@@ -980,7 +977,7 @@ class Generator:
     def generate_mines(self):
         self.modifier = ""
         self.generation = self.gen_mine
-        self.entryMessage += c.blue("The walls are rough and lined with gold, the air is still and filled with silence. You have enter The Mines.")
+        self.entryMessage += c.blue("The walls are rough and lined with gold, the air is still and filled with silence. You have entered The Mines.")
         
         self.generate_floor()
         self.layoutRooms[self.size // 2][0] = Refinery()

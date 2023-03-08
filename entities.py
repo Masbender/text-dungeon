@@ -596,6 +596,25 @@ class Invisibility(Effect):
     def inspect(self):
         print("Increases DEX by 2.")
 
+class Cloaked(Effect):
+# hides targets name, +10 dodge chance
+    name = "cloaked"
+    color = c.effect_good
+
+    def apply(self, target):
+        self.target = target
+
+        self.target.dodgeChance += 10
+
+        # hides and stores name
+        self.targetsName = self.target.name
+        self.target.name = "CLOAKED"
+
+    def reverse(self):
+        self.target.dodgeChance -= 10
+
+        self.target.name = self.targetsName
+
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
 # 1) nothing, 2) -1CON, 3) -2INT, 4) lose max health over time
@@ -1234,6 +1253,78 @@ class BuffedGoblin(Goblin):
     dodgeChance = 15
     strength = 2
 
+class Hound(Enemy):
+# agressive but weak defense, only spawns in the arena (so it's missing stealth related stats)
+    name = "HOUND"
+    battleMessages = ["The gates open, several hounds are released!"]
+
+    maxHealth = 14
+    gold = 4
+
+    critChance = 20
+
+    def attack(self):
+        if player.dodge(self):
+            print("You dodge HOUND's attack!")
+            return
+
+        damage = player.hurt(self, 6, 1)
+        if randint(1, 3) == 1:
+            player.affect(Bleeding(), 5)
+            print(f"HOUND bites you for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
+        else:
+            print(f"HOUND bites you for {c.red(damage)} damage!")
+
+class Trickster(Enemy):
+# can cloak self and allies, high dodge chance and attacks when they dodge list.insert(index, item)
+    name = "TRICKSTER"
+    battleMessages = ["\"Your final challenge is to defeat the Trickster!\""]
+
+    maxHealth = 16
+    gold = 30
+    
+    armorClass = 2
+    dodgeChance = 20
+    
+    hasSmoke = True
+    
+    def dodge(self, attacker):
+        dodged = super().dodge(attacker)
+
+        if dodged:
+            player.affect(Poisoned(), 7)
+            print(f"TRICKSTER retaliates by hitting you with dart, inflicting {c.effect(Poisoned)}!")
+
+        return dodged
+        
+    def hurt(self, attacker, damage, piercing = 0, strength = None):
+        damage = super().hurt(attacker, damage, piercing, strength)
+
+        if self.health <= 0 and self.hasSmoke: # prevents being one-hit killed
+            self.health = 1
+
+        return damage
+
+    def attack(self, enemies):
+        if self.health < 5 and self.hasSmoke: # smoke bomb
+            self.hasSmoke = False
+
+            # summons 2 goblins and changes position
+            self.enemies.extend([Goblin(), Goblin()])
+            self.enemies.remove(self)
+            self.enemies.insert(randint(0, 2), self)
+
+            # affects all with cloaked and weakens the goblins
+            for enemy in enemies:
+                enemy.affect(Cloaked(), 5)
+                if enemy != self:
+                    enemy.strength -= 1
+            
+            print(f"Two GOBLINs enter the arena, and TRICKSTER uses a smoke bomb, affecting all enemies with {c.effect(Cloaked)}!")
+        else:
+            damage = player.hurt(self, 5, 2)
+            print(f"TRICKSTER stabs you for {c.red(damage)} damage!")
+     
 class Alchemist(Enemy):
 # buffs allies with Rage (+2 STR), Steel Flesh (+2 CON), and Invisibility (+2 DEX)
 # runs away if alone
