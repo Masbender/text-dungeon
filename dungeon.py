@@ -29,7 +29,6 @@ def unlock(key):
 
         return False
 
-
 def sort_inventory():
     weapons = []
     wands = []
@@ -57,7 +56,6 @@ def sort_inventory():
 
     player.inventory = weapons + wands + healing + consumables + apparel + scrolls + misc
 
-
 def item_list():
 # returns a list of item names
     itemList = []
@@ -65,7 +63,6 @@ def item_list():
         itemList.append(item.get_name())
 
     return itemList
-
 
 def update_effects(creature, enemies = None):
 # iterates through every effect
@@ -84,7 +81,6 @@ def update_effects(creature, enemies = None):
         creature.effects[effectIndex].reverse()
         creature.effects.pop(effectIndex)
 
-
 def print_effects(creature):
     effects = []
     for i in range(len(creature.effects)):
@@ -96,7 +92,6 @@ def print_effects(creature):
 
     if len(effects) > 0:
         print(f"[{' | '.join(effects)}]")
-
 
 def print_player_info():
 # prints player health, effects, stats, and equipment
@@ -115,8 +110,7 @@ def print_player_info():
     
     print(statsDisplay)
     separator()
-           
-                
+                        
 class Battle:
     def __init__(self, enemies, isSurprise = False):
         self.battleOver = False
@@ -272,12 +266,10 @@ class Floor:
         for line in lines:
             print(" ".join(line))
 
-
     def update_room(self, y, x):
         self.map[y][x] = self.layout[y][x]
     # adds a room to the map
         
-
     def update_map(self):
     # adds nearby rooms to the map
     # warns player of nearby enemies
@@ -309,7 +301,6 @@ class Floor:
                     messages.append(enemy.warning)
                     slowprint(enemy.warning)
 
-
     def move_player(self, direction):
     # moves the player
     # directions : 0 = up/north, 1 = right/east, 2 = down/south, 3 = left/west
@@ -332,7 +323,6 @@ class Floor:
         self.posX = newX
         return True
 
-
     def get_room(self):
     # retunrs the room that the player is in
         return self.layout[self.posY][self.posX]
@@ -341,7 +331,7 @@ class Floor:
     # returns a list of options for the player to choose
         room = self.get_room()
 
-        options = ["move", "wait", "view stats"]
+        options = ["↑ North", "→ East", "↓ South", "← West", "wait", "view stats"]
 
         if player.inventory != []:
             options.append(f"inventory [{len(player.inventory)}/{player.inventorySize}]")
@@ -371,16 +361,20 @@ class Floor:
     
         return options
 
-    def action_move(self):
+    def action_move(self, direction):
     # called when player decides to move
         # - INPUT -
-        options = ["cancel", "↑", "→", "↓", "←"]
+            """ (Unindent if change is reverted)
+            options = ["cancel", "↑", "→", "↓", "←"]
 
-        self.print_map()
-        separator()
-        playerInput = gather_input("What direction do you move?", options, True) - 1
+            self.print_map()
+            separator()
+            playerInput = gather_input("What direction do you move?", options, True) - 1
 
-        if playerInput > -1: # -1 is cancel
+            if playerInput > -1: # -1 is cancel
+            """
+            playerInput = ["↑", "→", "↓", "←"].index(direction) # delete if change is reverted
+
             # - MOVE -
             self.move_player(playerInput)
             
@@ -598,7 +592,8 @@ class Floor:
             playerInput = gather_input("What do you do?", options, False, False)
 
             actions = {
-                "move":self.action_move, "wait":self.action_wait, 
+                #"move":self.action_move, 
+                "wait":self.action_wait,
                 "view stats":self.action_view_stats, f"inventory [{len(player.inventory)}/{player.inventorySize}]":self.action_inventory,
                 c.yellow("take item"):self.action_take_item,
                 c.yellow("unlock chest"):self.action_unlock_chest, c.red("surprise attack"):self.action_surprise
@@ -606,6 +601,12 @@ class Floor:
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
                 actions[playerInput]()
+            
+            elif "move " in playerInput and len(playerInput) == 6:
+                self.action_move(playerInput[5])
+
+            elif playerInput[0] in ["↑", "→", "↓", "←"]:
+                self.action_move(playerInput[0])
                 
             elif playerInput == "debug : reveal map":
                 self.map = self.layout
