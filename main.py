@@ -1,11 +1,22 @@
 import dungeon
 import entities
-from extra import clear_console
-from extra import gather_input
+from extra import clear_console, slowprint
+from extra import gather_input, pause
 import items
 import color
 from random import randint, choice
 import pickle
+
+
+tips = [
+    "Armor class (AC) decreases the amount of damage you take.",
+    "Your inventory size is influenced by your strength (STR).",
+    "Your equipment will last longer if you have high intelligence (INT).",
+    "You can't sneak past an enemy unless you can detect them.",
+    "Be careful, if you pick up a cursed item (-1), you can't drop it.",
+    "Just because you don't see a ! doesn't mean there's not an enemy there,\nsome enemies require a high level of awareness to detect."
+]
+
 
 player = entities.player
 c = color
@@ -134,4 +145,8 @@ while True:
 
     for item in player.inventory:
         item.recharge()
-    
+
+    clear_console()
+    slowprint("Decending...", 0.08)
+    slowprint("Tip: " + choice(tips), 0.01)
+    pause()

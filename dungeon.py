@@ -10,7 +10,6 @@ player = entities.player
 
 movementControls = [["move"], ["↑ North", "→ East", "↓ South", "← West",], ["↑", "→", "↓", "←",]][gather_input("Which movement controls do you prefer?", ["sub-menu", "arrows & words", "arrows only"])]
 
-
 def unlock(key):
     keyIndex = -1
     for item in player.inventory:
@@ -121,6 +120,9 @@ class Battle:
 
     def start_battle(self):
         clear_console()
+        if player.stunned:
+            slowprint(c.red("You are surprised,"))
+            
         if self.enemies[0].battleMessages == []:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
@@ -135,7 +137,6 @@ class Battle:
         while not self.battleOver:  # rework running, make it's usually option but it's chance based (DEX & enemy count)
             if player.stunned:      # when it isn't an option replace it with punch (does 1 damage) if player has no weapons
                 player.stunned = False
-                print(c.red("You fail to notice their presence..."))
             else:
                 self.player_turn()
             
