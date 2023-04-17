@@ -8,6 +8,8 @@ c = color
 
 player = entities.player
 
+movementControls = [["move"], ["↑ North", "→ East", "↓ South", "← West",], ["↑", "→", "↓", "←",]][gather_input("Which movement controls do you prefer?", ["sub-menu", "arrows & words", "arrows only"])]
+
 
 def unlock(key):
     keyIndex = -1
@@ -331,7 +333,7 @@ class Floor:
     # returns a list of options for the player to choose
         room = self.get_room()
 
-        options = ["↑ North", "→ East", "↓ South", "← West", "wait", "view stats"]
+        options = movementControls + ["wait", "view stats"]
 
         if player.inventory != []:
             options.append(f"inventory [{len(player.inventory)}/{player.inventorySize}]")
@@ -361,19 +363,22 @@ class Floor:
     
         return options
 
-    def action_move(self, direction):
+    def action_move(self, direction = None):
     # called when player decides to move
         # - INPUT -
-            """ (Unindent if change is reverted)
-            options = ["cancel", "↑", "→", "↓", "←"]
+            playerInput = 0
+            if direction == None:
+                options = ["cancel", "↑", "→", "↓", "←"]
 
-            self.print_map()
-            separator()
-            playerInput = gather_input("What direction do you move?", options, True) - 1
+                self.print_map()
+                separator()
+                playerInput = gather_input("What direction do you move?", options, True) - 1
 
-            if playerInput > -1: # -1 is cancel
-            """
-            playerInput = ["↑", "→", "↓", "←"].index(direction) # delete if change is reverted
+                if playerInput == -1: # -1 is cancel
+                    return
+
+            else:
+                playerInput = ["↑", "→", "↓", "←"].index(direction) # delete if change is reverted
 
             # - MOVE -
             self.move_player(playerInput)
@@ -592,8 +597,7 @@ class Floor:
             playerInput = gather_input("What do you do?", options, False, False)
 
             actions = {
-                #"move":self.action_move, 
-                "wait":self.action_wait,
+                "move":self.action_move, "wait":self.action_wait,
                 "view stats":self.action_view_stats, f"inventory [{len(player.inventory)}/{player.inventorySize}]":self.action_inventory,
                 c.yellow("take item"):self.action_take_item,
                 c.yellow("unlock chest"):self.action_unlock_chest, c.red("surprise attack"):self.action_surprise
@@ -601,9 +605,6 @@ class Floor:
             
             if playerInput in actions.keys(): # some actions aren't in the dictionary
                 actions[playerInput]()
-            
-            elif "move " in playerInput and len(playerInput) == 6:
-                self.action_move(playerInput[5])
 
             elif playerInput[0] in ["↑", "→", "↓", "←"]:
                 self.action_move(playerInput[0])
