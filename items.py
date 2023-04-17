@@ -200,17 +200,17 @@ class Sword(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            slowprint(f"{self.target.name} dodges your attack!")
+            print(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
             if self.target.affect(entities.Bleeding(), self.bleedDuration):
-                slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+                print(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
                 return True
 
-        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class CursedSword(Sword):
@@ -277,12 +277,12 @@ class Spear(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            slowprint(f"{self.target.name} dodges your attack!")
+            print(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
 
-        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class EnchantedSpear(Spear):
@@ -325,17 +325,17 @@ class Mace(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            slowprint(f"{self.target.name} dodges your attack!")
+            print(f"{self.target.name} dodges your attack!")
             return True
             
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 11) < self.stunChance and self.uses > 0:
             self.target.stunned = True
-            slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.red('stunned')}.")
+            print(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.red('stunned')}.")
             return True
 
-        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class FlamingMace(Mace):
@@ -356,7 +356,7 @@ class FlamingMace(Mace):
 
         if randint(0, 1):
             if self.target.affect(entities.OnFire(), randint(2, 3)):
-                slowprint(f"{self.target.name} is set on fire.")
+                print(f"{self.target.name} is set on fire.")
 
         return True
         
@@ -379,16 +379,16 @@ class Dagger(Weapon):
         damageDealt = super().attack(enemies)
 
         if self.target.dodge(player):
-            slowprint(f"{self.target.name} dodges your attack!")
+            print(f"{self.target.name} dodges your attack!")
             return True
 
         if self.target.has_effect(entities.Surprised):
             damageDealt += self.sneakBonus
-            slowprint("Sneak attack!")
+            print("Sneak attack!")
 
         damageDealt = self.target.hurt(player, damageDealt, 0, 0)
 
-        slowprint(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
+        print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class EbonyDagger(Dagger):
@@ -410,7 +410,7 @@ class EbonyDagger(Dagger):
         # applies ebony dagger's effect
         if self.target.health <= 0 and self.uses > 0 and randint(0, 2) < 2:
             player.maxHealth += 1
-            slowprint("You absorb " + self.target.name + "'s power.")
+            print("You absorb " + self.target.name + "'s power.")
         
         return True
 

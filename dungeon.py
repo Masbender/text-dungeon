@@ -1,5 +1,5 @@
 from random import randint, choice
-from extra import clear_console, gather_input, slowprint, separator
+from extra import clear_console, gather_input, slowprint, separator, pause
 import entities
 import items
 import color
@@ -18,7 +18,7 @@ def unlock(key):
             keyIndex = player.inventory.index(item)
 
     if keyIndex == -1:
-        slowprint(f"You do not have a {key.name}.")
+        print(f"You do not have a {key.name}.")
         return False
     else:
         options = ["cancel", "use key"]
@@ -128,10 +128,12 @@ class Battle:
 
         if self.enemies[0].isSpecial:
             slowprint(c.red(f"There is no escape from this fight."))
+
+        pause()
         separator()
         
-        while not self.battleOver:
-            if player.stunned:
+        while not self.battleOver:  # rework running, make it's usually option but it's chance based (DEX & enemy count)
+            if player.stunned:      # when it isn't an option replace it with punch (does 1 damage) if player has no weapons
                 player.stunned = False
                 print(c.red("You fail to notice their presence..."))
             else:
@@ -152,7 +154,7 @@ class Battle:
             removedEnemies = []
             for enemy in self.enemies:
                 if enemy.health <= 0:
-                    slowprint(f"{enemy.name} drops {enemy.gold} gold.")
+                    print(f"{enemy.name} drops {enemy.gold} gold.")
                     player.gold += enemy.gold
                     removedEnemies.append(enemy)
 
@@ -301,7 +303,7 @@ class Floor:
             if player.awareness >= enemy.stealth:
                 if not enemy.warning in messages:
                     messages.append(enemy.warning)
-                    slowprint(enemy.warning)
+                    print(enemy.warning)
 
     def move_player(self, direction):
     # moves the player
@@ -311,7 +313,7 @@ class Floor:
 
         # checks if new position is too big or small
         if not (self.check_pos(newY) and self.check_pos(newX)):
-            slowprint("The wall here is protected by magic and is indestructible.")
+            print("The wall here is protected by magic and is indestructible.")
             return False
 
         # checks if new tile is a wall
@@ -408,7 +410,7 @@ class Floor:
     # called when player chooses to wait
         self.update_map()
         update_effects(player)
-        slowprint(choice(["You wait.", "You take a moment to enjoy your surroundings.", "You ponder existence.", "You fall asleep for an unknown amount of time."]))
+        print(choice(["You wait.", "You take a moment to enjoy your surroundings.", "You ponder existence.", "You fall asleep for an unknown amount of time."]))
         
     def action_view_stats(self):
     # called when player decides to view stats
@@ -489,7 +491,7 @@ class Floor:
             # moves item to inventory
             room.loot[chosenItem].pickup()
             player.inventory.append(room.loot.pop(chosenItem))
-            slowprint(f"You take the {options[chosenItem + 1]}.")
+            print(f"You take the {options[chosenItem + 1]}.")
     
             sort_inventory()
 
@@ -558,7 +560,7 @@ class Floor:
         room = self.get_room()
         
         if room.areEnemiesAware:
-            slowprint("You have already fought these enemies, they will not be surprised.")
+            print("You have already fought these enemies, they will not be surprised.")
             playerInput = gather_input("Are you sure you want to surprise attack?", ["cancel", "surprise attack"], True)
 
             if playerInput == 0:
@@ -590,7 +592,7 @@ class Floor:
             self.print_map()
         
             if room.description != "":
-                slowprint(room.description)
+                print(room.description)
             options = self.get_options()
             
             print_player_info()
@@ -684,7 +686,7 @@ class Chest(Room):
         if unlock(items.GoldKey):
             self.loot.extend(self.hiddenLoot)
 
-            slowprint("You unlock the chest.")
+            print("You unlock the chest.")
             self.description = ""
             self.specialAction = ""
             return True
@@ -702,7 +704,7 @@ class Wall(Room):
         self.threats = []
 
     def unblock(self): # requires a bomb or pickaxe
-        slowprint("There is a wall in the way.")
+        print("There is a wall in the way.")
         
         # gathers input
         options = ["cancel"]

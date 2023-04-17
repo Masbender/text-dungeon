@@ -30,9 +30,9 @@ def gather_input(prompt, options, startAtZero = False, returnInt = True):
 # INPUT : prompt (string), options (list), returnInt (bool, optional)
 # OUTPUT : provides the player with options and requires an INT as a response, returns index or name of response
     # prints and numbers options
-    slowprint(prompt, .004)
+    print(prompt)
     for i in range(len(options)):
-        slowprint(f"[{i + int(not startAtZero)}] {options[i]}", .004)
+        print(f"[{i + int(not startAtZero)}] {options[i]}")
 
   # gathers input and accounts for user error
     validResponse = False
@@ -67,6 +67,10 @@ def slowprint(text, speed=.03):
         print()
     else:
         print(text)
+
+def pause():
+    input("- PRESS ENTER -")
+    print("\033[1A\033[K", end="")
 
 # break between output
 def separator(end="\n"):
