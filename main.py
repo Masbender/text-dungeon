@@ -7,19 +7,23 @@ import color
 from random import randint, choice
 import pickle
 
+player = entities.player
+c = color
 
 tips = [
     "Armor class (AC) decreases the amount of damage you take.",
     "Your inventory size is influenced by your strength (STR).",
     "Your equipment will last longer if you have high intelligence (INT).",
     "You can't sneak past an enemy unless you can detect them.",
-    "Be careful, if you pick up a cursed item (-1), you can't drop it.",
-    "Just because you don't see a ! doesn't mean there's not an enemy there,\nsome enemies require a high level of awareness to detect."
+    f"Be careful, if you pick up a cursed item {c.red('(-1)')}, you can't drop it.",
+    f"Just because you don't see a {c.red('!')} doesn't mean there's not an enemy there,\nsome enemies require a higher level of awareness to detect.",
+    f"Both {c.effect(entities.Poisoned)} and {c.effect(entities.Bleeding)} drain 1 health per turn, but {c.effect(entities.OnFire)} drains 2.",
+    f"Being {c.effect(entities.Poisoned)} drains 1 health per turn and lowers your strength (STR).",
+    f"Being {c.effect(entities.OnFire)} also inflicts you with {c.effect(entities.Burned)}, which lowers your armor class (AC).",
+    f"{c.effect(entities.Decay)} lowers your constitution (CON), and becomes stronger over time.",
+    "Select \"view stats\" to learn what your current effects do.",
+    f"Having {c.effect(entities.BrokenBones)} decreases your strength (STR), constitution (CON), and dexterity (DEX),\nand it can only be cured by a {c.yellow('vial of healing')}."
 ]
-
-
-player = entities.player
-c = color
 
 load = False
 floors = []
@@ -147,6 +151,6 @@ while True:
         item.recharge()
 
     clear_console()
-    slowprint("Decending...", 0.08)
+    print("Decending...")
     slowprint("Tip: " + choice(tips), 0.01)
     pause()
