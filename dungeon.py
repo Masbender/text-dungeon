@@ -117,8 +117,12 @@ class Battle:
         self.battleOver = False
         self.enemies = enemies
         self.isSurpriseAttack = isSurprise
+        self.runChance = 100
+        self.canRun = True
 
     def start_battle(self):
+        initialEnemies = len(self.enemies)
+        
         clear_console()
         if player.stunned:
             slowprint(c.red("You are surprised,"))
@@ -134,20 +138,39 @@ class Battle:
         pause()
         separator()
         
-        while not self.battleOver:  # rework running, make it's usually option but it's chance based (DEX & enemy count)
-            if player.stunned:      # when it isn't an option replace it with punch (does 1 damage) if player has no weapons
+        while not self.battleOver: 
+            # calculates run chance based on amount of enemies
+            self.runChance = 100 + player.dodgeChance
+            if len(self.enemies) > initialEnemies:
+               self.runChance -= 70
+            else:
+                self.runChance -= int(70 / initialEnemies) * len(self.enemies)
+
+            # checks each enemy to change run chance and check if player can run
+            self.canRun = True
+            for enemy in self.enemies:
+                if enemy.stunned:
+                    self.runChance += int(70 / initialEnemies)
+                else:
+                    self.runChance -= int(enemy.dodgeChance / initialEnemies)
+                    
+                if enemy.isSpecial:
+                    self.canRun = False
+
+            if self.runChance > 100:
+                self.runChance = 100
+            elif self.runChance < 0:
+                self.runChance = 0
+            
+            if player.stunned:
                 player.stunned = False
             else:
                 self.player_turn()
             
-            canRun = True
-            allStunned = True
+            if self.battleOver:
+                break;
+
             for enemy in self.enemies:
-                if not enemy.stunned: # tracks if any enemies are not stunned
-                    allStunned = False
-                if enemy.isSpecial:
-                    canRun = False
-            
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
 
@@ -165,10 +188,6 @@ class Battle:
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
                 break
-
-            # handles escaping, cannot escape on the first turn of a sneak attack
-            if allStunned and canRun and not self.isSurpriseAttack:
-                self.run_prompt()
 
             self.isSurpriseAttack = False
             
@@ -196,21 +215,31 @@ class Battle:
         while not turnOver:
             self.print_battle()
 
-            itemUsed = gather_input("What do you use?", item_list())
+            itemUsed = None
+            if self.canRun:
+                itemUsed = gather_input("What do you use?", [f"run ({self.runChance}% chance)"] + item_list(), True) - 1
+            else:
+                itemUsed = gather_input("What do you use?", item_list())
 
-            turnOver = player.inventory[itemUsed].attack(self.enemies)
+            if itemUsed == -1:
+                if randint(0, 99) < self.runChance + 5: # a little bit of trickery
+                    print(c.green("You succesfully escaped."))
+                    self.run()
+                else:
+                    print(c.red("You failed to escape."))
+                turnOver = True
+            else:
+                turnOver = player.inventory[itemUsed].attack(self.enemies)
 
         update_effects(player, self.enemies)
 
-    def run_prompt(self): # if all enemies are stunned, the player can choose to run
-        playerInput = gather_input("All enemies are stunned, you have an opportunity to escape!", ["run", "fight"], False, False)
-
-        if playerInput == "run":
-            self.battleOver = True
-
-            # heals the enemies a bit to make running less powerful
-            for enemy in self.enemies:
-                enemy.heal(5)
+    def run(self): # called if the player chooses to run
+        self.battleOver = True
+        # heals the enemies a bit to make running less powerful
+        for enemy in self.enemies:
+            enemy.heal(5)
+            enemy.awareness += 1
+            enemy.stealth -= 1
 
 class Floor:
     def __init__(self, layout, posY, posX, entryMessage = ""): # posY and posX are player's position

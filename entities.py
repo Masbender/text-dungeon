@@ -673,7 +673,7 @@ class RatDisease(Effect):
         if self.stage > 3:
             print(f"Your health decays in {self.progression} turns.")
         else:
-            print(f"Progresses to stage {self.stage + 1} in {self.progression} turns.")
+            print(f"Progresses to lvl {self.stage + 1} in {self.progression} turns.")
             
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
