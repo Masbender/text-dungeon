@@ -138,7 +138,7 @@ class Battle:
             slowprint(c.blue(choice(self.enemies[0].battleMessages)))
 
         if player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
-                slowprint("You are both surprised.")
+                slowprint("You are all surprised.")
                 self.allSurprised = True
 
         if self.enemies[0].isSpecial:

@@ -1242,14 +1242,14 @@ class StunBomb(Consumable):
     value = 35
 
     def inspect(self):
-        print("Stuns every enemy, giving you an opportunity to escape. Allows you to escape from any non-boss fight.")
-        print(f"Leaves enemies {c.effect(entities.Dazed)}, lowering their DEX and PER.")
+        print(f"Leaves enemies {c.effect(entities.Dazed)} and {c.effect(entities.Surprised)}, lowering their DEX and PER.")
+        print(f"Allows you to escape from non-boss fights, and stuns enemies for a couple turns.")
 
     def attack(self, enemies):
         for enemy in enemies:
-            enemy.stunned = True
             enemy.affect(entities.Dazed(True), 2)
-        print(f"All enemies are {c.red('stunned')} and {c.effect(entities.Dazed)}!")
+            enemy.affect(entities.Surprised(), 2)
+        print(f"All enemies are {c.effect(entities.Surprised)} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True
 

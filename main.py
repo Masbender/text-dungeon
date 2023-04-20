@@ -23,7 +23,7 @@ tips = [
     "It's harder to escape from agile enemies.",
     "Your dodge chance also impacts your success chance at escaping combat.",
     "When you escape from enemies they become aware of your presence,\nmaking them harder to sneak by again.",
-    f"A {c.yellow('stun bomb')} allows you to escape from any enemy unless they are a boss.5",
+    f"A {c.yellow('stun bomb')} allows you to escape from any enemy unless they are a boss.",
     
     f"Both {c.effect(entities.Poisoned)} and {c.effect(entities.Bleeding)} drain 1 health per turn, but {c.effect(entities.OnFire)} drains 2.",
     f"Being {c.effect(entities.Poisoned)} drains 1 health per turn and lowers your strength (STR).",
