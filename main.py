@@ -11,17 +11,19 @@ player = entities.player
 c = color
 
 tips = [
-    "Armor class (AC) decreases the amount of damage you take.",
+    "Your armor class (AC) decreases the amount of damage you take.",
     "Your inventory size is influenced by your strength (STR).",
     "Your equipment will last longer if you have high intelligence (INT).",
     
     f"Be careful, if you pick up a cursed item {c.red('(-1)')}, you can't drop it.",
+    "Be on the lookout for secret rooms, most floors have one!",
     f"Just because you don't see a {c.red('!')} doesn't mean there's not an enemy there,\nsome enemies require a higher level of awareness to detect.",
+    "You can only sneak past an enemy if you can also detect them.",
 
     "It's harder to escape from agile enemies.",
     "Your dodge chance also impacts your success chance at escaping combat.",
     "When you escape from enemies they become aware of your presence,\nmaking them harder to sneak by again.",
-    f"A {c.yellow("stun bomb")} allows you to escape from any enemy unless they are a boss.5",
+    f"A {c.yellow('stun bomb')} allows you to escape from any enemy unless they are a boss.5",
     
     f"Both {c.effect(entities.Poisoned)} and {c.effect(entities.Bleeding)} drain 1 health per turn, but {c.effect(entities.OnFire)} drains 2.",
     f"Being {c.effect(entities.Poisoned)} drains 1 health per turn and lowers your strength (STR).",

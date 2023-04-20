@@ -255,9 +255,6 @@ class Enemy(Creature):
             self.attack(enemies)
 
 class Boss(Enemy):
-    awareness = 100
-    stealth = -100
-
     isSpecial = True
 
     def do_turn(self, enemies):
@@ -849,6 +846,7 @@ class Thief(Enemy):
     gold = 6
     awareness = 2
     stealth = 4
+    
     critChance = 5
 
     time = 0
@@ -895,6 +893,8 @@ class Ogre(Boss):
 
     maxHealth = 34
     gold = 40
+    awareness = 3
+    stealth = -1
     
     armorClass = 1
     resistance = 2

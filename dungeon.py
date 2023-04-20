@@ -113,24 +113,33 @@ def print_player_info():
     separator()
                         
 class Battle:
-    def __init__(self, enemies, isSurprise = False):
+    def __init__(self, enemies):
         self.battleOver = False
         self.enemies = enemies
-        self.isSurpriseAttack = isSurprise
         self.runChance = 100
         self.canRun = True
+
+        self.allSurprised = False
 
     def start_battle(self):
         initialEnemies = len(self.enemies)
         
+        
         clear_console()
-        if player.stunned:
-            slowprint(c.red("You are surprised,"))
+
+        if player.has_effect(entities.Surprised) and not self.enemies[0].has_effect(entities.Surprised):
+                slowprint(c.red("You are surprised!"))
+        elif not player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
+                slowprint("Surprise attack!")
             
         if self.enemies[0].battleMessages == []:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
             slowprint(c.blue(choice(self.enemies[0].battleMessages)))
+
+        if player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
+                slowprint("You are both surprised.")
+                self.allSurprised = True
 
         if self.enemies[0].isSpecial:
             slowprint(c.red(f"There is no escape from this fight."))
@@ -162,10 +171,7 @@ class Battle:
             elif self.runChance < 0:
                 self.runChance = 0
             
-            if player.stunned:
-                player.stunned = False
-            else:
-                self.player_turn()
+            self.player_turn()
             
             if self.battleOver:
                 break;
@@ -188,8 +194,6 @@ class Battle:
             if self.enemies == [] or player.health <= 0:
                 self.battleOver = True
                 break
-
-            self.isSurpriseAttack = False
             
         # detects if player won or lost
         if player.health > 0:
@@ -207,29 +211,32 @@ class Battle:
         print_player_info()
     
     def enemy_turn(self, enemy):
-        enemy.do_turn(self.enemies)
+        if self.allSurprised or not enemy.has_effect(entities.Surprised):
+            enemy.do_turn(self.enemies)
         update_effects(enemy, self.enemies)
 
     def player_turn(self):
         turnOver = False
-        while not turnOver:
-            self.print_battle()
 
-            itemUsed = None
-            if self.canRun:
-                itemUsed = gather_input("What do you use?", [f"run ({self.runChance}% chance)"] + item_list(), True) - 1
-            else:
-                itemUsed = gather_input("What do you use?", item_list())
-
-            if itemUsed == -1:
-                if randint(0, 99) < self.runChance + 5: # a little bit of trickery
-                    print(c.green("You succesfully escaped."))
-                    self.run()
+        if self.allSurprised or not player.has_effect(entities.Surprised):
+            while not turnOver:
+                self.print_battle()
+    
+                itemUsed = None
+                if self.canRun:
+                    itemUsed = gather_input("What do you use?", [f"run ({self.runChance}% chance)"] + item_list(), True) - 1
                 else:
-                    print(c.red("You failed to escape."))
-                turnOver = True
-            else:
-                turnOver = player.inventory[itemUsed].attack(self.enemies)
+                    itemUsed = gather_input("What do you use?", item_list())
+    
+                if itemUsed == -1:
+                    if randint(0, 99) < self.runChance + 5: # a little bit of trickery
+                        print(c.green("You succesfully escaped."))
+                        self.run()
+                    else:
+                        print(c.red("You failed to escape."))
+                    turnOver = True
+                else:
+                    turnOver = player.inventory[itemUsed].attack(self.enemies)
 
         update_effects(player, self.enemies)
 
@@ -240,6 +247,7 @@ class Battle:
             enemy.heal(5)
             enemy.awareness += 1
             enemy.stealth -= 1
+            update_effects(enemy, self.enemies)
 
 class Floor:
     def __init__(self, layout, posY, posX, entryMessage = ""): # posY and posX are player's position
@@ -428,11 +436,21 @@ class Floor:
                         isNoticed = True
                     if enemy.stealth <= player.awareness:
                         isSurprised = False
-                        
+                
                 if isNoticed:
                     if isSurprised:
-                        player.stunned = True
                         player.affect(entities.Surprised(), 1)
+                    battle = Battle(room.threats)
+                    battle.start_battle()
+                elif isSurprised:
+                    player.affect(entities.Surprised(), 1)
+                    for enemy in room.threats:
+                        enemy.affect(entities.Surprised(), 1)
+                    battle = Battle(room.threats)
+                    battle.start_battle()
+                elif issubclass(type(room.threats[0]), entities.Boss):
+                    for enemy in room.threats:
+                        enemy.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
 
@@ -597,11 +615,10 @@ class Floor:
                 return
 
         else:
-            for enemy in room.threats: # makes sure all enemies are surprised and stunned
+            for enemy in room.threats: # makes sure all enemies are surprised
                 enemy.affect(entities.Surprised(), 1)
-                enemy.stunned = True
 
-        battle = Battle(room.threats, True)
+        battle = Battle(room.threats)
         battle.start_battle()
 
         room.areEnemiesAware = True
