@@ -789,25 +789,44 @@ class LockedRoom(Room):
             return False
 
 class Chasm(Room):
-    description = "There is a large chasm here, it would be risky to descend it without proper equipment."
+    description = "There is a large chasm here."
     specialAction = "descend chasm"
 
     def interact(self):
+
+        risk = c.red("major")
+        if player.dexterity + player.constitution > 3:
+            risk = c.green("minor")
+        elif player.dexterity + player.constitution > 1:
+            risk = c.yellow("moderate")
+
+        prompt = f"Descending poses {risk} risk of injury, do you want to descend?"
+
+        if gather_input(prompt, ["cancel", "descend"], True) == 0:
+            return
+        
         g = Generator()
         g.initialize_floor("mines", 5, 7)
-        
-        hasRope = False
-        for item in player.inventory:
-            if type(item) == items.Rope:
-                player.inventory.remove(item)
-                hasRope = True
-                break
 
-        if hasRope:
-            g.entryMessage = c.blue("Using your rope, you manage to safely descend the chasm.\n")
+        outcome = 0
+        if risk == "minor":
+            outcome = randint(0, 1)
+        elif risk == "moderate":
+            outcome = randint(0, 2)
+        else:
+            outcome = randint(1, 2)
+
+        if outcome == 0:
+            g.entryMessage = c.blue("You safely descend the chasm.\n")
+        elif outcome == 1:
+            g.entryMessage = c.red("While climbing down the chasm you slip and sustain mild injury.\n")
+            player.health -= randint(2, 5)
+            player.affect(entities.Bleeding(), 3)
         else:
             g.entryMessage = c.red("While trying to climb down the chasm, you slip and break your bones.\n")
+            player.health -= randint(4, 6)
             player.affect(entities.BrokenBones())
+            player.affect(entities.Bleeding(), 4)
         
         g.generate_mines()
         floor = g.finalize_floor()

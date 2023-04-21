@@ -627,7 +627,7 @@ class HeavyArmor(Armor):
 
         self.armorClass = level + 1
         self.dexLoss = 1
-        if material == "iron" or material == "steel":
+        if material == "iron":
             self.dexLoss += 1
 
         super().__init__()
@@ -1382,17 +1382,6 @@ class Pickaxe(Item):
     def inspect(self):
         print("Can destroy walls, has multiple uses.")
 
-class Rope(Item):
-# used to descend the chasm safely
-    name = "rope"
-    value = 20
-
-    def status(self):
-        return ""
-
-    def inspect(self):
-        print("Useful when there's no stairs.")
-    
 class IronKey(Item):
     name = "iron key"
     value = 20
