@@ -36,7 +36,6 @@ tips = [
 ]
 
 load = False
-floors = []
 
 load_save = input("Load previous save? (y/n) : ").lower()
 if load_save == 'y':
@@ -47,7 +46,7 @@ if load_save == 'y':
         player = entities.player
         items.player = player
         dungeon.player = player
-        floors = pickle.load(file2)
+        dungeon.floors = pickle.load(file2)
         file1.close()
         file2.close()
     except:
@@ -92,7 +91,7 @@ if load_save == 'n':
     
     areas = ["prison", "crossroads", "stronghold"]
     
-    floors = []
+    dungeon.floors = []
     
     for i in range(6):
         g = dungeon.Generator()
@@ -128,10 +127,10 @@ if load_save == 'n':
             g.addRooms.append(dungeon.Chasm())
 
         g.generate_floor()
-        floors.append(g.finalize_floor())
+        dungeon.floors.append(g.finalize_floor())
     
         if i % 3 == 2: # adds boss
-            floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
+            dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
 while True:
@@ -139,20 +138,20 @@ while True:
     file1 = open("player.p", "wb")
     file2 = open("level.p", "wb")
     pickle.dump(player, file1)
-    pickle.dump(floors, file2)
+    pickle.dump(dungeon.floors, file2)
     file1.close()
     file2.close()
 
-    player.currentFloor = floors[0]
-    floors[0].enter_floor()
-    floors.pop(0)
+    player.currentFloor = dungeon.floors[0]
+    dungeon.floors[0].enter_floor()
+    dungeon.floors.pop(0)
 
     if player.health <= 0:
         clear_console()
         print("you died")
         break
 
-    elif 0 == len(floors):
+    elif 0 == len(dungeon.floors):
         clear_console()
         print("thanks for playing")
         break

@@ -10,6 +10,8 @@ player = entities.player
 
 movementControls = [["move"], ["↑ North", "→ East", "↓ South", "← West",], ["↑", "→", "↓", "←",]][gather_input("Which movement controls do you prefer?", ["sub-menu", "arrows & words", "arrows only"])]
 
+floors = []
+
 def unlock(key):
     keyIndex = -1
     for item in player.inventory:
@@ -662,8 +664,8 @@ class Floor:
                 self.map = self.layout
 
             elif "descend" in playerInput:
-                room.interact() # if it leads somewhere else it is in .interact()
-                break
+                if room.interact(): # if it leads somewhere else it is in .interact()
+                    break
 
             else:
                 room.interact()
@@ -693,7 +695,7 @@ class Room:
         return detected
 
     def interact(self): # called when player uses special action
-        pass
+        return True
 
 class Refinery(Room):
 # used to refine gold chunks
@@ -803,7 +805,7 @@ class Chasm(Room):
         prompt = f"Descending poses {risk} risk of injury, do you want to descend?"
 
         if gather_input(prompt, ["cancel", "descend"], True) == 0:
-            return
+            return False
         
         g = Generator()
         g.initialize_floor("mines", 5, 7)
@@ -829,8 +831,9 @@ class Chasm(Room):
             player.affect(entities.Bleeding(), 4)
         
         g.generate_mines()
-        floor = g.finalize_floor()
-        floor.enter_floor()
+        floors.insert(1, g.finalize_floor())
+
+        return True
 
 class Stairs(Room):
     blocked = False
@@ -868,9 +871,7 @@ class Shop(Room):
         # has a healing item
         self.stock.append(choice([items.Bandage, items.Rations])())
         
-        if depth == 1:
-            self.stock.append(items.Rope())
-        elif depth == 4:
+        if depth == 4:
             self.stock.append(items.StorageBook())
         
         # items are more expensive in later floors
