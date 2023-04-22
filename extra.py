@@ -10,6 +10,12 @@ clear_console() - erases all text on the screen using a system command
 
 gather_input(prompt, ) - gathers input by presenting options and requesting a number
 
+slowprint(text, speed = .03) - prints the text one character at a time, with speed seconds in-between characters
+
+separator() - prints a long line of '-' to separate sections of text
+
+pause() - prompts the user to press enter to continue, erases prompt but not previous text afterwards
+
 """
 
 # if on a slow machine it doesn't slow print

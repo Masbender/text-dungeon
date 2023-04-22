@@ -168,6 +168,9 @@ class Battle:
                 if enemy.isSpecial:
                     self.canRun = False
 
+            if self.canRun == False:
+                self.runChance = 0
+
             if self.runChance > 100:
                 self.runChance = 100
             elif self.runChance < 0:
@@ -224,11 +227,7 @@ class Battle:
             while not turnOver:
                 self.print_battle()
     
-                itemUsed = None
-                if self.canRun:
-                    itemUsed = gather_input("What do you use?", [f"run ({self.runChance}% chance)"] + item_list(), True) - 1
-                else:
-                    itemUsed = gather_input("What do you use?", item_list())
+                itemUsed = gather_input("What do you use?", [f"run ({self.runChance}% chance)"] + item_list(), True) - 1
     
                 if itemUsed == -1:
                     if randint(0, 99) < self.runChance + 5: # a little bit of trickery
