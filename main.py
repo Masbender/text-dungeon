@@ -7,12 +7,6 @@ import color
 from random import randint, choice
 import pickle
 
-from pygame.mixer import music
-from pygame.mixer import init
-init()
-music.load("Loop#2.wav")
-music.play()
-
 player = entities.player
 c = color
 
