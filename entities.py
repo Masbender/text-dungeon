@@ -680,7 +680,7 @@ class Draugr(Enemy):
 # can inflict bleeding
     name = "DRAUGR"
     stealthMessages = [c.red("DRAUGR") + " is on the hunt for human.",
-                      c.red("DRAUGR") + " does not notice you, it's armor appears brittle and unlikely to withstand a long fight."]
+                      c.red("DRAUGR") + " is seeking."]
     undead = True
     isSpecial = True
 
@@ -771,7 +771,7 @@ class Skeleton(Enemy):
             self.weapon = choice(["sword", "spear", "mace"])
             self.battleMessages = [f"SKELETON grips their {self.weapon}!",
                                   "SKELETON finally gets to see some action!"]
-            self.stealthMessages = [c.red("SKELETON") + f" is holding a {self.weapon}, and is searching for a target."]
+            self.stealthMessages = [c.red("SKELETON") + f" is holding a {self.weapon}."]
 
     def do_turn(self, enemies):
     # there is a chance that skeletons stagger and don't attack
@@ -818,8 +818,7 @@ class SkeletonGuard(Skeleton):
 # has more AC, staggers less, always has a spear, very aware
     name = "SKELETON GUARD"
     warning = "You hear the shuffling of bones..."
-    stealthMessages = [c.red("SKELETON GUARD") + " had promised not to fall asleep this time.",
-                       c.red("SKELETON GUARD") + " is determined to let none pass, but hasn't noticed you."]
+    stealthMessages = [c.red("SKELETON GUARD") + " had promised not to fall asleep this time."]
     isSpecial = True
 
     maxHealth = 17
@@ -839,7 +838,8 @@ class Thief(Enemy):
     name = "THIEF"
     warning = "You are being watched..."
     battleMessages = ["\"I see you got some items there, the collector will be pleased.\"",
-                     "You encounter THIEF!"]
+                     "You encounter a goblin THIEF!",
+                     "THIEF equips a dart!"]
     stealthMessages = [c.red("THIEF") + " is looking for a victim.",
                       c.red("THIEF") + " is preparing poisons, and is unaware of your presence.",
                       "A goblin " + c.red("THIEF") + " is roaming."]
@@ -884,14 +884,15 @@ class Thief(Enemy):
                 print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
-                print(f"THIEF hits you with a dart, but you resist its poison.")
+                print("THIEF hits you with a dart, but you resist its poison.")
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
     name = "OGRE"
     warning = "You hear the sounds of an ogre..."
     battleMessages = ["\"Long time it's been since human dared wander down here, you make tasty treat.\"",
-                     "\"Me hungry, human tasty.\""]
+                     "\"Me hungry, human tasty.\"",
+                     "\"I CRUSH YOU!\""]
 
     maxHealth = 34
     gold = 40
@@ -971,12 +972,11 @@ class Rat(Enemy):
 # a weak enemy who spawns in large groups
 # can inflict self with decay, then infects the player
     name = "RAT"
-    warning = "You hear rats scampering around..."
+    warning = "You hear the rats..."
     battleMessages = ["You encounter a group of RATS!"]
-    stealthMessages = [c.red("RAT") + " is sleeping. Some of their bones are visible.",
+    stealthMessages = ["You spot a decayed " + c.red("RAT") + " .",
                       c.red("RAT") + " is eating. They are a foul, decayed creature.",
-                      "You find " + c.red("RAT") + ", who is much more mutated than any rat on the surface.",
-                      "You see " + c.red("RAT") + ", who is not in very good condition.",
+                      "You see a hungry " + c.red("RAT") + ".",
                       c.red("RAT") + " is roaming."]
 
     maxHealth = 12
@@ -1088,12 +1088,12 @@ class SewerRat(Enemy):
 # a slightly tougher rat that can inflict bleeding and has an armor piercing attack
 # if the player is bleeding, it can inflict rat disease
     name = "SEWER RAT"
-    warning = "You hear rats scampering around..."
+    warning = "You hear the rats.."
     battleMessages = ["You encounter SEWER RAT!",
                       "SEWER RAT has found its next meal!"]
-    stealthMessages = [c.red("SEWER RAT") + " is much less decayed than the other rats, but is much more mutated.",
-                       "You encounter " + c.red("SEWER RAT") + ", who looks severely infected.",
-                       c.red("SEWER RAT") + " eating the decayed corpse of another rat."]
+    stealthMessages = ["You find a mutated " + c.red("SEWER RAT") + ".",
+                       "You spot an infected " + c.red("SEWER RAT") + ".",
+                       c.red("SEWER RAT") + " is eating the decayed corpse of another rat."]
     
     maxHealth = 14
     gold = 5
@@ -1138,7 +1138,7 @@ class RatBeast(Enemy):
     warning = "You hear a loud wheezing..."
     stealthMessages = [c.red("RAT BEAST") + " is wandering.",
                       c.red("RAT BEAST") + " is looking for their next meal.",
-                      "You encounter a " + c.red("RAT BEAST") + ", a rat the size of a bear."]
+                      "You encounter " + c.red("RAT BEAST") + ", a rat the size of a bear."]
 
     maxHealth = 32
     gold = 14
@@ -1190,7 +1190,7 @@ class RatBeast(Enemy):
         else:
             player.dodgeChance += 5
             if player.dodge(self):
-                print(f"You evade RAT BEAST, and they hit a wall, leaving them {c.effect(Dazed)}.")
+                print(f"You evade RAT BEAST and they hit a wall, leaving them {c.effect(Dazed)}.")
                 self.affect(Dazed(), 2)
                 player.dodgeChance -= 5
                 return
@@ -1204,8 +1204,8 @@ class Goblin(Enemy):
 # dexterous enemy, has a dart the blocks healing and has a bandage
     name = "GOBLIN"
     warning = "You hear goblins..."
-    battleMessages = ["You encounter GOBLIN!",
-                     "\"Killing you will get me a raise!\"",
+    battleMessages = ["You encounter a GOBLIN scout!",
+                     "\"I'll be taking your gold!\"",
                      "\"You can't escape the collector!\""]
     stealthMessages = [c.red("GOBLIN") + " is waiting.",
                       c.red("GOBLIN") + " is keeping watch.",
@@ -1257,7 +1257,7 @@ class BuffedGoblin(Goblin):
 class Hound(Enemy):
 # agressive but weak defense, only spawns in the arena (so it's missing stealth related stats)
     name = "HOUND"
-    battleMessages = ["The gates open, several hounds are released!"]
+    battleMessages = ["The gates open, and several hounds are released!"]
 
     maxHealth = 14
     gold = 4
@@ -1279,7 +1279,7 @@ class Hound(Enemy):
 class Trickster(Enemy):
 # can cloak self and allies, high dodge chance and attacks when they dodge list.insert(index, item)
     name = "TRICKSTER"
-    battleMessages = ["\"Your final challenge is to defeat the Trickster!\""]
+    battleMessages = [c.purple("\"Your final challenge is to defeat the Trickster!\"")]
 
     maxHealth = 16
     gold = 30
@@ -1333,8 +1333,8 @@ class Alchemist(Enemy):
     warning = "You hear goblins..."
     battleMessages = ["You encounter ALCHEMIST!",
                       "\"The goblins just can't get enough of my potions!\"",
-                     "\"I make potions for the master and his minions, but I wouldn't mind killing you for him as well.\"",
-                     "The ALCHEMIST drinks one of their potions."]
+                     "\"The collector doesn't need to know about your death!\"",
+                     "\"He wants to meet you, but I think I'll kill you instead!\""]
     stealthMessages = [c.red("ALCHEMIST") + " is mixing potions.",
                       c.red("ALCHEMIST") + " is selling potions to the goblins."]
     
@@ -1370,7 +1370,7 @@ class Worm(Enemy):
 # appears in the walls of the mines
 # can block healing and latch onto the player to drain their health
     name = "WORM"
-    warning = "You hear movement in the walls..."
+    warning = c.red("You hear a soft rumbling in the walls...")
     battleMessages = ["You have disturbed WORM!",
                       "WORM has awoken!",
                       "You encounter WORM!"]
@@ -1414,7 +1414,7 @@ class Worm(Enemy):
             else:
                 self.isLatched = True
                 self.name = "WORM (latched)"
-                print(c.red(f"WORM latches onto you!"))
+                print(c.red("WORM latches onto you!"))
 
 class AncientDraugr(Enemy):
 # a rare enemy that can appear in the crossroads
@@ -1423,7 +1423,7 @@ class AncientDraugr(Enemy):
     battleMessages = ["You encounter ANCIENT DRAUGR!",
                      "ANCIENT DRAUGR has killed many, and doesn't intend to stop!"]
     stealthMessages = [c.red("ANCIENT DRAUGR") + " is on the hunt for human.",
-                      "You see " + c.red("ANCIENT DRAUGR") + ". The air is getting colder."]
+                        c.red("ANCIENT DRAUGR") + " has a freezing aura."]
     undead = True
     isSpecial = True
 

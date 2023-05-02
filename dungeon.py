@@ -133,18 +133,17 @@ class Battle:
                 slowprint(c.red("You are surprised!"))
         elif not player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
                 slowprint("Surprise attack!")
-            
-        if self.enemies[0].battleMessages == []:
+        elif self.enemies[0].battleMessages == []:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
             slowprint(c.blue(choice(self.enemies[0].battleMessages)))
 
         if player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
-                slowprint("You are all surprised.")
+                slowprint("You surprise eachother.")
                 self.allSurprised = True
 
         if self.enemies[0].isSpecial:
-            slowprint(c.red(f"There is no escape from this fight."))
+            slowprint(c.red("There is no escape from this fight."))
 
         pause()
         separator()
@@ -401,6 +400,8 @@ class Floor:
             
             for enemy in room.threats:
                 print(choice(enemy.stealthMessages))
+
+            print(c.green("They do not notice you."))
     
         return options
 
@@ -896,7 +897,7 @@ class Shop(Room):
                     print(c.red(f"You need {purchase.get_price() - player.gold} more gold to purchase {purchase.get_name()}!"))
 
                 elif len(player.inventory) == player.inventorySize:
-                    print(c.red(f"Your inventory is full!"))
+                    print(c.red("Your inventory is full!"))
                     break
 
                 else:
@@ -907,6 +908,62 @@ class Shop(Room):
                     print(f"You purchase {purchase.get_name()} for {purchase.get_price()} gold.")
                     break
 
+class Collector(Room):
+    blocked = False
+    description = "You stumble upon " + c.purple("THE COLLECTOR") + ", an ancient stone golem."
+    specialAction = "talk"
+
+    def __init__(self):
+        self.loot = []
+        self.threats = []
+
+        self.stock = [items.EvasionBook(), items.HealingVial(), items.get_loot(8)]
+
+        # sells some items from the next area
+        self.stock.append(items.gen_item(8))
+        self.stock.append(items.get_item(8))
+
+        # sells a guaranteed healing item
+        self.stock.append(choice([items.Bandage, items.Rations])())
+        
+        # items are more expensive when bought from the collector
+        for item in self.stock:
+            item.value = int(item.value * 1.5)
+
+    def interact(self):
+        while True: # --- TODO: FINISH THIS SECTION ---
+            options = ["leave", "talk", "shop", "sell", "fight"]
+            playerInput = gather_input("What do you do?", options, True, False)
+            
+            while True:
+                options = ["cancel"]
+    
+                for item in self.stock:
+                    options.append(item.get_name() + f", costs {c.yellow(item.get_price())} gold")
+    
+                print(c.purple("\"What do you wish to buy?\""))
+                playerInput = gather_input(f"You have {c.yellow(player.gold)} gold.", options, True) - 1
+    
+                if playerInput == -1: # cancel
+                    break
+                else:
+                    purchase = self.stock[playerInput]
+    
+                    if player.gold < purchase.get_price():
+                        print(c.red(f"You need {purchase.get_price() - player.gold} more gold to purchase {purchase.get_name()}!"))
+    
+                    elif len(player.inventory) == player.inventorySize:
+                        print(c.red("Your inventory is full!"))
+                        break
+    
+                    else:
+                        self.stock.remove(purchase)
+                        player.gold -= purchase.get_price()
+                        player.inventory.append(purchase)
+                        sort_inventory()
+                        print(f"You purchase {purchase.get_name()} for {purchase.get_price()} gold.")
+                        break
+
 def gen_room(area, depth, type):
     loot = []
     threats = []
@@ -914,20 +971,22 @@ def gen_room(area, depth, type):
 
     # standard room
     if type == 1:
-        if area == "prison":
-            if randint(1, 3) == 1:
-                room.description = "You are in an empty prison cell."
+        pass
+        #if area == "prison":
+         #   if randint(1, 3) == 1:
+          #      room.description = "You are in an empty prison cell."
 
     # special room
     elif type == 2:
-        if area == "prison":
-            roomDesc = randint(1, 6)
-            if roomDesc == 1:
-                room.description = "You are in an old storage room."
-            elif roomDesc == 2:
-                room.description = "You are in what used to be an armory."
-            elif roomDesc == 3:
-                room.description = "You are in a large, empty room."
+        pass
+        #if area == "prison":
+         #   roomDesc = randint(1, 6)
+          #  if roomDesc == 1:
+           #     room.description = "You are in an old storage room."
+            #elif roomDesc == 2:
+             #   room.description = "You are in what used to be an armory."
+            #elif roomDesc == 3:
+             #   room.description = "You are in a large, empty room."
 
     # secret room
     elif type == 3:
@@ -1271,7 +1330,7 @@ class Generator:
         #chosenGear = []
         lootPools = [items.gen_weapon, items.gen_armor]
         for i in range(gearAmount):
-            lootpool = None
+            lootPool = None
             if i < 2: # always generates at least one weapon, armor, and wand
                 lootPool = lootPools[i]
             else:

@@ -9,18 +9,23 @@ blue = "\033[1;36m" # descriptive, player
 purple = "\033[1;35m" # story
 """
 
+# used for enemies, to highlight damage, and for negative events, things, and effects
 def red(text):
     return "\033[1;31m" + str(text) + regular
 
+# used to highlight loot, loot providing encounters, or as a transition from green to red
 def yellow(text):
     return "\033[1;33m" + str(text) + regular
 
+# used for beneficial effects and to highlight healing or other positive things
 def green(text):
     return "\033[1;92m" + str(text) + regular
 
+# used to highlight speech, descriptive text, or mysterious encounters
 def blue(text):
     return "\033[1;36m" + str(text) + regular
 
+# used for gods and powerful effects
 def purple(text):
     return "\033[1;35m" + str(text) + regular
 
@@ -35,6 +40,8 @@ def effect_neutral(effect, text):
 def effect_bad(effect, text):
     return red(text)
 
+def effect_great(effect, text):
+    return purple(text)
 
 # compare is primarily used for displaying stats, the color determines if they're being modified or not
 def compare(actual, base):

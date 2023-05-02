@@ -8,7 +8,7 @@ clearCommand - tracks what command to give the system to clear the console
 
 clear_console() - erases all text on the screen using a system command
 
-gather_input(prompt, ) - gathers input by presenting options and requesting a number
+gather_input(prompt, options, startAtZero, returnInt) - gathers input by presenting options and requesting a number
 
 slowprint(text, speed = .03) - prints the text one character at a time, with speed seconds in-between characters
 

@@ -1323,7 +1323,7 @@ class ImmunityBook(Consumable):
 
 class EvasionBook(Consumable):
 # consuming grants +5% dodge chance
-# found as an artifact
+# purchased from the collector
     name = "\"Forbidden Techniques: Evasion\""
     value = 100
 
@@ -1336,13 +1336,13 @@ class EvasionBook(Consumable):
     def consume(self, floor):
         player.dodgeChance += 5
         print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
-        print(f"Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
+        print("Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
         self.degrade()
         return True
 
 class VisionBook(Consumable):
 # consuming grants +1 awareness
-# purchased from the collector
+# found as an artifact
     name = "\"Forbidden Techniques: Vision\""
     value = 100
 
@@ -1522,7 +1522,7 @@ class SeeingOrb(Item):
 
 standardLoot = [(Rations, 3), (ScrollRemoveCurse, 1), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, EvasionBook]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, VisionBook]
 
 # generates an item such as a bomb or bandage
 def gen_item(quality):
