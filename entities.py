@@ -15,13 +15,15 @@ class Creature:
 
     # other basic stats, not always modified by subclasses
     immuneTo = None # effects that cannot be applied
-    armorClass = 0 # reduced from incoming damage
+    armorClass = 0 # reduces incoming damage
     dodgeChance = 0 # percent chance to dodge
-    resistance = 0 # resistance to some effects
-    critChance = 0 # % chance to do x2 damage
+    resistance = 0 # higher values decrease the duration of certain effects
+    critChance = 0 # percent chance to do x2 damage
 
     # these are mainly used for the player, mostly modify basic stats
-    strength = 0 # increases damage
+    # note that besides strength and intelligence, changing these stats doesn't do much
+    # use methods such as update_dex(num) instead of changing these stats directly
+    strength = 0 # +damage +inventorySize
     dexterity = 0 # +dodge +stealth
     constitution = 0 # +maxHeatlh +resistance
     intelligence = 0 # increases gear durability and scroll effectiveness
