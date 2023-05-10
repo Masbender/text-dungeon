@@ -1082,28 +1082,41 @@ class Scroll(Item):
     def status(self):
         return ""
 
-class ScrollRemoveCurse(Scroll):
+class ScrollCleanse(Scroll):
 # reverses curses from all items, has an INT in 4 chance to enchant
-    name = "scroll of remove curse"
+    name = "scroll of cleansing"
     value = 35
 
     def inspect(self):
-        print("Reverses every curse into blessings on all of your items.")
-        print("With higher levels of intelligence (INT), it might make them even stronger.")
+        print("Uncurses every cursed item in this floor and your inventory.")
+        print("With higher levels of intelligence (INT) some items may also be blessed.")
     
     def consume(self, floor):
         power = player.intelligence # intelligence boosts effectiveness
-        
-        for item in player.inventory: # cleanses each item
-            if item.enchantment < 0:
-                item.enchantment *= -1 # reverses curses
 
-                if randint(0, 3) < power: # can improve item
+        # finds all items in the floor
+        allItems = []
+        allItems.extend(player.inventory)
+        for row in player.currentFloor.layout:
+            for room in row:
+                for item in room.loot:
+                    allItems.append(item)
+
+        # uncurses and upgrades them
+        upgradedItemsCount = 0
+        for item in allItems:
+            if type(item) != CursedSword:
+                if item.enchantment < 0:
+                    item.enchantment = 0
+
+                if randint(0, 8) < power and item.enchantable:
                     item.enchantment += 1
-                    print(f"{item.name} has been improved.")
+                    upgradedItemsCount += 1
+
+        print("In a flash of cleansing light, all items in this floor have been uncursed.")
+        print(f"{upgradedItemsCount} items have been upgraded.")
 
         self.degrade()
-        print("All of your items have been uncursed.")
         return True
 
 class ScrollEnchant(Scroll):
@@ -1520,7 +1533,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 3), (ScrollRemoveCurse, 1), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
+standardLoot = [(Rations, 3), (ScrollCleanse, 5), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
 
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, VisionBook]
 

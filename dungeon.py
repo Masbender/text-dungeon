@@ -568,16 +568,15 @@ class Floor:
                 if chosenItem.usePrompt != None:
                     options.append(chosenItem.usePrompt)
 
-                if chosenItem.enchantment >= 0:
-                    options.append("drop")
+                options.append("drop")
 
             # prints info about the item
             print(chosenItem.get_name())
             chosenItem.inspect()
             if chosenItem.enchantment > 0:
-                print(f"This item is {c.green('blessed')}.")
+                print(f"This item is {c.green('blessed')}, making it stronger.")
             elif chosenItem.enchantment < 0:
-                print(f"This item is {c.red('cursed')}, and cannot be dropped.")
+                print(f"This item is {c.red('cursed')}, making it weaker.")
 
             # asks for input
             playerInput = gather_input("\nWhat do you do with " + chosenItem.get_name() + "?", options, True, False)
