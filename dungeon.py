@@ -934,35 +934,58 @@ class Collector(Room):
         while True: # --- TODO: FINISH THIS SECTION ---
             options = ["leave", "talk", "shop", "sell", "fight"]
             playerInput = gather_input("What do you do?", options, True, False)
-            
-            while True:
-                options = ["cancel"]
-    
-                for item in self.stock:
-                    options.append(item.get_name() + f", costs {c.yellow(item.get_price())} gold")
-    
-                print(c.purple("\"What do you wish to buy?\""))
-                playerInput = gather_input(f"You have {c.yellow(player.gold)} gold.", options, True) - 1
-    
-                if playerInput == -1: # cancel
-                    break
-                else:
-                    purchase = self.stock[playerInput]
-    
-                    if player.gold < purchase.get_price():
-                        print(c.red(f"You need {purchase.get_price() - player.gold} more gold to purchase {purchase.get_name()}!"))
-    
-                    elif len(player.inventory) == player.inventorySize:
-                        print(c.red("Your inventory is full!"))
+
+            if playerInput == "shop":
+                while True:
+                    options = ["cancel"]
+        
+                    for item in self.stock:
+                        options.append(item.get_name() + f", costs {c.yellow(item.get_price())} gold")
+        
+                    print(c.purple("\"What do you wish to buy?\""))
+                    playerInput = gather_input(f"You have {c.yellow(player.gold)} gold.", options, True) - 1
+        
+                    if playerInput == -1: # cancel
                         break
-    
                     else:
-                        self.stock.remove(purchase)
-                        player.gold -= purchase.get_price()
-                        player.inventory.append(purchase)
-                        sort_inventory()
-                        print(f"You purchase {purchase.get_name()} for {purchase.get_price()} gold.")
+                        purchase = self.stock[playerInput]
+        
+                        if player.gold < purchase.get_price():
+                            print(c.red(f"You need {purchase.get_price() - player.gold} more gold to purchase {purchase.get_name()}!"))
+        
+                        elif len(player.inventory) == player.inventorySize:
+                            print(c.red("Your inventory is full!"))
+                            break
+        
+                        else:
+                            self.stock.remove(purchase)
+                            player.gold -= purchase.get_price()
+                            player.inventory.append(purchase)
+                            sort_inventory()
+                            print(f"You purchase {purchase.get_name()} for {purchase.get_price()} gold.")
+                            break
+            elif playerInput == "sell":
+                while True:
+                    options = ["cancel"]
+
+                    for item in player.inventory:
+                        options.append(item.get_name() + " " + c.yellow(item.get_price() // 2))
+
+                    playerInput = gather_input("Which item do you want to sell?", options, True)
+
+                    if playerInput < 0:
                         break
+                    else:
+                        item = player.inventory[playerInput]
+                        print(f"Are you sure you want to {c.red(sell)} {c.yellow(item.get_name())} for {item.get_price()} gold?")
+                        if input("(y/n): ").lower() == "y":
+                            print(f"You sold {c.yellow(item.get_name())} for {c.green(item.get_price() // 2)} gold.")
+                            player.inventory.remove(item)
+                            item.discard()
+                            if item == player.armor or item == player.ring:
+                                item.unequip()
+
+                            player.gold += item.get_price() // 2
 
 def gen_room(area, depth, type):
     loot = []

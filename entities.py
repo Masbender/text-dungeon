@@ -835,14 +835,14 @@ class SkeletonGuard(Skeleton):
 class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
-    name = "THIEF"
+    name = "SCAVENGER"
     warning = "You are being watched..."
     battleMessages = ["\"I see you got some items there, the collector will be pleased.\"",
-                     "You encounter a goblin THIEF!",
-                     "THIEF equips a dart!"]
-    stealthMessages = [c.red("THIEF") + " is looking for a victim.",
-                      c.red("THIEF") + " is preparing poisons, and is unaware of your presence.",
-                      "A goblin " + c.red("THIEF") + " is roaming."]
+                     "You encounter a goblin SCAVENGER!",
+                     "SCAVENGER equips a dart!"]
+    stealthMessages = [c.red("SCAVENGER") + " is looking for a victim.",
+                      c.red("SCAVENGER") + " is preparing poisons, and is unaware of your presence.",
+                      "A goblin " + c.red("SCAVENGER") + " is roaming."]
 
     maxHealth = 16
     gold = 6
@@ -861,30 +861,30 @@ class Thief(Enemy):
         self.time += 1
         if randint(1, 4) < self.time:
             enemies.remove(self)
-            print("THIEF runs away!")
+            print("SCAVENGER runs away!")
             
         elif self.time == 3:
-            print(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
+            print(choice(["SCAVENGER seems eager to escape.", "SCAVENGER wants to flee."]))
 
     def attack(self, enemies):
         if not self.hasDart:
             if player.dodge(self):
-                print("You dodge THIEF's dagger.")
+                print("You dodge SCAVENGER's dagger.")
                 return
 
             damage = player.hurt(self, 4)
-            print(f"THIEF stabs you for {c.red(damage)} damage!")
+            print(f"SCAVENGER stabs you for {c.red(damage)} damage!")
         else:
             self.hasDart = False
             if player.dodge(self):
-                print("You dodge THIEF's dart.")
+                print("You dodge SCAVENGER's dart.")
                 return
             
             if player.affect(Poisoned(), 6):
-                print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
+                print(f"SCAVENGER hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
-                print("THIEF hits you with a dart, but you resist its poison.")
+                print("SCAVENGER hits you with a dart, but you resist its poison.")
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones

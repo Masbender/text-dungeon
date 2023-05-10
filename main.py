@@ -56,26 +56,32 @@ if load_save == 'n':
     # placeholder character 
     playerInput = gather_input("Choose a character:", ["Guard", "Thief"], False, False)
     
-    introMessage = ""
-    
     if playerInput == "Guard":
         player.inventory.extend([items.Spear(0), items.HeavyArmor(0), items.Rations()])
         player.set_stats(1, 1, 0, 2, 0)
         player.inventory[1].consume(None)
-        introMessage = "While patrolling the halls of the Prison you become lost, the halls feel like a maze and you cannot find the way back."
+        print("You are one of the unlucky few who were in the prison when it turned.\n"
+             +"While patrolling the halls you become lost, you encounter unfamiliar rooms\n"
+             +"and you cannot seem to find anyone else.\n")
+        pause()
     
     if playerInput == "Thief":
         player.inventory.extend([items.Dagger(0), items.Cloak(), items.Bandage()])
         player.set_stats(0, 0, 2, 1, 1)
         player.inventory[1].consume(None)
-        introMessage = "You manage to escape your cell, but you soon become lost in the halls of the Prison."
+        print("Following several disappearances, the prison was declared cursed.\n"
+              +"Many fled from the city, as they were scared that they would be next.\n"
+              +"This resulted in an economic crisis, forcing many to steal just so they can eat.\n\n"
+              +"You were one of the unlucky few who were caught. You have been given an unusual sentence:\n" 
+              +"you have been sent to explore the cursed prison and to report back your findings.\n"
+              +"Even before you entered the prison, you knew that you would not return.\n")
+        pause()
 
     if playerInput == "Assassin":
         player.inventory.extend([items.Dagger(1), items.Cloak(), items.StunBomb()])
         player.inventory[1].consume(None)
         player.inventory[0].uses = 10
         player.set_stats(0, -1, 2, 0, 1)
-        introMessage = "You have only recently been thrown into the cursed prison, yet all fresh air has already disappeared."
     
     if playerInput == "Sorcerer":
         player.inventory.extend([items.Mace(0), items.MagicRobe(), items.PoisonWand()])
@@ -105,7 +111,7 @@ if load_save == 'n':
     
         if i % 3 == 0:
             message = c.blue({
-                "prison":"Welcome to the Dungeon. " + introMessage,
+                "prison":"Welcome to the Dungeon. You have entered the prison, goblin scavengers and the undead roam these halls.",
                 "crossroads":"You have entered the Crossroads. The halls are sewer like and the sounds of rats are everywhere."
             }[area] + "\n")
             g.entryMessage = message + g.entryMessage

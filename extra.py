@@ -20,7 +20,7 @@ pause() - prompts the user to press enter to continue, erases prompt but not pre
 
 # if on a slow machine it doesn't slow print
 doSlowPrint = True
-if input("Optimize performance? (y/n): ").lower() == 'y':
+if False:#input("Optimize performance? (y/n): ").lower() == 'y':
     doSlowPrint = False
     
 # detects the os and selects the appropriate clear command
