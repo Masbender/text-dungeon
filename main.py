@@ -135,8 +135,10 @@ if load_save == 'n':
         g.generate_floor()
         dungeon.floors.append(g.finalize_floor())
     
-        if i % 3 == 2: # adds boss
+        if i == 2: # adds boss
             dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
+        elif i == 5: # adds boss
+            dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Collector()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
 while True:

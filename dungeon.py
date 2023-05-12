@@ -916,6 +916,11 @@ class Collector(Room):
         self.loot = []
         self.threats = []
 
+        self.battles = [[entities.BuffedGoblin(), entities.Goblin()],
+                       [entities.Hound(), entities.Hound(), entities.Hound()],
+                       entities.Trickster()]
+        self.battles[0][0].battleMessages = ["The gate opens, and two GOBLINs enter the arena!"]
+
         self.stock = [items.EvasionBook(), items.HealingVial(), items.get_loot(8)]
 
         # sells some items from the next area
@@ -931,7 +936,9 @@ class Collector(Room):
 
     def interact(self):
         while True: # --- TODO: FINISH THIS SECTION ---
-            options = ["leave", "talk", "shop", "sell", "fight"]
+            options = ["cancel", "talk", "shop", "sell"]
+            if len(battles) > 0:
+                options.append("fight")
             playerInput = gather_input("What do you do?", options, True, False)
 
             if playerInput == "shop":
@@ -985,6 +992,14 @@ class Collector(Room):
                                 item.unequip()
 
                             player.gold += item.get_price() // 2
+            elif playerInput == "fight":
+                battle = Battle(self.battles.pop(0))
+                battle.start_battle()
+                if len(self.battles) == 0:
+                    print("You completed all stages. You can now leave.")
+                    pause()
+            elif playerInput == "cancel":
+                return
 
 def gen_room(area, depth, type):
     loot = []
@@ -1143,7 +1158,11 @@ class Generator:
             walls.remove(wall)
             self.layoutRooms[wall[0]][wall[1]].loot.append(items.GoldChunk())
 
+        # spawns worms
         walls = self.hiddenWalls + self.adjacentWalls
+        # doesn't spawn worms near spawn
+        walls.remove(self.layoutRooms[0][2])
+        walls.remove(self.layoutRooms[0][4])
         for i in range(15):
             wall = choice(walls)
             if len(self.layoutRooms[wall[0]][wall[1]].threats) > 0:
