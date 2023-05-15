@@ -939,6 +939,8 @@ class BuffRing(Ring):
 class Medicine(Item): 
     usePrompt = "use"
 
+    enchantable = True
+
     healing = 0
     effectApplied = None
     effectDuration = 0
@@ -965,10 +967,10 @@ class Medicine(Item):
             player.effects.pop(i)
 
         # heals and apples effects
-        healingDone = player.heal(self.healing + randint(-1, 1))
+        healingDone = player.heal(self.healing + self.enchantment + randint(-1, 1))
 
         if self.effectApplied != None:
-            player.affect(self.effectApplied(), self.effectDuration)
+            player.affect(self.effectApplied(), self.effectDuration + self.enchantment)
 
         # prints out a message based on healing and removed effects
         message = f"The {self.name} restores {healingDone} health"
@@ -1031,6 +1033,11 @@ class Bandage(Medicine):
     def inspect(self):
         print(f"It heals around 4 HP and applies REGENERATION.")
         print(f"Cures bleeding.")
+        if self.enchantment > 0:
+            print(c.green("This item does extra healing."))
+        elif self.enchantment < 0:
+            print(c.red("This item does less healing."))
+        
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
 
     def get_name(self):
@@ -1061,6 +1068,10 @@ class Rations(Medicine):
         print("Heals around 7 health instantly, and 8 more health over 4 turns.")
         print("You don't have enough time to eat this during combat.")
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
+        if self.enchantment > 0:
+            print(c.green("This item does extra healing."))
+        elif self.enchantment < 0:
+            print(c.red("This item does less healing."))
 
     def attack(self, enemies):
         print("You don't have enough time to eat!")
@@ -1073,6 +1084,8 @@ class Scroll(Item):
 # one use item that is more powerful with higher intelligence
     maxUses = 1
     
+    enchantable = True
+    
     usePrompt = "read"
 
     def degrade(self):
@@ -1082,6 +1095,18 @@ class Scroll(Item):
     def status(self):
         return ""
 
+    def consume(self, floor):
+        if self.enchantment < 0:
+            print(c.red(f"Reading the cursed scroll drains {self.enchantment} health from you!"))
+            player.health += self.enchantment
+        return True
+
+    def inspect(self):
+        if self.enchantment > 0:
+            print(c.green(f"This scroll is more powerful, it's effects will be boosted by {self.enchantment} INT."))
+        elif self.enchantment < 0:
+            print(c.red("This scroll may have undesirable effects."))
+
 class ScrollCleanse(Scroll):
 # reverses curses from all items, has an INT in 4 chance to enchant
     name = "scroll of cleansing"
@@ -1090,9 +1115,10 @@ class ScrollCleanse(Scroll):
     def inspect(self):
         print("Uncurses every cursed item in this floor and your inventory.")
         print("With higher levels of intelligence (INT) some items may also be blessed.")
+        super().inspect()
     
     def consume(self, floor):
-        power = player.intelligence # intelligence boosts effectiveness
+        power = player.intelligence + self.enchantment # intelligence boosts effectiveness
 
         # finds all items in the floor
         allItems = []
@@ -1116,6 +1142,8 @@ class ScrollCleanse(Scroll):
         print("In a flash of cleansing light, all items in this floor have been uncursed.")
         print(f"{upgradedItemsCount} items have been upgraded.")
 
+        super().consume(floor)
+
         self.degrade()
         return True
 
@@ -1127,8 +1155,11 @@ class ScrollEnchant(Scroll):
     def inspect(self):
         print("This scroll will bless one of your items.")
         print("It cannot be used on items with a higher level than your intelligence (INT).")
+        super().inspect()
 
     def consume(self, floor):
+        power = player.intelligence + self.enchantment
+        
         # gathers input
         options = ["cancel"]
         for item in player.inventory:
@@ -1142,7 +1173,7 @@ class ScrollEnchant(Scroll):
             itemIndex -= 1 # converts to proper index
             chosenItem = player.inventory[itemIndex]
 
-            if chosenItem.enchantment > player.intelligence: # checks intelligence
+            if chosenItem.enchantment > power: # checks intelligence
                 print("That item is too high of a level for your intelligence.")
                 return False
             
@@ -1152,6 +1183,7 @@ class ScrollEnchant(Scroll):
 
                 chosenItem.enchantment += 1
                 print(chosenItem.name + " has been blessed.")
+                super().consume(floor)
                 self.degrade()
 
                 if chosenItem == player.armor or chosenItem == player.ring:
@@ -1169,9 +1201,10 @@ class ScrollRepair(Scroll):
     def inspect(self):
         print("This scroll will fully restore the uses of one item.")
         print("Your intelligence (INT) can increase or decrease the item's durability.")
+        super().inspect()
 
     def consume(self, floor):
-        power = player.intelligence # intelligence boosts effectiveness
+        power = player.intelligence + self.enchantment # intelligence boosts effectiveness
 
         # gathers input
         options = ["cancel"]
@@ -1197,7 +1230,7 @@ class ScrollRepair(Scroll):
                     
                 item.uses = item.maxUses
                 print(item.name + " has been fully repaired")
-                
+                super().consume(floor)
                 self.degrade()
                 return True
             else:
@@ -1214,22 +1247,28 @@ class Consumable(Item):
 
     def status(self):
         return ""
-        
+
 class Bomb(Consumable):
     name = "bomb"
     value = 45
 
+    enchantable = True
+
     def inspect(self):
         print("Bombs can destroy walls, possibly revealing secrets.")
         print("It can be used in combat to harm all enemies.")
+        if self.enchantment > 0:
+            print(c.green("This bomb does extra damage."))
+        elif self.enchantment < 0:
+            print(c.red("This bomb does less damage."))
 
     def attack(self, enemies):
         for enemy in enemies:
-            damage = 15
+            damage = randint(13, 15) + self.enchantment * 2
 
             # does less damage against bosses (discourages spamming bombs)
             if issubclass(type(enemy), entities.Boss):
-                damage = 8
+                damage = damage // 2
 
             # bombs are unaffected by crit chance
             crit = player.critChance
@@ -1254,14 +1293,22 @@ class StunBomb(Consumable):
     name = "stun bomb"
     value = 35
 
+    enchantable = True
+
     def inspect(self):
         print(f"Leaves enemies {c.effect(entities.Dazed)} and {c.effect(entities.Surprised)}, lowering their DEX and PER.")
         print(f"Allows you to escape from non-boss fights, and stuns enemies for a couple turns.")
+        if self.enchantment > 0:
+            print(c.green(f"Dazed lasts longer."))
+        elif self.enchantment <= 0:
+            print(c.red(f"Does not inflict Dazed."))
 
     def attack(self, enemies):
         for enemy in enemies:
-            enemy.affect(entities.Dazed(True), 2)
             enemy.affect(entities.Surprised(), 2)
+            if self.enchantment >= 0:
+                enemy.affect(entities.Dazed(True), 2 + self.enchantment)
+                
         print(f"All enemies are {c.effect(entities.Surprised)} and {c.effect(entities.Dazed)}!")
         self.degrade()
         return True
@@ -1270,16 +1317,18 @@ class FireBomb(Consumable):
     name = "fire bomb"
     value = 55
 
+    enchantable = True
+
     def inspect(Self):
         print("Damages all enemies and sets them on fire.")
 
     def attack(self, enemies):
         for enemy in enemies:
-            damage = 14
+            damage = randint(13, 15) + self.enchantment
 
             # does less damage against bosses (discourages spamming bombs)
             if issubclass(type(enemy), entities.Boss):
-                damage = 7
+                damage = damage // 2
 
             # bombs are unaffected by crit chance
             crit = player.critChance
@@ -1287,10 +1336,9 @@ class FireBomb(Consumable):
             
             damage = enemy.hurt(player, damage, 2, 0)
 
-            # restores crit chance
             player.critChance = crit
             
-            enemy.affect(entities.OnFire(), 5)
+            enemy.affect(entities.OnFire(), 5 + self.enchantment)
             print(f"The fire bomb does {c.red(damage)} damage to {enemy.name}, and sets them {c.effect(entities.OnFire)}!")
 
         self.degrade()
@@ -1378,6 +1426,8 @@ class Pickaxe(Item):
     value = 70
     maxUses = 3
 
+    enchantable = True
+
     def status(self):
         message = ""
         if self.uses == 1:
@@ -1388,12 +1438,20 @@ class Pickaxe(Item):
         return message
 
     def dig(self):
+        
+        player.intelligence += self.enchantment
         self.degrade()
-        print("It takes a while, but you dig a tunnel through the wall.")
+        player.intelligence -= self.enchantment
+        
+        print("Can dig through walls, has multiple uses.")
         return True
 
     def inspect(self):
         print("Can destroy walls, has multiple uses.")
+        if self.enchantment > 0:
+            print(c.green("This pickaxe has more durability."))
+        elif self.enchantment < 0:
+            print(c.red("This pickaxe has less durability."))
 
 class IronKey(Item):
     name = "iron key"
@@ -1533,25 +1591,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-standardLoot = [(Rations, 3), (ScrollCleanse, 1), (Bomb, 4), (Bandage, 4), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 3)]
-
 rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, VisionBook]
-
-# generates an item such as a bomb or bandage
-def gen_item(quality):
-    # higher quality items have higher numbers
-    itemNum = randint(1, 10) + quality
-
-    # goes through each item until it finds one with a larger number than selected
-    for item in standardLoot:
-        if itemNum <= item[1]:
-            chosenItem = item[0]
-            return chosenItem()
-        else:
-            itemNum -= item[1]
-
-    # if number is too high it returns the last one
-    return standardLoot[-1][0]
 
 def gen_loot(quality):
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough
@@ -1565,55 +1605,73 @@ def gen_loot(quality):
         item.enchantment += (quality + randint(0, 1)) // 3
     return item
 
-def gen_armor(quality):
-    armorLoot = [(Cloak, 3), (HeavyArmor, 7), (BuffRing, 6)]
-
-    finalArmor = None
-    armor = gen_standard(armorLoot)
-
-    if armor == HeavyArmor:
-        gearLevel = (quality + 2) // 3
-        if gearLevel > 3:
-            gearLevel = 3
-            
-        finalArmor = armor(gearLevel)
-    
-    else:
-        finalArmor = armor()
-        finalArmor.enchantment += (quality + 1) // 4
-    
-    finalArmor.enchantment += randint(-1, 1)
-
-    return finalArmor
-
-
-def gen_weapon(quality):
-    weaponLoot = [(Sword, 4), (Mace, 4), (Spear, 4), (Dagger, 4)]
-
-    finalWeapon = gen_standard(weaponLoot)((quality + 2) // 3)
-
-    finalWeapon.enchantment += randint(-1, 1)
-
-    return finalWeapon
-
-def gen_wand(quality):
-    wandLoot = [(TeleportWand, 4), (LightningWand, 4), (HarmWand, 4), (PoisonWand, 4)]
-
-    finalWand = gen_standard(wandLoot)()
-
-    finalWand.enchantment += randint(-1, 1) + ((quality + 2) // 4)
-
-    return finalWand
-
-def gen_standard(gearList):
+def pick_item(itemPool, itemNum):
 # used in functions for generating weapons, armor, and wands
-    itemNum = randint(1, 16)
-
-    for item in gearList:
+    for item in itemPool:
         if itemNum <= item[1]:
             return item[0]
         else:
             itemNum -= item[1]
+    # returns the last item if the number is too large
+    return itemPool[-1][0]
 
+
+# returns a random item (usually a consumable)
+def gen_item(quality):
+    itemPool = [(Rations, 6), (Bomb, 4), (Bandage, 3), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 2), (ScrollRepair, 1), (ScrollEnchant, 1)]
+
+    item = pick_item(itemPool, randint(1, 12) + quality)()
+
+    if item.enchantable and randint(1, 4) == 1: # 25% chance that item is blessed
+        item.enchantment += 1
+    
+    return item
+
+previousCategory = "misc"
+# returns a random item that's gear (weapon, armmor, etc.)
 def gen_gear(quality):
-    return choice([gen_armor, gen_weapon])(quality)
+    categories = ["brute", "stealth", "misc"]
+    categories.remove(previousCategory)
+
+    category = choice(categories)
+    
+    gearPools = {
+        "brute":((Sword, 2), (Mace, 2), (Spear, 2), (HeavyArmor, 4)),
+        "stealth":((Dagger, 6), (Cloak, 4)),
+        "misc":((BuffRing, 10))
+    }
+
+    gear = pick_item(gearPools[category], randint(1, 10))
+
+    # tracks what category was selected
+    if gear in (Sword, Mace, Spear, HeavyArmor):
+        previousType = "brute"
+    elif gear in (Dagger, Cloak):
+        previousType = "stealth"
+    else:
+        previousType = "misc"
+    
+    # some gear can be made of different materials, others get upgraded by being blessedd
+    if gear in (Sword, Mace, Spear, HeavyArmor, Dagger):
+        level = (quality + 2) // 3
+        if level > 3:
+            level = 3
+            
+        gear = gear(level)
+    else:
+        gear = gear()
+        gear.enchantment += quality // 3
+    
+    if gear.enchantable: # gear can be cursed or blessed
+        gear.enchantment += randint(-1, 1)
+    
+    return gear
+
+def gen_scroll(quality = 0):
+    scrollPool = ((ScrollEnchant, 2), (ScrollCleanse, 1), (ScrollRepair, 1))
+    scroll = pick_item(scrollPool, randint(1, 4))()
+
+    if randint(2, 19) < quality: # 5% chance to be blessed for each point of quality over 2
+        scroll.enchantment += 1
+        
+    return scroll

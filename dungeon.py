@@ -439,19 +439,19 @@ class Floor:
                     if enemy.stealth <= player.awareness:
                         isSurprised = False
                 
-                if isNoticed:
-                    if isSurprised:
+                if isNoticed: # is detected
+                    if isSurprised: # is detected and suprised
                         player.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
-                elif isSurprised:
+                elif isSurprised: # is not detected but is surprised
                     player.affect(entities.Surprised(), 1)
                     for enemy in room.threats:
                         enemy.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
-                elif issubclass(type(room.threats[0]), entities.Boss):
-                    for enemy in room.threats:
+                elif issubclass(type(room.threats[0]), entities.Boss): # boss fight
+                    for enemy in room.threats: # is not detected
                         enemy.affect(entities.Surprised(), 1)
                     battle = Battle(room.threats)
                     battle.start_battle()
@@ -574,9 +574,9 @@ class Floor:
             print(chosenItem.get_name())
             chosenItem.inspect()
             if chosenItem.enchantment > 0:
-                print(f"This item is {c.green('blessed')}, making it stronger.")
+                print(f"\nThis item is {c.green('blessed')}.")
             elif chosenItem.enchantment < 0:
-                print(f"This item is {c.red('cursed')}, making it weaker.")
+                print(f"\nThis item is {c.red('cursed')}.")
 
             # asks for input
             playerInput = gather_input("\nWhat do you do with " + chosenItem.get_name() + "?", options, True, False)
@@ -778,7 +778,7 @@ class LockedRoom(Room):
         self.loot = []
         self.threats = []
 
-        self.loot = [items.gen_gear(depth + 1), choice([items.gen_item(depth + 2), items.ScrollRepair()])]
+        self.loot = [items.gen_gear(depth + 1), items.gen_scroll(depth), choice([items.gen_item(depth + 2)])]
 
     def unblock(self): # requires a certain key
         print(f"This room is locked and requires a iron key.")
@@ -859,11 +859,15 @@ class Shop(Room):
         if self.stock[0].enchantable:
             self.stock[0].enchantment = randint(1, 2)
         
-        # has an item or gear that can't be cursed
-        self.stock.append(items.gen_gear(depth))
-        if self.stock[1].enchantment < 0:
-            self.stock[1].enchantment = 0
+        # has 2 items or gear that can't be cursed
+        for i in range(2):
+            self.stock.append(items.gen_gear(depth))
+            if self.stock[-1].enchantment < 0:
+                self.stock[-1].enchantment = 0
 
+        # has a scroll
+        self.stock.append(items.gen_scroll(depth + 6))
+        
         # has an item from the next area
         self.stock.append(items.gen_item(depth + 4))
 
@@ -921,11 +925,11 @@ class Collector(Room):
                        entities.Trickster()]
         self.battles[0][0].battleMessages = ["The gate opens, and two GOBLINs enter the arena!"]
 
-        self.stock = [items.EvasionBook(), items.HealingVial(), items.get_loot(8)]
+        self.stock = [items.EvasionBook(), items.HealingVial(), items.gen_loot(8)]
 
         # sells some items from the next area
         self.stock.append(items.gen_item(8))
-        self.stock.append(items.get_item(8))
+        self.stock.append(items.gen_item(8))
 
         # sells a guaranteed healing item
         self.stock.append(choice([items.Bandage, items.Rations])())
@@ -1128,7 +1132,7 @@ class Generator:
                 
                 self.layoutRooms[y].append(room)
 
-        self.addItems.extend(self.gen_random_items(self.size + randint(1, 2), self.size - randint(1, 2)))
+        self.addItems.extend(self.gen_random_items(self.size + randint(0, 1), self.size - randint(0, 1)))
         
         # spawns enemies
         if self.modifier == "dangerous":
@@ -1368,28 +1372,13 @@ class Generator:
         spawnedItems = []
         
         # spawns gear
-        #chosenGear = []
-        lootPools = [items.gen_weapon, items.gen_armor]
         for i in range(gearAmount):
-            lootPool = None
-            if i < 2: # always generates at least one weapon, armor, and wand
-                lootPool = lootPools[i]
-            else:
-                lootPool = choice(lootPools)
-                if lootPool == items.gen_wand:
-                    lootPools.remove(items.gen_wand)
-            
-            randomItem = lootPool(self.depth)
-
-            # can't have more than 2 of the same item per floor
-            #while chosenGear.count(type(randomItem)) > 1:
-            #randomItem = lootPool(self.depth)
+            randomItem = items.gen_gear(self.depth)
 
             # cursed modifier has a 1 in 3 chance to degrade every item
             if self.modifier == "cursed" and randomItem.enchantable and randint(1, 3) == 1:
                 randomItem.enchantment -= 1
 
-            #chosenGear.append(type(randomItem))
             spawnedItems.append(randomItem)
 
         # spawns items

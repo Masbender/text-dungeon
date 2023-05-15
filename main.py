@@ -46,13 +46,13 @@ if load_save == 'y':
         player = entities.player
         items.player = player
         dungeon.player = player
-        dungeon.floors = pickle.load(file2)
+        dungeon.floors.extend(pickle.load(file2))
         file1.close()
         file2.close()
     except:
         print("Error while loading save, creating new save instead.")
         load_save = 'n'
-if load_save == 'n':
+else:# load_save == 'n':
     # placeholder character 
     playerInput = gather_input("Choose a character:", ["Guard", "Thief"], False, False)
     
@@ -107,7 +107,7 @@ if load_save == 'n':
 
         # adds standard encounters
         g.addRooms.append(dungeon.LockedRoom(i))
-        g.addItems.extend([items.IronKey(), items.KnowledgeBook(), items.ScrollEnchant()])
+        g.addItems.extend([items.IronKey(), items.KnowledgeBook()])
     
         if i % 3 == 0:
             message = c.blue({
@@ -138,7 +138,7 @@ if load_save == 'n':
         if i == 2: # adds boss
             dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Ogre()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
         elif i == 5: # adds boss
-            dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Room([items.HealingVial()], [entities.Collector()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
+            dungeon.floors.append(dungeon.Floor([[dungeon.Room([items.Rations()], []), dungeon.Collector()], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
     # GENERATION END
 
 while True:
