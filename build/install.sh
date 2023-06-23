@@ -5,7 +5,7 @@ mkdir text-dungeon ; cd text-dungeon ; touch text-dungeon.desktop
 
 # download needed files
 echo Downloading executable...
-curl -#fL -o text-dungeon https://github.com/Masbender/text-dungeon/releases/download/v1.0/text-dungeon-linux
+curl -#fL -o text-dungeon https://github.com/Masbender/text-dungeon/releases/download/v0.2/text-dungeon-linux
 echo Downloading icon...
 curl -#fLO https://raw.githubusercontent.com/Masbender/text-dungeon/main/build/icon.png
 
