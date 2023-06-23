@@ -5,9 +5,9 @@ mkdir text-dungeon ; cd text-dungeon ; touch text-dungeon.desktop
 
 # download needed files
 echo Downloading executable...
-curl -#fL -o text-dungeon https://github.com/Masbender/text-dungeon/releases/download/v0.2/text-dungeon-linux
+curl -#fLO https://github.com/Masbender/text-dungeon/releases/download/v0.2/text-dungeon
 echo Downloading icon...
-curl -#fLO https://raw.githubusercontent.com/Masbender/text-dungeon/main/build/icon.png
+curl -#fLO https://raw.githubusercontent.com/Masbender/text-dungeon/main/install/icon.png
 
 # allow binary to launch
 sudo chmod +x text-dungeon text-dungeon.desktop

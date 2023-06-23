@@ -1,8 +1,0 @@
-
-[Desktop Entry]
-Name=Text Dungeon
-Type=Application
-Comment=suffer alone in your terminal!
-Icon=/home/shinysocks/projects/text-dungeon/build/text-dungeon/icon.png
-Exec=/home/shinysocks/projects/text-dungeon/build/text-dungeon/text-dungeon
-Terminal=true
