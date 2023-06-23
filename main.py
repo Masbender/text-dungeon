@@ -40,8 +40,8 @@ load = False
 load_save = input("Load previous save? (y/n) : ").lower()
 if load_save == 'y':
     try:
-        file1 = open("player.p", "rb")
-        file2 = open("level.p", "rb")
+        file1 = open("./player.p", "rb")
+        file2 = open("./level.p", "rb")
         entities.player = pickle.load(file1)
         player = entities.player
         items.player = player
@@ -143,8 +143,8 @@ else:# load_save == 'n':
 
 while True:
     player.floor = None
-    file1 = open("player.p", "wb")
-    file2 = open("level.p", "wb")
+    file1 = open("./player.p", "wb")
+    file2 = open("./level.p", "wb")
     pickle.dump(player, file1)
     pickle.dump(dungeon.floors, file2)
     file1.close()
