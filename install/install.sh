@@ -13,7 +13,6 @@ curl -#fLO https://raw.githubusercontent.com/Masbender/text-dungeon/main/install
 sudo chmod +x text-dungeon text-dungeon.desktop
 
 # generate desktop entry
-echo "" > text-dungeon.desktop
 echo [Desktop Entry] >> text-dungeon.desktop
 echo Name=Text Dungeon >> text-dungeon.desktop
 echo Type=Application >> text-dungeon.desktop
