@@ -352,7 +352,7 @@ class FlamingMace(Mace):
 
     def inspect(self):
         super().inspect()
-        print("It sets enemies on fire.")
+        print("It sets enemies on fire, dealing damage over time and lowering their armor class (AC).")
 
     def attack(self, enemies):
         super().attack(enemies)
@@ -629,9 +629,10 @@ class Armor(Equipable):
         self.value = 5 + (55 * level)
         self.maxUses = 20 + (12 * level)
 
-        self.armorClass = level + 1
+        self.armorClass = level + 2
         self.dexLoss = 1
-        if material == "iron":
+
+        if material in ["iron", "steel"]:
             self.dexLoss += 1
 
         super().__init__()
@@ -1170,7 +1171,7 @@ class ScrollEnchant(Scroll):
     value = 65
 
     def inspect(self):
-        print("This scroll will bless one of your items.")
+        print("Reading this scroll will bless one of your items.")
         print("It cannot be used on items with a higher level than your intelligence (INT).")
         super().inspect()
 
@@ -1182,7 +1183,7 @@ class ScrollEnchant(Scroll):
         for item in player.inventory:
             options.append(item.get_name())
 
-        itemIndex = gather_input("What item do you bless?", options, True)
+        itemIndex = gather_input(f"Choose an item with a level of {c.green(power)} or less to bless.", options, True)
 
         if itemIndex == 0: # 0 cancels
             return False
@@ -1191,9 +1192,13 @@ class ScrollEnchant(Scroll):
             chosenItem = player.inventory[itemIndex]
 
             if chosenItem.enchantment > power: # checks intelligence
-                print("That item is too high of a level for your intelligence.")
+                print(c.red(f"You can only upgrade items with a level of {power} or less."))
                 return False
             
+            if chosenItem == self:
+                print(c.red("The scroll cannot bless itself!"))
+                return False
+
             if chosenItem.enchantable: # checks if item is valid
                 if chosenItem in player.gear.values():
                     chosenItem.unequip()
@@ -1207,7 +1212,7 @@ class ScrollEnchant(Scroll):
                     chosenItem.equip()
                 return True
             else:
-                print(chosenItem.name + " cannot be enchanted.")
+                print(c.red(chosenItem.name + " cannot be enchanted."))
                 return False
 
 class ScrollRepair(Scroll):

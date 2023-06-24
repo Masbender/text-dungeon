@@ -810,9 +810,9 @@ class Chasm(Room):
         g.initialize_floor("mines", 5, 7)
 
         outcome = 0
-        if risk == "minor":
+        if risk == c.green("minor"):
             outcome = randint(0, 1)
-        elif risk == "moderate":
+        elif risk == c.yellow("moderate"):
             outcome = randint(0, 2)
         else:
             outcome = randint(1, 2)
@@ -1165,8 +1165,8 @@ class Generator:
         # spawns worms
         walls = self.hiddenWalls + self.adjacentWalls
         # doesn't spawn worms near spawn
-        walls.remove(self.layoutRooms[0][2])
-        walls.remove(self.layoutRooms[0][4])
+        walls.remove([0, 2])
+        walls.remove([0, 4])
         for i in range(15):
             wall = choice(walls)
             if len(self.layoutRooms[wall[0]][wall[1]].threats) > 0:

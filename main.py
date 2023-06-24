@@ -15,7 +15,6 @@ tips = [
     "Your inventory size is influenced by your strength (STR).",
     "Your equipment will last longer if you have high intelligence (INT).",
     
-    f"Be careful, if you pick up a cursed item {c.red('(-1)')}, you can't drop it.",
     "Be on the lookout for secret rooms, most floors have one!",
     f"Just because you don't see a {c.red('!')} doesn't mean there's not an enemy there,\nsome enemies require a higher level of awareness to detect.",
     "You can only sneak past an enemy if you can also detect them.",
