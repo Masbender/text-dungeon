@@ -3,6 +3,7 @@
 
 ## Install on Linux
 `curl https://shinysocks.net/install.sh | bash`
+- Make sure you run the above command in the directory that you want the game installed.
 
 ## Install on Windows
 - Download the [latest](https://github.com/Masbender/text-dungeon/releases/latest) release for Windows.
