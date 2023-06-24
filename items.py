@@ -42,12 +42,10 @@ class Item:
                 print(self.name + " has broken")
 
             self.discard()
-            if player.armor == self:
-                player.armor = None
-                self.unequip()
-            elif player.ring == self:
-                player.ring = None
-                self.unequip()
+            for key in player.gear.keys():
+                if player.gear[key] == self:
+                    player.gear[key] = None
+                    self.unequip()
             
             player.inventory.remove(self)
         return True
@@ -576,10 +574,9 @@ class TeleportWand(Wand):
         target.heal(6) # heals the target a bit
         return True
     
-class Armor(Item):
-    enchantable = True
-
+class Equipable(Item):
     usePrompt = "equip"
+    gearType = None # replace with a string such as "armor", "ring" or "back"
     
     def status(self):
         suffix = ""
@@ -591,16 +588,16 @@ class Armor(Item):
         return f"{suffix}"
 
     def get_name(self):
-        if self == player.armor:
+        if self == player.gear[self.gearType]:
             return super().get_name() + " (equipped)"
             
         return super().get_name()
 
     def put_on(self):
-        if player.armor != None:
+        if player.gear[self.gearType] != None:
             #player.inventory.append(player.armor)
-            player.armor.unequip()
-        player.armor = self
+            player.gear[self.gearType].unequip()
+        player.gear[self.gearType] = self
         #player.inventory.remove(self)
 
     def consume(self, floor):
@@ -613,10 +610,13 @@ class Armor(Item):
     def unequip(self):
         return False
     
-class HeavyArmor(Armor):
+class Armor(Equipable):
 # gives defense to player but lowers DEX
 # lvl 0 = bronze, lvl 1 = iron, lvl 2 = steel, lvl 3 = mithril
+    enchantable = True
     enchantValue = 0.25
+
+    gearType = "armor"
     
     def __init__(self, level):
         material = ["bronze", "iron", "steel", "mithril"][level]
@@ -644,12 +644,31 @@ class HeavyArmor(Armor):
         player.armorClass -= self.armorClass + self.enchantment
         player.update_dex(self.dexLoss)
 
-class MagicRobe(Armor):
+class LeatherArmor(Equipable):
+# gives less defense than any other armor, but has no DEX penalty
+    enchantable = True
+    enchantValue = 0.4
+
+    gearType = "armor"
+
+    def inspect(self):
+        print(f"When equipped it gives you {1 + self.enchantment} armor class without hurting your dexterity.")
+
+    def equip(self):
+        player.armorClass += 1 + self.enchantment
+
+    def unequip(self):
+        player.armorClass -= 1 + self.enchantment
+
+class MagicRobe(Equipable):
 # provides 0 base armor, but increases wand recharge
     name = "magic robe"
     value = 40
+    enchantable = True
     enchantValue = 0.8
     maxUses = 20
+
+    gearType = "armor"
 
     def inspect(self):
         print("When equipped it recharges your wands an additional time each floor.")
@@ -665,12 +684,15 @@ class MagicRobe(Armor):
         player.armorClass -= self.enchantment
         player.recharge -= 1
 
-class Cloak(Armor):
+class Cloak(Equipable):
 # provides 0 base armor, but +1 stealth
     name = "cloak"
     value = 50
+    enchantable = True
     enchantValue = 0.6
     maxUses = 25
+
+    gearType = "back"
 
     def inspect(self):
         print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
@@ -684,12 +706,15 @@ class Cloak(Armor):
         player.armorClass -= self.enchantment
         player.stealth -= 1
 
-class ShadowCloak(Armor):
+class ShadowCloak(Equipable):
 # same as cloak, but enchantments affect stealth, not armor
 # starts enchanted
     name = "Cloak of Shadows"
     value = 100
     maxUses = 30
+    
+    enchantable = True
+    gearType = "back"
 
     def inspect(self):
         enchantment = self.enchantment
@@ -713,43 +738,13 @@ class ShadowCloak(Armor):
         
         player.update_dex(-enchantment - 1)
         
-class Ring(Item):
-    maxUses = 1
-
-    enchantable = True
-
-    usePrompt = "equip"
-    
-    def status(self):
-        return ""
-
-    def get_name(self):
-        if self == player.ring:
-            return super().get_name() + " (equipped)"
-            
-        return super().get_name()
-
-    def consume(self, floor):
-        self.equip()
-        self.put_on()
-
-    def put_on(self):
-        if player.ring != None:
-            #player.inventory.append(player.ring)
-            player.ring.unequip()
-        player.ring = self
-        #player.inventory.remove(self)
-
-    def attack(self, enemies):
-        return self.consume(None)
-
-    def unequip(self):
-        return False
-
-class InfernoRing(Ring):
+class InfernoRing(Equipable):
 # increases strength, but burns you when attacked
     name = "Ring of Rage"
     value = 100
+
+    enchantable = True
+    gearType = "ring"
 
     def inspect(self):
         print(f"Increases your strength (STR) by {self.enchantment + 1}, but doesn't increase inventory size.")
@@ -763,10 +758,13 @@ class InfernoRing(Ring):
         player.strength -= self.enchantment + 1
         player.infernoRing = False
 
-class IllusionRing(Ring):
+class IllusionRing(Equipable):
 # increases dodged, when you dodge the attacker is stunned
     name = "Ring of Illusion"
     value = 100
+
+    enchantable = True
+    gearType = "ring"
 
     def inspect(self):
         enchantment = self.enchantment
@@ -792,7 +790,7 @@ class IllusionRing(Ring):
         player.illusionRing = False
         player.dodgeChance -= 5 + 5 * enchantment
 
-class ArtifactRing(Ring):
+class ArtifactRing(Equipable):
 # can accept up to two other rings, then provides the bonuses of each of them
 # any enchantment levels are split between the two rings
     name = "Artifact Ring"
@@ -802,6 +800,9 @@ class ArtifactRing(Ring):
 
     ring1 = None
     ring2 = None
+
+    enchantable = True
+    gearType = "ring"
 
     def inspect(self):
         if self.ring2 == None:
@@ -853,9 +854,12 @@ class ArtifactRing(Ring):
         self.ring1.unequip()
         self.ring2.unequip()
 
-class BuffRing(Ring):
+class Ring(Equipable):
 # boosts one stat by 1 level
 # 0 = stealth, 1 = dodge, 2 = health, 3 = resistance, 4 = awareness
+    enchantable = True
+    gearType = "ring"
+
     def __init__(self, ID = -1):
         self.value = 50
         self.maxUses = 1
@@ -1132,12 +1136,18 @@ class ScrollCleanse(Scroll):
         upgradedItemsCount = 0
         for item in allItems:
             if type(item) != CursedSword:
+                if item in player.gear.values():
+                    item.unequip()
+
                 if item.enchantment < 0:
                     item.enchantment = 0
 
                 if randint(0, 8) < power and item.enchantable:
                     item.enchantment += 1
                     upgradedItemsCount += 1
+
+                if item in player.gear.values():
+                    item.equip()
 
         print("In a flash of cleansing light, all items in this floor have been uncursed.")
         print(f"{upgradedItemsCount} items have been upgraded.")
@@ -1178,7 +1188,7 @@ class ScrollEnchant(Scroll):
                 return False
             
             if chosenItem.enchantable: # checks if item is valid
-                if chosenItem == player.armor or chosenItem == player.ring:
+                if chosenItem in player.gear.values():
                     chosenItem.unequip()
 
                 chosenItem.enchantment += 1
@@ -1186,7 +1196,7 @@ class ScrollEnchant(Scroll):
                 super().consume(floor)
                 self.degrade()
 
-                if chosenItem == player.armor or chosenItem == player.ring:
+                if chosenItem in player.gear.values():
                     chosenItem.equip()
                 return True
             else:
@@ -1636,15 +1646,15 @@ def gen_gear(quality):
     category = choice(categories)
     
     gearPools = {
-        "brute":((Sword, 2), (Mace, 2), (Spear, 2), (HeavyArmor, 4)),
-        "stealth":((Dagger, 6), (Cloak, 4)),
-        "misc":((BuffRing, 10))
+        "brute":((Sword, 2), (Mace, 2), (Spear, 2), (Armor, 3), (LeatherArmor, 1)),
+        "stealth":((Dagger, 6), (Cloak, 3), (LeatherArmor, 1)),
+        "misc":((Ring, 10))
     }
 
     gear = pick_item(gearPools[category], randint(1, 10))
 
     # tracks what category was selected
-    if gear in (Sword, Mace, Spear, HeavyArmor):
+    if gear in (Sword, Mace, Spear, Armor):
         previousType = "brute"
     elif gear in (Dagger, Cloak):
         previousType = "stealth"
@@ -1652,7 +1662,7 @@ def gen_gear(quality):
         previousType = "misc"
     
     # some gear can be made of different materials, others get upgraded by being blessedd
-    if gear in (Sword, Mace, Spear, HeavyArmor, Dagger):
+    if gear in (Sword, Mace, Spear, Armor, Dagger):
         level = (quality + 2) // 3
         if level > 3:
             level = 3
@@ -1660,7 +1670,7 @@ def gen_gear(quality):
         gear = gear(level)
     else:
         gear = gear()
-        gear.enchantment += quality // 3
+        gear.enchantment += quality // randint(3, 4)
     
     if gear.enchantable: # gear can be cursed or blessed
         gear.enchantment += randint(-1, 1)

@@ -184,8 +184,7 @@ class Player(Creature):
 
     inventorySize = 10
     inventory = []
-    ring = None
-    armor = None
+    gear = {"armor":None, "ring":None, "back":None}
     recharge = 1 # wand recharge speed
 
     baseSTR = 0
@@ -221,8 +220,8 @@ class Player(Creature):
     # damages armor
         damageDealt = super().hurt(attacker, damage, piercing, strength)
 
-        if self.armor != None:
-            self.armor.degrade()
+        if self.gear["armor"] != None:
+            self.gear["armor"].degrade()
 
         # applies inferno ring's effect
         if self.infernoRing:
@@ -835,14 +834,14 @@ class SkeletonGuard(Skeleton):
 class Thief(Enemy):
 # an uncommon, stealthy and aware enemy
 # hits you with a poison dart when at full health, might run away later in combat
-    name = "SCAVENGER"
+    name = "THIEF"
     warning = "You are being watched..."
     battleMessages = ["\"I see you got some items there, the collector will be pleased.\"",
-                     "You encounter a goblin SCAVENGER!",
-                     "SCAVENGER equips a dart!"]
-    stealthMessages = [c.red("SCAVENGER") + " is looking for a victim.",
-                      c.red("SCAVENGER") + " is preparing poisons, and is unaware of your presence.",
-                      "A goblin " + c.red("SCAVENGER") + " is roaming."]
+                     "You encounter a goblin THIEF!",
+                     "THIEF equips a dart!"]
+    stealthMessages = [c.red("THIEF") + " is looking for a victim.",
+                      c.red("THIEF") + " is preparing poisons, and is unaware of your presence.",
+                      "A goblin " + c.red("THIEF") + " is roaming."]
 
     maxHealth = 16
     gold = 6
@@ -861,30 +860,30 @@ class Thief(Enemy):
         self.time += 1
         if randint(1, 4) < self.time:
             enemies.remove(self)
-            print("SCAVENGER runs away!")
+            print("THIEF runs away!")
             
         elif self.time == 3:
-            print(choice(["SCAVENGER seems eager to escape.", "SCAVENGER wants to flee."]))
+            print(choice(["THIEF seems eager to escape.", "THIEF wants to flee."]))
 
     def attack(self, enemies):
         if not self.hasDart:
             if player.dodge(self):
-                print("You dodge SCAVENGER's dagger.")
+                print("You dodge THIEF's dagger.")
                 return
 
             damage = player.hurt(self, 4)
-            print(f"SCAVENGER stabs you for {c.red(damage)} damage!")
+            print(f"THIEF stabs you for {c.red(damage)} damage!")
         else:
             self.hasDart = False
             if player.dodge(self):
-                print("You dodge SCAVENGER's dart.")
+                print("You dodge THIEF's dart.")
                 return
             
             if player.affect(Poisoned(), 6):
-                print(f"SCAVENGER hits you with a dart, inflicting {c.effect(Poisoned)}!")
+                print(f"THIEF hits you with a dart, inflicting {c.effect(Poisoned)}!")
             else:
                 player.health -= 1
-                print("SCAVENGER hits you with a dart, but you resist its poison.")
+                print("THIEF hits you with a dart, but you resist its poison.")
     
 class Ogre(Boss):
 # big enemy, can inflict dazed, bleeding, and broken bones
@@ -1066,11 +1065,11 @@ class Rat(Enemy):
             return
             
         # nibbles through armor
-        if randint(0, 2) == 2 and player.armor != None:
+        if randint(0, 2) == 2 and player.gear["armor"] != None:
             piercing = 2
             if player.armorClass > 4:
                 piercing += 1
-            player.armor.degrade()
+            player.gear["armor"].degrade()
             damage = player.hurt(self, 4, piercing)
             print(f"RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")
             return
@@ -1108,8 +1107,8 @@ class SewerRat(Enemy):
             print("You dodge SEWER RAT's attack.")
             return
         
-        if randint(0, 1) and player.armor != None:
-            player.armor.degrade()
+        if randint(0, 1) and player.gear["armor"] != None:
+            player.gear["armor"].degrade()
             damage = player.hurt(self, 3, 2)
 
             print(f"SEWER RAT nibbles through your armor, {c.red('degrading')} it and dealing {c.red(damage)} damage!")

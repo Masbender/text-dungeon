@@ -561,7 +561,7 @@ class Floor:
             options = ["back"]
             chosenItem = player.inventory[playerInput]
 
-            if chosenItem == player.ring or chosenItem == player.armor:
+            if chosenItem in player.gear.values():
                 options.append("unequip")
                 
             else:
@@ -592,10 +592,10 @@ class Floor:
             elif playerInput == "unequip":
                 chosenItem.unequip()
 
-                if chosenItem == player.armor:
-                    player.armor = None
-                else:
-                    player.ring = None
+                for key in player.gear.keys():
+                    if chosenItem == player.gear[key]:
+                        player.gear[key] = None
+                        break
 
                 print("You unequip the " + chosenItem.get_name() + ".")
 
@@ -941,7 +941,7 @@ class Collector(Room):
     def interact(self):
         while True: # --- TODO: FINISH THIS SECTION ---
             options = ["cancel", "talk", "shop", "sell"]
-            if len(battles) > 0:
+            if len(self.battles) > 0:
                 options.append("fight")
             playerInput = gather_input("What do you do?", options, True, False)
 
@@ -987,12 +987,12 @@ class Collector(Room):
                         break
                     else:
                         item = player.inventory[playerInput]
-                        print(f"Are you sure you want to {c.red(sell)} {c.yellow(item.get_name())} for {item.get_price()} gold?")
+                        print(f"Are you sure you want to {c.red('sell')} {c.yellow(item.get_name())} for {item.get_price()} gold?")
                         if input("(y/n): ").lower() == "y":
                             print(f"You sold {c.yellow(item.get_name())} for {c.green(item.get_price() // 2)} gold.")
                             player.inventory.remove(item)
                             item.discard()
-                            if item == player.armor or item == player.ring:
+                            if item in player.gear.values():
                                 item.unequip()
 
                             player.gold += item.get_price() // 2
