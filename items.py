@@ -1649,29 +1649,29 @@ def gen_item(quality):
     
     return item
 
-previousCategory = "misc"
+previousCategory = ["misc"] # this is a list b/c variables outside of functions can't be changed
 # returns a random item that's gear (weapon, armmor, etc.)
 def gen_gear(quality):
     categories = ["brute", "stealth", "misc"]
-    categories.remove(previousCategory)
+    categories.remove(previousCategory[0])
 
     category = choice(categories)
     
     gearPools = {
-        "brute":((Sword, 2), (Mace, 2), (Spear, 2), (Armor, 3), (LeatherArmor, 1)),
-        "stealth":((Dagger, 6), (Cloak, 3), (LeatherArmor, 1)),
-        "misc":((Ring, 10))
+        "brute":[(Sword, 2), (Mace, 2), (Spear, 2), (Armor, 3), (LeatherArmor, 1)],
+        "stealth":[(Dagger, 6), (Cloak, 3), (LeatherArmor, 1)],
+        "misc":[(Ring, 10)]
     }
 
     gear = pick_item(gearPools[category], randint(1, 10))
 
     # tracks what category was selected
     if gear in (Sword, Mace, Spear, Armor):
-        previousType = "brute"
+        previousCategory[0] = "brute"
     elif gear in (Dagger, Cloak):
-        previousType = "stealth"
+        previousCategory[0] = "stealth"
     else:
-        previousType = "misc"
+        previousCategory[0] = "misc"
     
     # some gear can be made of different materials, others get upgraded by being blessedd
     if gear in (Sword, Mace, Spear, Armor, Dagger):
