@@ -14,18 +14,22 @@ tips = [
     "Your armor class (AC) decreases the amount of damage you take.",
     "Your inventory size is influenced by your strength (STR).",
     "Your equipment will last longer if you have high intelligence (INT).",
+    f"A {c.yellow('scroll of repair')} can make an item more durable than before if you have high intelligence (INT).",
+    f"Reading a {c.yellow('scroll of cleansing')} will remove any curses from all items in your inventory and on the the floor."
+    +"\If your intelligence is high enough, it might even bless a few items!",
     
     "Be on the lookout for secret rooms, most floors have one!",
     f"Just because you don't see a {c.red('!')} doesn't mean there's not an enemy there,\nsome enemies require a higher level of awareness to detect.",
     "You can only sneak past an enemy if you can also detect them.",
+    f"Items with a {c.green('(+)')} are blessed and are typically stronger,\nhowever items with a {c.red('(-)')} are cursed, making them weaker.",
 
     "It's harder to escape from agile enemies.",
     "Your dodge chance also impacts your success chance at escaping combat.",
     "When you escape from enemies they become aware of your presence,\nmaking them harder to sneak by again.",
     f"A {c.yellow('stun bomb')} allows you to escape from any enemy unless they are a boss.",
     
-    f"Both {c.effect(entities.Poisoned)} and {c.effect(entities.Bleeding)} drain 1 health per turn, but {c.effect(entities.OnFire)} drains 2.",
-    f"Being {c.effect(entities.Poisoned)} drains 1 health per turn and lowers your strength (STR).",
+    f"{c.effect(entities.Poisoned)} and {c.effect(entities.Bleeding)} each do 1 damage per turn, but {c.effect(entities.OnFire)} does 2.",
+    f"Being {c.effect(entities.Poisoned)} does 1 damage per turn and lowers your strength (STR).",
     f"Being {c.effect(entities.Chilled)} drains 1 health per turn and lowers your dexterity (DEX).",
     f"Being {c.effect(entities.OnFire)} also inflicts you with {c.effect(entities.Burned)}, which lowers your armor class (AC).",
     f"{c.effect(entities.Decay)} lowers your constitution (CON), and becomes stronger over time.",
