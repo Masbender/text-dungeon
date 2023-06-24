@@ -215,7 +215,7 @@ class CursedSword(Sword):
 # same as sword but extra damage and burning against undead
     name = "Cursed Blade"
     value = 100
-    maxUses = 20
+    maxUses = 16
 
     enchantment = -1
     enchantable = False
@@ -242,6 +242,7 @@ class CursedSword(Sword):
             healthLost -= self.enchantment
             
         self.enchantment -= 1
+        self.bleedDuration += 1
         player.maxHealth -= healthLost
         player.health -= healthLost
 
@@ -287,21 +288,25 @@ class EnchantedSpear(Spear):
 # same as spear but heals you when you attack alive enemies
     name = "Enchanted Spear"
     value = 100
-    maxUses = 20
+    maxUses = 25
 
-    damage = 5
-    armorPiercing = 2
+    damage = 6
+    armorPiercing = 100
 
     def inspect(self):
         super().inspect()
-        print("It heals you when you attack enemies.")
+        print("This spear almost always hits it's target, it ignores both dodges and armor class.")
 
     def attack(self, enemies):
+        dodgeChances = [] # saves and removes enemy dodge chance
+        for enemy in enemies:
+            dodgeChances.append(enemy.dodgeChance)
+            enemy.dodgeChance = 0
+
         super().attack(enemies)
 
-        healing = player.heal(randint(1, 2))
-        if healing > 0:
-            print(f"You heal {c.green(healing)} health.")
+        for i in range(len(enemies)): # restores enemy dodge chance
+            enemies[i].dodgeChance = dodgeChances[i]
 
         return True
 
@@ -343,18 +348,17 @@ class FlamingMace(Mace):
     maxUses = 20
 
     damage = 5
-    stunChance = 3
+    stunChance = 2
 
     def inspect(self):
         super().inspect()
-        print("It can sets enemies on fire.")
+        print("It sets enemies on fire.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
-        if randint(0, 1):
-            if self.target.affect(entities.OnFire(), randint(2, 3)):
-                print(f"{self.target.name} is set on fire.")
+        if self.target.affect(entities.OnFire(), randint(2, 3)):
+            print(f"{self.target.name} is set on fire.")
 
         return True
         
@@ -393,22 +397,22 @@ class EbonyDagger(Dagger):
 # same as a dagger, but gain max health per kill
     name = "Ebony Dagger"
     value = 100
-    maxUses = 20
+    maxUses = 50
 
     damage = 5
     sneakBonus = 4
 
     def inspect(self):
         super().inspect()
-        print(f"Getting kills with this weapon can increase your max health.")
+        print(f"Made from a magical and durable material, this dagger heals you whenever you kill something.")
 
     def attack(self, enemies):
         super().attack(enemies)
 
         # applies ebony dagger's effect
-        if self.target.health <= 0 and self.uses > 0 and randint(0, 2) < 2:
-            player.maxHealth += 1
-            print("You absorb " + self.target.name + "'s power.")
+        if self.target.health <= 0:
+            player.heal(1)
+            print("You absorb some of " + self.target.name + "'s health.")
         
         return True
 
@@ -646,13 +650,16 @@ class Armor(Equipable):
 
 class LeatherArmor(Equipable):
 # gives less defense than any other armor, but has no DEX penalty
+    name = "leather armor"
+    value = 35
+    maxUses = 25
     enchantable = True
     enchantValue = 0.4
 
     gearType = "armor"
 
     def inspect(self):
-        print(f"When equipped it gives you {1 + self.enchantment} armor class without hurting your dexterity.")
+        print(f"When equipped it gives you {1 + self.enchantment} armor class.")
 
     def equip(self):
         player.armorClass += 1 + self.enchantment

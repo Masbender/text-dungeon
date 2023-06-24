@@ -50,7 +50,7 @@ def sort_inventory():
             healing.append(item)
         elif issubclass(type(item), items.Scroll):
             scrolls.append(item)
-        elif issubclass(type(item), items.Armor) or issubclass(type(item), items.Ring):
+        elif issubclass(type(item), items.Equipable):
             apparel.append(item)
         elif issubclass(type(item), items.Consumable):
             consumables.append(item)
