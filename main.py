@@ -41,13 +41,22 @@ if load_save == 'y':
     try:
         file1 = open("./player.p", "rb")
         file2 = open("./level.p", "rb")
+        file3 = open("./gear.p", "rb")
+
         entities.player = pickle.load(file1)
         player = entities.player
         items.player = player
         dungeon.player = player
         dungeon.floors.extend(pickle.load(file2))
+
+        gear = pickle.load(file3)
+        for index in gear:
+            player.inventory[index].equip()
+            player.inventory[index].put_on()
+
         file1.close()
         file2.close()
+        file3.close()
     except:
         print("Error while loading save, creating new save instead.")
         load_save = 'n'
@@ -135,12 +144,6 @@ else:# load_save == 'n':
 
 while True:
     player.floor = None
-    file1 = open("./player.p", "wb")
-    file2 = open("./level.p", "wb")
-    pickle.dump(player, file1)
-    pickle.dump(dungeon.floors, file2)
-    file1.close()
-    file2.close()
 
     player.currentFloor = dungeon.floors[0]
     dungeon.floors[0].enter_floor()
@@ -158,6 +161,32 @@ while True:
 
     for item in player.inventory:
         item.recharge()
+
+    file1 = open("./player.p", "wb")
+    file2 = open("./level.p", "wb")
+    file3 = open("./gear.p", "wb")
+
+    gear = [] # unequipes gear in the save file (b/c pickles don't like gear) but saves which items were equipped
+    for key in player.gear.keys():
+        try:
+            gear.append(player.inventory.index(player.gear[key]))
+            player.gear[key].unequip()
+            player.gear[key] = None
+        except ValueError:
+            pass
+
+    pickle.dump(player, file1)
+    pickle.dump(dungeon.floors, file2)
+    pickle.dump(gear, file3)
+
+    # re-equips gear
+    for index in gear:
+        player.inventory[index].equip()
+        player.inventory[index].put_on()
+
+    file1.close()
+    file2.close()
+    file3.close()
 
     clear_console()
     print(c.blue("Decending..."))
