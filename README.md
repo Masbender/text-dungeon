@@ -1,5 +1,6 @@
-![icon](https://github.com/Masbender/text-dungeon/assets/91911303/df8d9d13-cc17-4596-a021-e903e3490d5f)
+![icon](https://github.com/Masbender/text-dungeon/assets/91911303/63d96f62-a73d-4d79-ae93-347dd9906034)
 # Text Dungeon: suffer alone in your terminal!
+
 
 ## Install on Linux
 `curl https://shinysocks.net/install.sh | bash`
