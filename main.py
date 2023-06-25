@@ -15,8 +15,8 @@ tips = [
     "Your inventory size is influenced by your strength (STR).",
     "Your equipment will last longer if you have high intelligence (INT).",
     f"A {c.yellow('scroll of repair')} can make an item more durable than before if you have high intelligence (INT).",
-    f"Reading a {c.yellow('scroll of cleansing')} will remove any curses from all items in your inventory and on the the floor."
-    +"\If your intelligence is high enough, it might even bless a few items!",
+    f"Reading a {c.yellow('scroll of cleansing')} will remove any curses from all items in your inventory and on the current floor."
+    +"\nIf your intelligence is high enough, it might even bless a few items!",
     
     "Be on the lookout for secret rooms, most floors have one!",
     f"Just because you don't see a {c.red('!')} doesn't mean there's not an enemy there,\nsome enemies require a higher level of awareness to detect.",
