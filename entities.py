@@ -225,8 +225,7 @@ class Player(Creature):
 
         # applies inferno ring's effect
         if self.infernoRing:
-            self.affect(Burned(), 2)
-            print(f"You are {c.effect(Burned)} by your Ring of Rage!")
+            self.affect(Burned(), 3 + (player.resistance // 2)) # duration of burned scales with resistance, making resistance less effective
 
         return damageDealt
 
@@ -1261,14 +1260,14 @@ class Hound(Enemy):
     maxHealth = 14
     gold = 4
 
-    critChance = 20
+    critChance = 10
 
-    def attack(self):
+    def attack(self, enemies):
         if player.dodge(self):
             print("You dodge HOUND's attack!")
             return
 
-        damage = player.hurt(self, 6, 1)
+        damage = player.hurt(self, 6)
         if randint(1, 3) == 1:
             player.affect(Bleeding(), 5)
             print(f"HOUND bites you for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")

@@ -478,7 +478,7 @@ class Floor:
         minor = [] # minor resistances
         major = [] # major resistances
 
-        for effect in [entities.Poisoned, entities.Bleeding, entities.Burned, entities.Dazed, entities.OnFire, entities.BrokenBones]:
+        for effect in [entities.Poisoned, entities.Burned, entities.Bleeding, entities.Chilled, entities.Dazed, entities.OnFire, entities.BrokenBones]:
             if effect.level < player.resistance:
                 if player.resistance - effect.level > 3:
                     major.append(effect.name)
@@ -515,6 +515,7 @@ class Floor:
             title = effect.color(effect.name.upper())
             if not effect.isPermanent:
                 title += f" ({player.effects[i].duration} turns remaining)"
+            print()
             print(title)
 
             effect.inspect()
@@ -922,7 +923,7 @@ class Collector(Room):
 
         self.battles = [[entities.BuffedGoblin(), entities.Goblin()],
                        [entities.Hound(), entities.Hound(), entities.Hound()],
-                       entities.Trickster()]
+                       [entities.Trickster()]]
         self.battles[0][0].battleMessages = ["The gate opens, and two GOBLINs enter the arena!"]
 
         self.stock = [items.EvasionBook(), items.HealingVial(), items.gen_loot(8)]
@@ -981,14 +982,16 @@ class Collector(Room):
                     for item in player.inventory:
                         options.append(item.get_name() + " " + c.yellow(item.get_price() // 2))
 
-                    playerInput = gather_input("Which item do you want to sell?", options, True)
+                    playerInput = gather_input("Which item do you want to sell?", options, True) - 1
 
                     if playerInput < 0:
                         break
                     else:
                         item = player.inventory[playerInput]
-                        print(f"Are you sure you want to {c.red('sell')} {c.yellow(item.get_name())} for {item.get_price()} gold?")
-                        if input("(y/n): ").lower() == "y":
+                        print(f"Are you sure you want to {c.red('sell')} {c.yellow(item.get_name())} for {item.get_price() // 2} gold?")
+                        playerInput = input("(y/n): ").lower()
+                        clear_console()
+                        if playerInput == "y":
                             print(f"You sold {c.yellow(item.get_name())} for {c.green(item.get_price() // 2)} gold.")
                             player.inventory.remove(item)
                             item.discard()
@@ -999,6 +1002,8 @@ class Collector(Room):
             elif playerInput == "fight":
                 battle = Battle(self.battles.pop(0))
                 battle.start_battle()
+                if player.health <= 0:
+                    return
                 if len(self.battles) == 0:
                     print("You completed all stages. You can now leave.")
                     pause()

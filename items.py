@@ -412,7 +412,7 @@ class EbonyDagger(Dagger):
         # applies ebony dagger's effect
         if self.target.health <= 0:
             healing = player.heal(randint(5, 7))
-            print("You absorb " + c.green(healing) + "health from " + self.target.name + ".")
+            print("You absorb " + c.green(healing) + " health from " + self.target.name + ".")
         
         return True
 
