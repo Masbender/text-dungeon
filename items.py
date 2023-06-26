@@ -285,17 +285,17 @@ class Spear(Weapon):
         return True
 
 class EnchantedSpear(Spear):
-# same as spear but heals you when you attack alive enemies
+# same as spear but has high piercing and ignores dodge
     name = "Enchanted Spear"
     value = 100
     maxUses = 25
 
     damage = 6
-    armorPiercing = 100
+    armorPiercing = 10
 
     def inspect(self):
         super().inspect()
-        print("This spear almost always hits it's target, it ignores both dodges and armor class.")
+        print("This spear ignores cannot be dodged and had very high armor piercing.")
 
     def attack(self, enemies):
         dodgeChances = [] # saves and removes enemy dodge chance
@@ -729,7 +729,7 @@ class ShadowCloak(Equipable):
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
             
-        print(f"When equipped it gives you 0 armor class but increases your DEX by {1 + enchantment}.")
+        print(f"When equipped it increases your DEX by {1 + enchantment}.")
 
     def equip(self):
         enchantment = self.enchantment
