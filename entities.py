@@ -972,7 +972,7 @@ class Rat(Enemy):
     name = "RAT"
     warning = "You hear the rats..."
     battleMessages = ["You encounter a group of RATS!"]
-    stealthMessages = ["You spot a decayed " + c.red("RAT") + " .",
+    stealthMessages = ["You spot a decayed " + c.red("RAT") + ".",
                       c.red("RAT") + " is eating. They are a foul, decayed creature.",
                       "You see a hungry " + c.red("RAT") + ".",
                       c.red("RAT") + " is roaming."]
@@ -1199,7 +1199,7 @@ class RatBeast(Enemy):
             print(f"RAT BEAST rams you for {c.red(damage)} damage, leaving you {c.effect(Dazed)}!")
 
 class Goblin(Enemy):
-# dexterous enemy, has a dart the blocks healing and has a bandage
+# dexterous enemy, has a dart that blocks healing and has a bandage
     name = "GOBLIN"
     warning = "You hear goblins..."
     battleMessages = ["You encounter a GOBLIN scout!",
@@ -1215,7 +1215,6 @@ class Goblin(Enemy):
     stealth = 4
 
     armorClass = 2
-    dodgeChance = 5
     critChance = 5
 
     hasDart = True
@@ -1233,14 +1232,14 @@ class Goblin(Enemy):
             if player.dodge(self):
                 print("You dodge GOBLIN's dart.")
                 return
-            player.affect(HealingBlocked(), 5)
+            player.affect(HealingBlocked(), 3)
             print(f"GOBLIN hits you with a poisoned dart, inflicting you with {c.effect(HealingBlocked)}!")
 
         else:
             if player.dodge(self):
                 print("You dodge GOBLIN's attack.")
                 return
-            damage = player.hurt(self, 4, 2)
+            damage = player.hurt(self, 4)
             print(f"GOBLIN attacks you for {c.red(damage)} damage!")
 
 class BuffedGoblin(Goblin):
@@ -1252,34 +1251,12 @@ class BuffedGoblin(Goblin):
     dodgeChance = 15
     strength = 2
 
-class Hound(Enemy):
-# agressive but weak defense, only spawns in the arena (so it's missing stealth related stats)
-    name = "HOUND"
-    battleMessages = ["The gates open, and several hounds are released!"]
-
-    maxHealth = 14
-    gold = 4
-
-    critChance = 10
-
-    def attack(self, enemies):
-        if player.dodge(self):
-            print("You dodge HOUND's attack!")
-            return
-
-        damage = player.hurt(self, 6)
-        if randint(1, 3) == 1:
-            player.affect(Bleeding(), 5)
-            print(f"HOUND bites you for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
-        else:
-            print(f"HOUND bites you for {c.red(damage)} damage!")
-
-class Trickster(Enemy):
+class Trickster(Boss):
 # can cloak self and allies, high dodge chance and attacks when they dodge list.insert(index, item)
     name = "TRICKSTER"
-    battleMessages = [c.purple("\"Your final challenge is to defeat the Trickster!\"")]
+    battleMessages = ["\"I'm not allowed to let you pass, boss's orders.\"", "\"I'm the boss's champion, you're not going to get past me.\""]
 
-    maxHealth = 16
+    maxHealth = 30
     gold = 30
     
     armorClass = 2
@@ -1305,23 +1282,39 @@ class Trickster(Enemy):
         return damage
 
     def attack(self, enemies):
-        if self.health < 5 and self.hasSmoke: # smoke bomb
+        if self.health < 10 and self.hasSmoke: # smoke bomb
             self.hasSmoke = False
 
             # summons 2 goblins and changes position
-            self.enemies.extend([Goblin(), Goblin()])
-            self.enemies.remove(self)
-            self.enemies.insert(randint(0, 2), self)
+            enemies.extend([Goblin(), Goblin()])
+            enemies.remove(self)
+            enemies.insert(randint(0, 2), self)
 
             # affects all with cloaked and weakens the goblins
             for enemy in enemies:
-                enemy.affect(Cloaked(), 5)
+                enemy.health = 18
+                enemy.maxHealth = 18
+                enemy.armorClass = 0
+                
+                for effect in enemy.effects:
+                    effect.reverse()
+
+                enemy.effects = []
+
                 if enemy != self:
+                    enemy.affect(Cloaked(), randint(4, 5))
                     enemy.strength -= 1
+                    enemy.hasDart = False
+                    enemy.hasBandage = False
+                else:
+                    self.isSpecial = False
+
+            # affects self for longer because the effect triggers right after turn
+            self.affect(Cloaked(), randint(5, 6))
             
             print(f"Two GOBLINs enter the arena, and TRICKSTER uses a smoke bomb, affecting all enemies with {c.effect(Cloaked)}!")
         else:
-            damage = player.hurt(self, 5, 2)
+            damage = player.hurt(self, randint(4, 5), 2)
             print(f"TRICKSTER stabs you for {c.red(damage)} damage!")
      
 class Alchemist(Enemy):

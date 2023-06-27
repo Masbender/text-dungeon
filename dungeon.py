@@ -164,7 +164,7 @@ class Battle:
                 else:
                     self.runChance -= int(enemy.dodgeChance / initialEnemies)
                     
-                if enemy.isSpecial:
+                if enemy.isSpecial or issubclass(type(enemy), entities.Boss):
                     self.canRun = False
 
             if self.canRun == False:
@@ -178,7 +178,7 @@ class Battle:
             self.player_turn()
             
             if self.battleOver:
-                break;
+                break
 
             for enemy in self.enemies:
                 if enemy.health > 0:
@@ -566,10 +566,10 @@ class Floor:
                 options.append("unequip")
                 
             else:
+                options.append("drop")
+
                 if chosenItem.usePrompt != None:
                     options.append(chosenItem.usePrompt)
-
-                options.append("drop")
 
             # prints info about the item
             print(chosenItem.get_name())
@@ -921,11 +921,6 @@ class Collector(Room):
         self.loot = []
         self.threats = []
 
-        self.battles = [[entities.BuffedGoblin(), entities.Goblin()],
-                       [entities.Hound(), entities.Hound(), entities.Hound()],
-                       [entities.Trickster()]]
-        self.battles[0][0].battleMessages = ["The gate opens, and two GOBLINs enter the arena!"]
-
         self.stock = [items.EvasionBook(), items.HealingVial(), items.gen_loot(8)]
 
         # sells some items from the next area
@@ -941,10 +936,13 @@ class Collector(Room):
 
     def interact(self):
         while True: # --- TODO: FINISH THIS SECTION ---
-            options = ["cancel", "talk", "shop", "sell"]
-            if len(self.battles) > 0:
-                options.append("fight")
-            playerInput = gather_input("What do you do?", options, True, False)
+            options = ["cancel", "shop", "sell"]
+            prompt = c.purple('"' + choice([
+                "You don't want to know what's down there. Just give up now, and I'll gladly buy your items!",
+                "Anything you don't sell to me now can be taken off of your dead body after you face my champion.",
+                "Even though you survived the goblins, my champion will make short work of you."
+                ]) + '"')
+            playerInput = gather_input(prompt, options, True, False)
 
             if playerInput == "shop":
                 while True:
@@ -999,14 +997,6 @@ class Collector(Room):
                                 item.unequip()
 
                             player.gold += item.get_price() // 2
-            elif playerInput == "fight":
-                battle = Battle(self.battles.pop(0))
-                battle.start_battle()
-                if player.health <= 0:
-                    return
-                if len(self.battles) == 0:
-                    print("You completed all stages. You can now leave.")
-                    pause()
             elif playerInput == "cancel":
                 return
 

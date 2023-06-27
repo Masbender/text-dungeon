@@ -248,7 +248,7 @@ class CursedSword(Sword):
 
         player.affect(entities.Bleeding(), healthLost)
 
-        print(f"Your sacrifice makes of {c.red(healthLost)} health the blade stronger, but you are now bleeding.")
+        print(f"Your sacrifice of {c.red(healthLost)} health makes the blade stronger, but you are now bleeding.")
         return True
     
     def attack(self, enemies):
@@ -1640,7 +1640,7 @@ def pick_item(itemPool, itemNum):
 
 # returns a random item (usually a consumable)
 def gen_item(quality):
-    itemPool = [(Rations, 6), (Bomb, 4), (Bandage, 3), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 2), (ScrollRepair, 1), (ScrollEnchant, 1)]
+    itemPool = [(Rations, 5), (Bomb, 5), (Bandage, 3), (StunBomb, 2), (Pickaxe, 1), (FireBomb, 2), (ScrollRepair, 1), (ScrollEnchant, 1)]
 
     item = pick_item(itemPool, randint(1, 12) + quality)()
 
