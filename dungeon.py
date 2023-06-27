@@ -133,6 +133,8 @@ class Battle:
                 slowprint(c.red("You are surprised!"))
         elif not player.has_effect(entities.Surprised) and self.enemies[0].has_effect(entities.Surprised):
                 slowprint("Surprise attack!")
+                if isinstance(type(self.enemies[0]), entities.Boss) and self.enemies[0].battleMessages != []:
+                    slowprint(c.blue(choice(self.enemies[0].battleMessages)))
         elif self.enemies[0].battleMessages == []:
             slowprint(c.blue(f"You encounter {self.enemies[0].name}!"))
         else:
