@@ -51,8 +51,7 @@ if load_save == 'y':
         player = entities.player
         items.player = player
         dungeon.player = player
-        #dungeon.floors.extend(pickle.load(file2))
-        dungeon.floors.append(dungeon.Floor([[dungeon.Collector(), dungeon.Room([items.HealingVial()], [entities.Trickster()])], [dungeon.Wall(), dungeon.Stairs()]], 0, 0))
+        dungeon.floors.extend(pickle.load(file2))
         gear = pickle.load(file3)
         for index in gear:
             player.inventory[index].equip()
