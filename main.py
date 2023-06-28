@@ -1,3 +1,18 @@
+"""
+TODO:
+
+ring of rage increases bonus damage and crit chance (1/2 of what PER does)
+
+double crit chance from perception
+
+change output system so that events such as dodging and effect resolutions happen after an attack instead of before
+
+change resistance so that major resistances are immunities instead
+
+combine tips and entry message
+
+"""
+
 import dungeon
 import entities
 from extra import clear_console, slowprint

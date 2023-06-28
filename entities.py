@@ -228,6 +228,14 @@ class Player(Creature):
             self.affect(Burned(), 3 + (player.resistance // 2)) # duration of burned scales with resistance, making resistance less effective
 
         return damageDealt
+    
+    def affect(self, effect, duration = 0):
+        isAffected = super().affect(effect, duration)
+
+        print(effect.color(effect.name.upper()), end=", ")
+        effect.inspect()
+
+        return isAffected
 
 player = Player() # creates the one and only instance of player
 
@@ -303,7 +311,7 @@ class Electrocuted(Effect):
             self.target.stunned = True
 
     def inspect(self):
-        print("Stuns you every other turn.")
+        print("Stuns the target every other turn.")
 
 class Bleeding(Effect):
 # does 1 damage per turn
@@ -317,7 +325,7 @@ class Bleeding(Effect):
         self.target.health -= 1
 
     def inspect(self):
-        print("Deals 1 damage every turn.")
+        print(f"Does {c.red(1)} damage every turn.")
 
 class Regeneration(Effect):
 # heals 1 hp per turn
@@ -328,7 +336,7 @@ class Regeneration(Effect):
         self.target.heal(1)
 
     def inspect(self):
-        print("Heals 1 health every turn.")
+        print(f"Heals {c.green(1)} health every turn.")
 
 class WellFed(Effect):
 # heals 2 health per turn
@@ -339,7 +347,7 @@ class WellFed(Effect):
         self.target.heal(2)
 
     def inspect(self):
-        print("Heals 2 health every turn.")
+        print(f"Heals {c.green(2)} health every turn.")
         
 class Dazed(Effect):
 # lowers DEX
@@ -371,7 +379,7 @@ class Dazed(Effect):
             self.target.isSpecial = True
 
     def inspect(self):
-        print("Lowers DEX and PER by 1.")
+        print(f"Lowers DEX and PER by {c.red(1)}.")
 
 class Surprised(Effect):
 # lowers dodge chance
@@ -387,7 +395,7 @@ class Surprised(Effect):
         self.target.dodgeChance += 20
 
     def inspect(self):
-        print("Lowers dodge chance by 20%.")
+        print(f"Lowers dodge chance by {c.red(20)}%.")
 
 class Decay(Effect):
 # lowers CON, gets stronger over time
@@ -417,8 +425,7 @@ class Decay(Effect):
         self.target.update_con(self.decayLevel)
 
     def inspect(self):
-        print(f"Lowers your CON by {self.decayLevel}.")
-        print(f"This effect becomse stronger in {self.turnsToProgress} turns.")
+        print(f"Lowers CON by {c.red(self.decayLevel)}, becomes stronger over time.")
 
 class BrokenBones(Effect):
 # lowers DEX, STR, CON, permanently
@@ -445,7 +452,7 @@ class BrokenBones(Effect):
         self.target.update_con(1)
 
     def inspect(self):
-        print("Lowers STR, CON, and DEX by 1.")
+        print(f"Lowers STR, CON, and DEX by {c.red(1)}.")
 
 class Burned(Effect):
 # lowers AC by 1
@@ -463,7 +470,7 @@ class Burned(Effect):
         self.target.armorClass += 1
 
     def inspect(self):
-        print("Lowers armor class by 1.")
+        print(f"Lowers armor class by {c.red(1)}.")
 
 class OnFire(Effect):
 # does 2 damage per turn
@@ -481,8 +488,7 @@ class OnFire(Effect):
         self.target.health -= 2
 
     def inspect(self):
-        print("Deals 2 damage every turn.")
-        print("Applies burned.")
+        print(f"Does {c.red(2)} damage every turn, inflicts {c.effect(Burned)}.")
 
 class Poisoned(Effect):
 # does 1 damage per turn and lowers STR
@@ -503,8 +509,7 @@ class Poisoned(Effect):
         self.target.strength += 1
 
     def inspect(self):
-        print("Lowers STR by 1, doesn't lower inventory size.")
-        print("Deals 1 damage every turn.")
+        print(f"Lowers STR by {c.red(1)}, does {c.red(1)} damage every turn.")
 
 class Chilled(Effect):
 # does 1 damage per turn and lowers DEX
@@ -525,8 +530,7 @@ class Chilled(Effect):
         self.target.update_dex(1)
 
     def inspect(self):
-        print("Lowers DEX by 1.")
-        print("Deals 1 damage every turn.")
+        print(f"Lowers DEX by {c.red(1)}, does {c.red(1)} damage every turn.")
 
 class HealingBlocked(Effect):
 # prevents healing
@@ -558,7 +562,7 @@ class Rage(Effect):
         self.target.update_str(-2)
 
     def inspect(self):
-        print("Increases STR by 2.")
+        print(f"Increases STR by {c.green(2)}.")
 
 class SteelFlesh(Effect):
 # +2 CON
@@ -574,7 +578,7 @@ class SteelFlesh(Effect):
         self.target.update_con(-2)
 
     def inspect(self):
-        print("Increases CON by 2.")
+        print(f"Increases CON by {c.green(2)}.")
 
 class Invisibility(Effect):
 # +2 DEX
@@ -590,7 +594,7 @@ class Invisibility(Effect):
         self.target.update_dex(-2)
 
     def inspect(self):
-        print("Increases DEX by 2.")
+        print(f"Increases DEX by {c.green(2)}.")
 
 class Cloaked(Effect):
 # hides targets name, +10 dodge chance
@@ -610,6 +614,9 @@ class Cloaked(Effect):
         self.target.dodgeChance -= 10
 
         self.target.name = self.targetsName
+
+    def inspect(self):
+        print(f"Increases dodge chance by {c.green(10)}%, hides the targets name.")
 
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
@@ -662,15 +669,15 @@ class RatDisease(Effect):
             print(c.red("Your body heals, but some damage remains."))
 
     def inspect(self):
-        if self.stage == 2:
-            print("Lowers STR by 1.")
-        elif self.stage > 2:
-            print("Lowers STR by 1, and INT by 2.")
+        if self.stage == 1:
+            print(f"Has no current effect, becomes stronger over time.")
+        elif self.stage == 2:
+            print(f"Lowers STR by {c.red(1)}, becomes stronger over time.")
+        elif self.stage == 3:
+            print(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, becomes stronger over time.")
 
-        if self.stage > 3:
-            print(f"Your health decays in {self.progression} turns.")
         else:
-            print(f"Progresses to lvl {self.stage + 1} in {self.progression} turns.")
+            print(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, permanently lowers your max health over time.")
             
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors

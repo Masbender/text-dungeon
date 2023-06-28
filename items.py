@@ -18,6 +18,8 @@ class Item:
     
     usePrompt = None # if this is None, then the inventory won't provide use as an options
     
+    canDig = False # determines if an item can break walls
+
     def __init__(self):
         self.value = int(self.value * randint(9, 11) / 10) # 90% to 110% of value
         self.uses = self.maxUses
@@ -1276,6 +1278,8 @@ class Bomb(Consumable):
 
     enchantable = True
 
+    canDig = True
+
     def inspect(self):
         print("Bombs can destroy walls, possibly revealing secrets.")
         print("It can be used in combat to harm all enemies.")
@@ -1304,11 +1308,6 @@ class Bomb(Consumable):
             print(f"The bomb does {c.red(damage)} damage to {enemy.name}!")
 
         self.degrade()
-        return True
-
-    def dig(self):
-        self.degrade()
-        print("The bomb explodes, after the rubble clears you see that the wall has collapsed.")
         return True
 
 class StunBomb(Consumable):
@@ -1450,6 +1449,8 @@ class Pickaxe(Item):
 
     enchantable = True
 
+    canDig = True
+
     def status(self):
         message = ""
         if self.uses == 1:
@@ -1459,14 +1460,10 @@ class Pickaxe(Item):
 
         return message
 
-    def dig(self):
-        
+    def degrade(self):
         player.intelligence += self.enchantment
-        self.degrade()
+        super().degrade()
         player.intelligence -= self.enchantment
-        
-        print("Can dig through walls, has multiple uses.")
-        return True
 
     def inspect(self):
         print("Can destroy walls, has multiple uses.")

@@ -756,21 +756,29 @@ class Wall(Room):
 
     def unblock(self): # requires a bomb or pickaxe
         print("There is a wall in the way.")
-        
-        # gathers input
-        options = ["cancel"]
+
+        miningItems = []
         for item in player.inventory:
-            options.append(item.get_name())
+            if item.canDig:
+                miningItems.append(item)
         
-        itemUsed = gather_input("How do you destroy it?", options, True)
+        if len(miningItems) > 0:
+            # gathers input
+            options = ["cancel"]
+            for item in miningItems:
+                options.append(item.get_name())
+            
+            itemUsed = gather_input("How do you destroy it?", options, True) - 1
 
-        # checks if item works then uses it
-        tunnelDug = False
-        if itemUsed > 0: # 0 is cancel
-            itemUsed -= 1 # reverts back to proper index
-            tunnelDug = player.inventory[itemUsed].dig()
-
-        return tunnelDug
+            if itemUsed == -1:
+                return False
+            else:
+                player.inventory[player.inventory.index(miningItems[itemUsed])].degrade()
+                return True
+        else:
+            print(c.red("You have no way of destroying it.\n"))
+            pause()
+            return False
 
 class LockedRoom(Room):
     blocked = True
