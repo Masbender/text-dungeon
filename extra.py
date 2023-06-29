@@ -4,6 +4,12 @@ from time import sleep
 """
 TABLE OF CONTENTS :
 
+messages - used to store messages that'll be printed to the screen
+
+add_message(message) - adds a message to messages
+
+print_messages - prints and clears messages
+
 clearCommand - tracks what command to give the system to clear the console
 
 clear_console() - erases all text on the screen using a system command
@@ -17,6 +23,21 @@ separator() - prints a long line of '-' to separate sections of text
 pause() - prompts the user to press enter to continue, erases prompt but not previous text afterwards
 
 """
+
+messages = [] # this is here because it needs to be accessed by all other files
+
+# this exists b/c things in extra are imported separately and I don't want to have a var named messages in other files (too common)
+def add_message(message):
+    messages.append(message)
+
+def print_messages():
+    if len(messages) > 0:
+        for message in messages:
+            print(message)
+
+        messages.clear()
+
+        print()
 
 # if on a slow machine it doesn't slow print
 doSlowPrint = True

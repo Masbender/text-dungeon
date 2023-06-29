@@ -1,3 +1,4 @@
+from extra import add_message
 from random import randint, choice
 import color
 
@@ -19,6 +20,7 @@ class Creature:
     dodgeChance = 0 # percent chance to dodge
     resistance = 0 # higher values decrease the duration of certain effects
     critChance = 0 # percent chance to do x2 damage
+    bonusDamage = 0 # damage added to spears, swords, and maces
 
     # these are mainly used for the player, mostly modify basic stats
     # note that besides strength and intelligence, changing these stats doesn't do much
@@ -42,8 +44,9 @@ class Creature:
         self.effects = []
 
     def update_str(self, increase):
-    # strength is added to damage dealt
+    # strength is added to damage dealt and increases inventory size
         self.strength += increase
+        self.bonusDamage += 0.75 * increase
         if issubclass(type(self), Player):
             self.inventorySize += increase
 
@@ -71,7 +74,7 @@ class Creature:
         self.perception += increase
 
         self.awareness += increase
-        self.critChance += 5 * increase
+        self.critChance += 10 * increase
     
     def set_stats(self, str, con, dex, per, int):
     # sets all 5 stats at once
@@ -91,15 +94,16 @@ class Creature:
         number = randint(0, 99)
         return self.dodgeChance > number
 
-    def hurt(self, attacker, damage, piercing = 0, strength = None):
-        # uses attacker strength by default, but can be overridden
-        if attacker.critChance > 0:
-            if randint(0, 100) < attacker.critChance:
-                damage *= 2
-                print(attacker.name + " got a CRITICAL STIKE!")
-        
-        if strength == None:
-            strength = attacker.strength
+    def hurt(self, attacker, damage, piercing = 0, applyModifiers = True):
+        bonusDamage = 0
+        # apply modifiers enables crit chance and bonus damage
+        if applyModifiers:
+            bonusDamage += attacker.bonusDamage
+
+            if attacker.critChance > 0:
+                if randint(0, 100) < attacker.critChance:
+                    bonusDamage += damage
+                    add_message(attacker.name + " got a CRITICAL STIKE!")
             
         reduction = self.armorClass
         if reduction > 0 and piercing > 0: # piercing is only applied if AC > 0
@@ -109,8 +113,7 @@ class Creature:
                 
         reduction /= 2.0 # each point of AC is only 0.5 damage reduction
         
-        # applies reduction and strength, each point of strength is 0.75 extra damage
-        finalDamage = damage - reduction + (strength * 0.75)
+        finalDamage = damage - reduction + bonusDamage
         
         # all attacks do at least 0.5 damage, (50% to do 1 damage)
         if finalDamage < 0.5:
@@ -144,11 +147,11 @@ class Creature:
         isPermanent = duration == 0
         
         # applies resistance
-        if effect.natural and self.resistance > effect.level and not isPermanent:
-            if (duration - self.resistance + effect.level) > 0:
-                duration += effect.level - self.resistance
-            else:
+        if effect.natural and player.resistance > effect.level:
+            if duration - self.resistance + effect.level > 3:
                 return False
+            elif not isPermanent:
+                duration -= self.resistance - effect.level
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
@@ -212,7 +215,7 @@ class Player(Creature):
 
         if dodged and self.illusionRing:
             attacker.stunned = True
-            print(f"Your Ring of Illusion stuns {attacker.name}.")
+            add_message(f"Your Ring of Illusion stuns {attacker.name}.")
 
         return dodged
 
@@ -232,8 +235,10 @@ class Player(Creature):
     def affect(self, effect, duration = 0):
         isAffected = super().affect(effect, duration)
 
-        print(effect.color(effect.name.upper()), end=", ")
-        effect.inspect()
+        if not isAffected:
+            add_message("You resisted the effect!")
+        elif type(effect) != Surprised: # surprised triggers too often and doesn't appear properly
+            add_message(effect.color(effect.name.upper()) + ": " + effect.inspect())
 
         return isAffected
 
@@ -299,7 +304,7 @@ class Effect:
 
     def inspect(self):
     # tells the player what the effect does
-        print("This is an effect.")
+        return("This is an effect.")
 
 class Electrocuted(Effect):
 # stuns the target every other turn
@@ -311,7 +316,7 @@ class Electrocuted(Effect):
             self.target.stunned = True
 
     def inspect(self):
-        print("Stuns the target every other turn.")
+        return("Stuns the target every other turn.")
 
 class Bleeding(Effect):
 # does 1 damage per turn
@@ -325,7 +330,7 @@ class Bleeding(Effect):
         self.target.health -= 1
 
     def inspect(self):
-        print(f"Does {c.red(1)} damage every turn.")
+        return(f"Does {c.red(1)} damage every turn.")
 
 class Regeneration(Effect):
 # heals 1 hp per turn
@@ -336,7 +341,7 @@ class Regeneration(Effect):
         self.target.heal(1)
 
     def inspect(self):
-        print(f"Heals {c.green(1)} health every turn.")
+        return(f"Heals {c.green(1)} health every turn.")
 
 class WellFed(Effect):
 # heals 2 health per turn
@@ -347,7 +352,7 @@ class WellFed(Effect):
         self.target.heal(2)
 
     def inspect(self):
-        print(f"Heals {c.green(2)} health every turn.")
+        return(f"Heals {c.green(2)} health every turn.")
         
 class Dazed(Effect):
 # lowers DEX
@@ -379,7 +384,7 @@ class Dazed(Effect):
             self.target.isSpecial = True
 
     def inspect(self):
-        print(f"Lowers DEX and PER by {c.red(1)}.")
+        return(f"Lowers DEX and PER by {c.red(1)}.")
 
 class Surprised(Effect):
 # lowers dodge chance
@@ -395,7 +400,7 @@ class Surprised(Effect):
         self.target.dodgeChance += 20
 
     def inspect(self):
-        print(f"Lowers dodge chance by {c.red(20)}%.")
+        return(f"Lowers dodge chance by {c.red(20)}%.")
 
 class Decay(Effect):
 # lowers CON, gets stronger over time
@@ -425,7 +430,7 @@ class Decay(Effect):
         self.target.update_con(self.decayLevel)
 
     def inspect(self):
-        print(f"Lowers CON by {c.red(self.decayLevel)}, becomes stronger over time.")
+        return(f"Lowers CON by {c.red(self.decayLevel)}, becomes stronger over time.")
 
 class BrokenBones(Effect):
 # lowers DEX, STR, CON, permanently
@@ -440,7 +445,7 @@ class BrokenBones(Effect):
 
         if issubclass(type(self.target), Skeleton):
             self.target.health = 0
-            print(self.target.name + " dies")
+            add_message(self.target.name + " dies")
 
         self.target.update_dex(-1)
         self.target.update_str(-1)
@@ -452,7 +457,7 @@ class BrokenBones(Effect):
         self.target.update_con(1)
 
     def inspect(self):
-        print(f"Lowers STR, CON, and DEX by {c.red(1)}.")
+        return(f"Lowers STR, CON, and DEX by {c.red(1)}.")
 
 class Burned(Effect):
 # lowers AC by 1
@@ -470,7 +475,7 @@ class Burned(Effect):
         self.target.armorClass += 1
 
     def inspect(self):
-        print(f"Lowers armor class by {c.red(1)}.")
+        return(f"Lowers armor class by {c.red(1)}.")
 
 class OnFire(Effect):
 # does 2 damage per turn
@@ -488,7 +493,7 @@ class OnFire(Effect):
         self.target.health -= 2
 
     def inspect(self):
-        print(f"Does {c.red(2)} damage every turn, inflicts {c.effect(Burned)}.")
+        return(f"Does {c.red(2)} damage every turn, inflicts {c.effect(Burned)}.")
 
 class Poisoned(Effect):
 # does 1 damage per turn and lowers STR
@@ -509,7 +514,7 @@ class Poisoned(Effect):
         self.target.strength += 1
 
     def inspect(self):
-        print(f"Lowers STR by {c.red(1)}, does {c.red(1)} damage every turn.")
+        return(f"Lowers STR by {c.red(1)}, does {c.red(1)} damage every turn.")
 
 class Chilled(Effect):
 # does 1 damage per turn and lowers DEX
@@ -530,7 +535,7 @@ class Chilled(Effect):
         self.target.update_dex(1)
 
     def inspect(self):
-        print(f"Lowers DEX by {c.red(1)}, does {c.red(1)} damage every turn.")
+        return(f"Lowers DEX by {c.red(1)}, does {c.red(1)} damage every turn.")
 
 class HealingBlocked(Effect):
 # prevents healing
@@ -546,7 +551,7 @@ class HealingBlocked(Effect):
         self.target.canHeal = True
 
     def inspect(self):
-        print("Prevents healing.")
+        return("Prevents healing.")
 
 class Rage(Effect):
 # +2 STR
@@ -562,7 +567,7 @@ class Rage(Effect):
         self.target.update_str(-2)
 
     def inspect(self):
-        print(f"Increases STR by {c.green(2)}.")
+        return(f"Increases STR by {c.green(2)}.")
 
 class SteelFlesh(Effect):
 # +2 CON
@@ -578,7 +583,7 @@ class SteelFlesh(Effect):
         self.target.update_con(-2)
 
     def inspect(self):
-        print(f"Increases CON by {c.green(2)}.")
+        return(f"Increases CON by {c.green(2)}.")
 
 class Invisibility(Effect):
 # +2 DEX
@@ -594,7 +599,7 @@ class Invisibility(Effect):
         self.target.update_dex(-2)
 
     def inspect(self):
-        print(f"Increases DEX by {c.green(2)}.")
+        return(f"Increases DEX by {c.green(2)}.")
 
 class Cloaked(Effect):
 # hides targets name, +10 dodge chance
@@ -616,7 +621,7 @@ class Cloaked(Effect):
         self.target.name = self.targetsName
 
     def inspect(self):
-        print(f"Increases dodge chance by {c.green(10)}%, hides the targets name.")
+        return(f"Increases dodge chance by {c.green(10)}%, hides the targets name.")
 
 class RatDisease(Effect):
 # has 4 stages, each inheriting the effects of the last:
@@ -670,14 +675,14 @@ class RatDisease(Effect):
 
     def inspect(self):
         if self.stage == 1:
-            print(f"Has no current effect, becomes stronger over time.")
+            return(f"Has no current effect, becomes stronger over time.")
         elif self.stage == 2:
-            print(f"Lowers STR by {c.red(1)}, becomes stronger over time.")
+            return(f"Lowers STR by {c.red(1)}, becomes stronger over time.")
         elif self.stage == 3:
-            print(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, becomes stronger over time.")
+            return(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, becomes stronger over time.")
 
         else:
-            print(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, permanently lowers your max health over time.")
+            return(f"Lowers STR by {c.red(1)} and INT by {c.red(2)}, permanently lowers your max health over time.")
             
 class Draugr(Enemy):
 # a rare enemy that can appear in earlier floors
@@ -706,7 +711,7 @@ class Draugr(Enemy):
             self.armorClass -= 1
             self.maxHealth -= 1
             self.health -= 1
-            print("DRAUGR's armor degrades.")
+            add_message("DRAUGR's armor degrades.")
         
         return damageDealt
         
@@ -1276,7 +1281,7 @@ class Trickster(Boss):
 
         if dodged:
             player.affect(Poisoned(), 7)
-            print(f"TRICKSTER retaliates by hitting you with dart, inflicting {c.effect(Poisoned)}!")
+            add_message(f"TRICKSTER retaliates by hitting you with dart, inflicting {c.effect(Poisoned)}!")
 
         return dodged
         
@@ -1389,7 +1394,7 @@ class Worm(Enemy):
 
         if self.isLatched:
             player.affect(Bleeding(), 6)
-            print(f"WORM detaches from you, leaving you {c.effect(Bleeding)}!")
+            add_message(f"WORM detaches from you, leaving you {c.effect(Bleeding)}!")
             self.name = "WORM"
             self.isLatched = False
         

@@ -297,7 +297,7 @@ class EnchantedSpear(Spear):
 
     def inspect(self):
         super().inspect()
-        print("This spear ignores cannot be dodged and had very high armor piercing.")
+        print("This spear cannot be dodged and had very high armor piercing.")
 
     def attack(self, enemies):
         dodgeChances = [] # saves and removes enemy dodge chance
@@ -757,16 +757,13 @@ class InfernoRing(Equipable):
     gearType = "ring"
 
     def inspect(self):
-        print(f"Increases your strength (STR) by {self.enchantment + 1}, but doesn't increase inventory size.")
-        print("When you are attacked you get burned (-1 AC).")
+        print(f"When equipped, increases your damage with weapons (excluding daggers) by {0.75 + 0.75 * self.enchantment}.")
 
     def equip(self):
-        player.strength += self.enchantment + 1
-        player.infernoRing = True
+        player.bonusDamage += (self.enchantment + 1) * 0.75
 
     def unequip(self):
-        player.strength -= self.enchantment + 1
-        player.infernoRing = False
+        player.bonusDamage -= (self.enchantment + 1) * 0.75
 
 class IllusionRing(Equipable):
 # increases dodged, when you dodge the attacker is stunned
@@ -895,7 +892,7 @@ class Ring(Equipable):
             f"Increases your health by {2 + 2 * enchantment}.",
             f"Increases your resistance to disease and injury by {1 + enchantment} level(s).",
             f"Increases your awareness of nearby threats by {1 + enchantment} level(s).",
-            f"Increases your chance to get a critical hit by {5 + 5 * enchantment}%."
+            f"Increases your chance to get a critical hit by {10 + 10 * enchantment}%."
         ][self.statID])
 
     def consume(self, floor):
@@ -924,7 +921,7 @@ class Ring(Equipable):
             player.awareness += 1 + enchantment
 
         elif self.stat == "critChance":
-            player.critChance += 5 + 5 * enchantment
+            player.critChance += 10 + 10 * enchantment
 
     def unequip(self):
         enchantment = self.enchantment
@@ -948,7 +945,7 @@ class Ring(Equipable):
             player.awareness -= 1 + enchantment
 
         elif self.stat == "critChance":
-            player.critChance -= 5 + 5 * enchantment
+            player.critChance -= 10 + 10 * enchantment
 
 class Medicine(Item): 
     usePrompt = "use"
@@ -1059,6 +1056,11 @@ class Bandage(Medicine):
 
         if self.status() != "":
             message += " " + self.status()
+
+        if self.enchantment > 0:
+            message += c.green(f" (+{self.enchantment})")
+        elif self.enchantment < 0:
+            message += c.red(f" (-{-self.enchantment})")
 
         return message
 
@@ -1610,7 +1612,7 @@ class SeeingOrb(Item):
         print("Once used, it requires a scroll of repair to recharge it.")
         print("Having this item increases your perception (PER) by 1.")
 
-rareLoot = [ShadowCloak, InfernoRing, IllusionRing, ArtifactRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, VisionBook]
+rareLoot = [ShadowCloak, InfernoRing, IllusionRing, SeeingOrb, EbonyDagger, FlamingMace, CursedSword, EnchantedSpear, VisionBook]
 
 def gen_loot(quality):
     if len(rareLoot) == 0: # replaces artifacts with scrolls if there aren't enough

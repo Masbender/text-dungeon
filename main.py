@@ -1,22 +1,15 @@
 """
-TODO:
+TODO
 
-ring of rage increases bonus damage and crit chance (1/2 of what PER does)
+rebalance effect levels
 
-double crit chance from perception
-
-change output system so that events such as dodging and effect resolutions happen after an attack instead of before
-
-change resistance so that major resistances are immunities instead
-
-combine tips and entry message
+make text better and more concise
 
 """
 
 import dungeon
 import entities
-from extra import clear_console, slowprint
-from extra import gather_input, pause
+from extra import clear_console, slowprint, separator, gather_input, pause
 import items
 import color
 from random import randint, choice
@@ -210,5 +203,11 @@ while True:
     print(c.blue("Decending..."))
     tip = choice(tips)
     tips.remove(tip)
-    slowprint("Tip: " + tip, 0.01)
+    slowprint("Tip: " + tip, 0.005)
+    print()
+
+    if dungeon.floors[0].entryMessage != "":
+        separator()
+        slowprint(dungeon.floors[0].entryMessage, 0.005)
+        print()
     pause()

@@ -1,5 +1,5 @@
 from random import randint, choice
-from extra import clear_console, gather_input, slowprint, separator, pause
+from extra import clear_console, gather_input, slowprint, separator, pause, print_messages
 import entities
 import items
 import color
@@ -185,6 +185,7 @@ class Battle:
             for enemy in self.enemies:
                 if enemy.health > 0:
                     self.enemy_turn(enemy)
+                    print_messages()
 
             # checks if enemies should die
             removedEnemies = []
@@ -239,6 +240,8 @@ class Battle:
                     turnOver = True
                 else:
                     turnOver = player.inventory[itemUsed].attack(self.enemies)
+                    print_messages()
+                    print()
 
         update_effects(player, self.enemies)
 
@@ -469,7 +472,7 @@ class Floor:
         message = ""
         # strength
         message += f"{c.compare(player.strength, player.baseSTR)} STR : "
-        message += f"you do {player.strength * 0.75} extra damage with weapons "
+        message += f"you do {c.compare(player.bonusDamage, player.strength * 0.75)} extra damage with weapons "
         message += f"and you can carry up to {c.compare(player.inventorySize, player.strength + 10)} items"
 
         # constitution
@@ -487,21 +490,25 @@ class Floor:
                 else:
                     minor.append(effect.name)
 
+        for effect in player.immuneTo:
+            if not effect.name in major:
+                major.append(effect.name)
+
         if len(minor) > 0:
-            message += f"you have minor resistance to ({', '.join(minor)}) "
+            message += f"you have resistance to ({', '.join(minor)}) "
         else:
-            message += "you have no minor resistances "
+            message += "you have resistances "
 
         if len(major) > 0:
-            message += f"and major resistance to ({', '.join(major)})"
+            message += f"and immunity to ({', '.join(major)})"
         else:
-            message += "and no major resistances"
+            message += "and no immunities"
         
         message += f"\n\n{c.compare(player.dexterity, player.baseDEX)} DEX : "
         message += f"you have a {c.compare(player.dodgeChance, player.dexterity * 5)}% chance to dodge attacks, and your stealth is level {c.compare(player.stealth, player.dexterity)}"
         
         message += f"\n\n{c.compare(player.perception, player.basePER)} PER : "
-        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you have a {c.compare(player.critChance, player.perception * 5)}% chance to deal double damage"
+        message += f"your awareness is level {c.compare(player.awareness, player.perception)}, and you have a {c.compare(player.critChance, player.perception * 10)}% chance to deal double damage"
         
         message += f"\n\n{c.compare(player.intelligence, player.baseINT)} INT : "
         message += f"your gear degrades {100 - player.intelligence * 10}% of the time"
@@ -520,7 +527,7 @@ class Floor:
             print()
             print(title)
 
-            effect.inspect()
+            print(effect.inspect())
 
     def action_take_item(self):
     # called when player takes an item
@@ -586,6 +593,7 @@ class Floor:
 
             if playerInput == chosenItem.usePrompt:
                 chosenItem.consume(self)
+                print_messages()
 
             elif playerInput == "drop":
                 chosenItem.discard()
