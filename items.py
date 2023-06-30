@@ -1,7 +1,8 @@
 from random import randint, choice
-from extra import gather_input, slowprint
+from extra import gather_input, slowprint, add_message
 import entities
 import color
+import math
 
 c = color
 
@@ -41,7 +42,7 @@ class Item:
         if self.uses == 0:
             # if it is reusable it says when it breaks
             if self.maxUses > 1:
-                print(self.name + " has broken")
+                add_message(c.red(self.name + " has broken"))
 
             self.discard()
             for key in player.gear.keys():
@@ -141,7 +142,7 @@ class Weapon(Item):
         if self.uses == 0:
             # if it is reusable it says when it breaks
             if self.maxUses > 1:
-                print(self.name + " has broken, it is much weaker now.")
+                add_message(c.red(self.name + " has broken, making it much weaker"))
                 self.uses -= 1 # prevents intelligence making this message appear again, doesn't break though
         return True
     
@@ -192,7 +193,8 @@ class Sword(Weapon):
                 self.bleedDuration += 1
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, with a {self.bleedChance} in 6 chance to inflict bleeding for {self.bleedDuration} turns.")
+        gcd = math.gcd(self.bleedChance, 6)
+        print(f"Does {c.compare(self.damage + self.enchantment, self.damage)} damage, with a {self.bleedChance // gcd} in {6 // gcd} chance to inflict bleeding for {self.bleedDuration} turns.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot inflict bleeding.")
     
@@ -206,11 +208,11 @@ class Sword(Weapon):
         damageDealt = self.target.hurt(player, damageDealt)
 
         if randint(0, 5) < self.bleedChance and self.uses > 0:
-            if self.target.affect(entities.Bleeding(), self.bleedDuration):
-                print(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
-                return True
+            self.target.affect(entities.Bleeding(), self.bleedDuration)
+            print(f"You attack {self.target.name} for {c.red(damageDealt)} damage, leaving them {c.effect(entities.Bleeding)}.")
+        else:
+            print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
 
-        print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
 
 class CursedSword(Sword):
@@ -232,8 +234,8 @@ class CursedSword(Sword):
         self.enchantment *= -1
         super().inspect()
         self.enchantment *= -1
-        print("Becomes stronger when cursed, and weaker when blessed.")
-        print("You can sacrifice your max health to repair and curse the sword further.")
+        print(f"Becomes stronger when cursed {c.red('(-)')}, but weaker when blessed {c.green('(+)')}.")
+        print("You can permanently sacrifice health to increase the swords strength. ")
         print(f"You currently have {c.health_status(player.health, player.maxHealth)} health.")
 
     def consume(self, floor):
@@ -250,7 +252,7 @@ class CursedSword(Sword):
 
         player.affect(entities.Bleeding(), healthLost)
 
-        print(f"Your sacrifice of {c.red(healthLost)} health makes the blade stronger, but you are now bleeding.")
+        print(f"Your sacrifice of {c.red(healthLost)} health makes the blade stronger.")
         return True
     
     def attack(self, enemies):
@@ -270,7 +272,7 @@ class Spear(Weapon):
             self.armorPiercing = (level + 3) // 2 # level/AP : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage and pierces {self.armorPiercing - 1} to {self.armorPiercing} points of armor.")
+        print(f"Does {c.compare(self.damage + self.enchantment, self.damage)} damage and pierces {self.armorPiercing} points of armor class.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot pierce armor.")
     
@@ -281,7 +283,7 @@ class Spear(Weapon):
             print(f"{self.target.name} dodges your attack!")
             return True
             
-        damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing - randint(0, 1))
+        damageDealt = self.target.hurt(player, damageDealt, self.armorPiercing)
 
         print(f"You attack {self.target.name} for {c.red(damageDealt)} damage.")
         return True
@@ -297,7 +299,7 @@ class EnchantedSpear(Spear):
 
     def inspect(self):
         super().inspect()
-        print("This spear cannot be dodged and had very high armor piercing.")
+        print("This spear cannot be dodged.")
 
     def attack(self, enemies):
         dodgeChances = [] # saves and removes enemy dodge chance
@@ -322,7 +324,8 @@ class Mace(Weapon):
             self.stunChance = (level + 3) // 2 # _ in 12, level/stunChance : 0/1, 1/2, 2/2, 3/3
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, with a {self.stunChance} in 12 chance to stun.")
+        gcd = math.gcd(self.stunChance, 12)
+        print(f"Does {c.compare(self.damage + self.enchantment, self.damage)} damage, with a {self.stunChance // gcd} in {12 // gcd} chance to stun enemies.")
         if self.uses < 0:
             print("Because it's broken it does less damage and cannot stun.")
     
@@ -359,8 +362,7 @@ class FlamingMace(Mace):
     def attack(self, enemies):
         super().attack(enemies)
 
-        if self.target.affect(entities.OnFire(), randint(2, 3)):
-            print(f"{self.target.name} is set on fire.")
+        self.target.affect(entities.OnFire(), randint(2, 3))
 
         return True
         
@@ -374,10 +376,10 @@ class Dagger(Weapon):
             self.sneakBonus = level + 2
 
     def inspect(self):
-        print(f"It does {self.damage + self.enchantment} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
-        print("Daggers do not gain any bonuses from strength (STR).")
+        print(f"Does {c.compare(self.damage + self.enchantment, self.damage)} damage, and {self.sneakBonus} extra damage towards surprised enemies.")
+        print("Does not gain any bonuses from strength (STR).")
         if self.uses < 0:
-            print("Because it's broken it does less damage and doesn't gain bonus damage..")
+            print("Because it's broken it does less damage and doesn't do extra damage.")
 
     def attack(self, enemies):
         damageDealt = super().attack(enemies)
@@ -406,7 +408,7 @@ class EbonyDagger(Dagger):
 
     def inspect(self):
         super().inspect()
-        print(f"Made from a magical and durable material, this dagger heals you whenever you kill something.")
+        print(f"This durable weapon heals you whenever you get a kill.")
 
     def attack(self, enemies):
         super().attack(enemies)
@@ -640,7 +642,8 @@ class Armor(Equipable):
         super().__init__()
 
     def inspect(self):
-        print(f"When equipped it gives you {self.armorClass + self.enchantment} armor class but lowers your dexterity by {self.dexLoss}.")
+        print(f"When equipped it gives you {c.compare(self.armorClass + self.enchantment, self.armorClass)} armor class but lowers your dexterity by {self.dexLoss}.")
+        print("Worn as armor.")
 
     def equip(self):
         player.armorClass += self.armorClass + self.enchantment
@@ -662,7 +665,8 @@ class LeatherArmor(Equipable):
     gearType = "armor"
 
     def inspect(self):
-        print(f"When equipped it gives you {1 + self.enchantment} armor class.")
+        print(f"When equipped it gives you {c.compare(1 + self.enchantment, 1)} armor class.")
+        print("Worn as armor.")
 
     def equip(self):
         player.armorClass += 1 + self.enchantment
@@ -682,8 +686,9 @@ class MagicRobe(Equipable):
 
     def inspect(self):
         print("When equipped it recharges your wands an additional time each floor.")
-        if self.enchantment > 0:
-            print(f"It also provides {self.enchantment} armor class.")
+        if self.enchantment != 0:
+            print(f"It also provides {c.compare(self.enchantment, 0)} armor class.")
+        print("Worn as armor.")
 
     def equip(self):
         # applies stats
@@ -705,7 +710,10 @@ class Cloak(Equipable):
     gearType = "back"
 
     def inspect(self):
-        print(f"When equipped it gives you {self.enchantment} armor class and increases your stealth by 1.")
+        print(f"When equipped it increases your stealth by 1.")
+        if self.enchantment != 0:
+            print(f"It also provides {c.compare(self.enchantment, 0)} armor class.")
+        print("Worn as a back item.")
 
     def equip(self):
         # applies stats
@@ -731,7 +739,8 @@ class ShadowCloak(Equipable):
         if enchantment < 0: # ensures that -1 enchantment means -1 stealth
             enchantment -= 1
             
-        print(f"When equipped it increases your DEX by {1 + enchantment}.")
+        print(f"When equipped it increases your dexterity (DEX) by {c.compare(1 + enchantment, 1)}.")
+        print("Worn as a back item.")
 
     def equip(self):
         enchantment = self.enchantment
@@ -757,7 +766,8 @@ class InfernoRing(Equipable):
     gearType = "ring"
 
     def inspect(self):
-        print(f"When equipped, increases your damage with weapons (excluding daggers) by {0.75 + 0.75 * self.enchantment}.")
+        print(f"When equipped, increases your damage with weapons (excluding daggers) by {c.compare(0.75 + 0.75 * self.enchantment, 0.75)}.")
+        print("Worn as a ring.")
 
     def equip(self):
         player.bonusDamage += (self.enchantment + 1) * 0.75
@@ -778,8 +788,9 @@ class IllusionRing(Equipable):
         if self.enchantment < 0: # negative enchantment is strong enough to reverse the effect
             enchantment -= 1
 
-        print("Whenever you dodge an attack, your attacker gets stunned.")
-        print(f"Increases your chance to dodge by {5 + 5 * enchantment}%.")
+        print("Whenever you dodge an attack, the attacker gets stunned.")
+        print(f"Increases your chance to dodge by {c.compare(5 + 5 * enchantment, 5)}%.")
+        print("Worn as a ring.")
 
     def equip(self):
         enchantment = self.enchantment
@@ -887,13 +898,14 @@ class Ring(Equipable):
             enchantment -= 1
 
         print([
-            f"Increases your stealth by {1 + enchantment} level(s).",
-            f"Increases your chance to dodge by {5 + 5 * enchantment}%.",
-            f"Increases your health by {2 + 2 * enchantment}.",
-            f"Increases your resistance to disease and injury by {1 + enchantment} level(s).",
-            f"Increases your awareness of nearby threats by {1 + enchantment} level(s).",
-            f"Increases your chance to get a critical hit by {10 + 10 * enchantment}%."
+            f"Increases your stealth by {c.compare(1 + enchantment, 1)} level(s).",
+            f"Increases your chance to dodge by {c.compare(5 + 5 * enchantment, 5)}%.",
+            f"Increases your health by {c.compare(2 + 2 * enchantment, 2)}.",
+            f"Increases your resistance to disease and injury by {c.compare(1 + enchantment, 1)} level(s).",
+            f"Increases your awareness of nearby threats by {c.compare(1 + enchantment, 1)} level(s).",
+            f"Increases your chance to get a critical hit by {c.compare(10 + 10 * enchantment, 10)}%."
         ][self.statID])
+        print("Worn as a ring.")
 
     def consume(self, floor):
         self.equip()
@@ -1042,8 +1054,8 @@ class Bandage(Medicine):
         return message
 
     def inspect(self):
-        print(f"It heals around 4 HP and applies REGENERATION.")
-        print(f"Cures bleeding.")
+        print(f"Heals around {c.compare(10 + 2 * self.enchantment, 10)} health over time.")
+        print(f"Has multiple uses and cures bleeding.")
         if self.enchantment > 0:
             print(c.green("This item does extra healing."))
         elif self.enchantment < 0:
@@ -1081,8 +1093,8 @@ class Rations(Medicine):
         return ""
         
     def inspect(self):
-        print("Heals around 7 health instantly, and 8 more health over 4 turns.")
-        print("You don't have enough time to eat this during combat.")
+        print(f"Heals around {c.compare(15 + 3 * self.enchantment, 15)} health over time.")
+        print("Cannot be eaten during combat.")
         print(f"\nYou currently have {c.health_status(player.health, player.maxHealth)} health.")
         if self.enchantment > 0:
             print(c.green("This item does extra healing."))
@@ -1130,7 +1142,7 @@ class ScrollCleanse(Scroll):
 
     def inspect(self):
         print("Uncurses every cursed item in this floor and your inventory.")
-        print("With higher levels of intelligence (INT) some items may also be blessed.")
+        print("With higher levels of intelligence (INT) some items may also become blessed.")
         super().inspect()
     
     def consume(self, floor):
@@ -1162,7 +1174,8 @@ class ScrollCleanse(Scroll):
                     item.equip()
 
         print("In a flash of cleansing light, all items in this floor have been uncursed.")
-        print(f"{upgradedItemsCount} items have been upgraded.")
+        if upgradedItemsCount > 0:
+            print(f"{upgradedItemsCount} items have been upgraded.")
 
         super().consume(floor)
 
@@ -1226,7 +1239,7 @@ class ScrollRepair(Scroll):
 
     def inspect(self):
         print("This scroll will fully restore the uses of one item.")
-        print("Your intelligence (INT) can increase or decrease the item's durability.")
+        print("Your intelligence (INT) can increase or decrease the chosen item's future durability.")
         super().inspect()
 
     def consume(self, floor):
@@ -1260,7 +1273,7 @@ class ScrollRepair(Scroll):
                 self.degrade()
                 return True
             else:
-                print(item.name + " does not work with the scroll of repair")
+                print(item.name + " cannot be repaired")
                 return False
 
 class Consumable(Item):
@@ -1283,8 +1296,8 @@ class Bomb(Consumable):
     canDig = True
 
     def inspect(self):
-        print("Bombs can destroy walls, possibly revealing secrets.")
-        print("It can be used in combat to harm all enemies.")
+        print("Can destroy walls, possibly revealing secret rooms.")
+        print("Can be used in combat to damage all enemies.")
         if self.enchantment > 0:
             print(c.green("This bomb does extra damage."))
         elif self.enchantment < 0:
@@ -1307,7 +1320,7 @@ class Bomb(Consumable):
             # restores crit chance
             player.critChance = crit
             
-            print(f"The bomb does {c.red(damage)} damage to {enemy.name}!")
+            print(f"The bomb does {c.red(damage)} damage to {enemy.name}.")
 
         self.degrade()
         return True
@@ -1320,7 +1333,7 @@ class StunBomb(Consumable):
 
     def inspect(self):
         print(f"Leaves enemies {c.effect(entities.Dazed)} and {c.effect(entities.Surprised)}, lowering their DEX and PER.")
-        print(f"Allows you to escape from non-boss fights, and stuns enemies for a couple turns.")
+        print(f"Allows you to escape from any enemy (except bosses), and stuns enemies for a couple turns.")
         if self.enchantment > 0:
             print(c.green(f"Dazed lasts longer."))
         elif self.enchantment <= 0:
@@ -1362,7 +1375,7 @@ class FireBomb(Consumable):
             player.critChance = crit
             
             enemy.affect(entities.OnFire(), 5 + self.enchantment)
-            print(f"The fire bomb does {c.red(damage)} damage to {enemy.name}, and sets them {c.effect(entities.OnFire)}!")
+            print(f"The fire bomb does {c.red(damage)} damage to {enemy.name}, and sets them {c.effect(entities.OnFire)}.")
 
         self.degrade()
         return True
@@ -1381,7 +1394,7 @@ class StorageBook(Consumable):
 
     def consume(self, floor):
         player.inventorySize += 1
-        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Most of the knowledge contained in the book is incomparehensible to your mortal mind.")
         print("Shortly after being read, the book burns to ashes. You gain +1 inventory size.")
         self.degrade()
         return True
@@ -1400,7 +1413,7 @@ class ImmunityBook(Consumable):
 
     def consume(self, floor):
         player.resistance += 1
-        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Most of the knowledge contained in the book is incomparehensible to your mortal mind.")
         print("Shortly after being read, the book burns to ashes. You gain +1 resistance.")
         self.degrade()
         return True
@@ -1419,7 +1432,7 @@ class EvasionBook(Consumable):
 
     def consume(self, floor):
         player.dodgeChance += 5
-        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Most of the knowledge contained in the book is incomparehensible to your mortal mind.")
         print("Shortly after being read, the book burns to ashes. You gain +5% dodge chance.")
         self.degrade()
         return True
@@ -1438,7 +1451,7 @@ class VisionBook(Consumable):
 
     def consume(self, floor):
         player.awareness += 1
-        print("Most of the knowledge contained in the book is incomprehensible to your mortal mind.")
+        print("Most of the knowledge contained in the book is incomparehensible to your mortal mind.")
         print("Shortly after being read, the book burns to ashes. You gain +1 awareness.")
         self.degrade()
         return True

@@ -148,9 +148,9 @@ class Battle:
             slowprint(c.red("There is no escape from this fight."))
 
         pause()
-        separator()
         
         while not self.battleOver: 
+            separator()
             # calculates run chance based on amount of enemies
             self.runChance = 100 + player.dodgeChance
             if len(self.enemies) > initialEnemies:
