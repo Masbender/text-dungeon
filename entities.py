@@ -921,7 +921,7 @@ class Ogre(Boss):
         # becomes stronger when below 20 HP
         if self.health < 20 and not self.isRaged:
             self.isRaged = True
-            self.bonusDamage += 3
+            self.bonusDamage += 2
             print("OGRE is enraged!")
         
         # choses move, can't do the same twice in a row
