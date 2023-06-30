@@ -722,10 +722,10 @@ class Draugr(Enemy):
 
         if randint(1, 3) == 1:
             if player.affect(Bleeding(), 4):
-                damage = player.hurt(self, 4)
+                damage = player.hurt(self, 5)
                 print(f"DRAUGR hits you with their axe for {c.red(damage)} damage, leaving you {c.effect(Bleeding)}!")
         else:
-            damage = player.hurt(self, 5)
+            damage = player.hurt(self, 6)
             print(f"DRAUGR hits you with their axe for {c.red(damage)} damage!")
 
 class Ghoul(Enemy):
@@ -836,7 +836,7 @@ class SkeletonGuard(Skeleton):
     awareness = 5
     stealth = -1
 
-    armorClass = 2
+    armorClass = 4
     immuneTo = [Bleeding, Burned]
 
     staggerChance = 1 # _ in 6
@@ -921,7 +921,7 @@ class Ogre(Boss):
         # becomes stronger when below 20 HP
         if self.health < 20 and not self.isRaged:
             self.isRaged = True
-            self.strength += 3
+            self.bonusDamage += 3
             print("OGRE is enraged!")
         
         # choses move, can't do the same twice in a row
