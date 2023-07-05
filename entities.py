@@ -152,8 +152,8 @@ class Creature:
                 return False
             elif not isPermanent:
                 duration -= self.resistance - effect.level
-				if duration < 1:
-					return False
+                if duration < 1:
+                    return False
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
