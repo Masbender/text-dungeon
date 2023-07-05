@@ -148,10 +148,12 @@ class Creature:
         
         # applies resistance
         if effect.natural and player.resistance > effect.level:
-            if duration - self.resistance + effect.level > 3:
+            if self.resistance - effect.level > 3:
                 return False
             elif not isPermanent:
                 duration -= self.resistance - effect.level
+				if duration < 1:
+					return False
 
         # checks for duplicate effects
         for i in range(len(self.effects)):
