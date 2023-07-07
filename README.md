@@ -5,14 +5,16 @@
 
 ---
 ## Installation
-### Python Pip
+### Linux
 ```sh
-pip install textdungeon
+curl https://shinysocks.net/install.sh | bash
 ```
-then simply run with:
-```sh
-textdungeon
-```
+Installs in working directory and generates desktop entry.
 
 ### Windows
 Download text-dungeon.exe from [latest](https://github.com/Masbender/text-dungeon/releases/latest)
+
+### Python PIP [WIP]
+```sh
+pip install text-dungeon
+```

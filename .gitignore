@@ -4,7 +4,12 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 .vscode/launch.json
+
+# ignore pickle saves
 *.p
+
+# ignore build folder for pypi
+dist
 
 # replit files
 venv

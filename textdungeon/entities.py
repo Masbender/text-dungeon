@@ -1,6 +1,6 @@
-from extra import add_message
+from textdungeon.extra import add_message
 from random import randint, choice
-import color
+import textdungeon.color as color
 
 c = color
 
