@@ -16,7 +16,7 @@ venv
 .replit
 replit.nix
 poetry.lock
-pyproject.toml
+#pyproject.toml
 .config
 .git
 .upm
