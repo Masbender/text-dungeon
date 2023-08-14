@@ -9,11 +9,11 @@ make text better and more concise
 
 import pickle
 from random import randint, choice
-from textdungeon.extra import clear_console, slowprint, separator, gather_input, pause
-import textdungeon.items as items
-import textdungeon.color as color
-import textdungeon.dungeon as dungeon
-import textdungeon.entities as entities
+from extra import clear_console, slowprint, separator, gather_input, pause
+import items as items
+import color as color
+import dungeon as dungeon
+import entities as entities
 
 player = entities.player
 c = color

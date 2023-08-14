@@ -1,8 +1,8 @@
 from random import randint, choice
-import textdungeon.items as items
-import textdungeon.color as color
-import textdungeon.entities as entities
-from textdungeon.extra import clear_console, gather_input, slowprint, separator, pause, print_messages
+import items as items
+import color as color
+import entities as entities
+from extra import clear_console, gather_input, slowprint, separator, pause, print_messages
 
 c = color
 

@@ -1,9 +1,9 @@
 
 import math
 from random import randint, choice
-import textdungeon.color as color
-import textdungeon.entities as entities
-from textdungeon.extra import gather_input, slowprint, add_message
+import color as color
+import entities as entities
+from extra import gather_input, slowprint, add_message
 
 c = color
 
