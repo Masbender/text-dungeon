@@ -698,8 +698,8 @@ class Draugr(Enemy):
 
     maxHealth = 18
     gold = 16
-    awareness = 3
-    stealth = 2
+    awareness = 2
+    stealth = 3
 
     critChance = 10
     resistance = 2
@@ -742,7 +742,7 @@ class Ghoul(Enemy):
     maxHealth = 16
     gold = 10
     awareness = 4
-    stealth = 1
+    stealth = 2
     
     dodgeChance = 10
     strength = -1 # 4 damage felt like too much but 3 is too little, so this nerfs 4 a little bit
@@ -769,7 +769,7 @@ class Skeleton(Enemy):
 
     maxHealth = 15
     gold = 8
-    awareness = 1
+    awareness = 0
     stealth = 0
     
     damage = 3
@@ -835,8 +835,8 @@ class SkeletonGuard(Skeleton):
 
     maxHealth = 17
     gold = 15
-    awareness = 5
-    stealth = -1
+    awareness = 6
+    stealth = 0
 
     armorClass = 4
     immuneTo = [Bleeding, Burned]
@@ -858,7 +858,7 @@ class Thief(Enemy):
 
     maxHealth = 16
     gold = 6
-    awareness = 2
+    awareness = 4
     stealth = 4
     
     critChance = 5
@@ -993,8 +993,8 @@ class Rat(Enemy):
 
     maxHealth = 12
     gold = 5
-    awareness = 2
-    stealth = 1
+    awareness = 1
+    stealth = 2
     
     corruption = 0
     mutations = []
@@ -1109,8 +1109,8 @@ class SewerRat(Enemy):
     
     maxHealth = 14
     gold = 5
-    awareness = 4
-    stealth = 1
+    awareness = 3
+    stealth = 2
 
     armorClass = 1
     dodgeChance = 5
@@ -1225,7 +1225,7 @@ class Goblin(Enemy):
 
     maxHealth = 14
     gold = 9
-    awareness = 4
+    awareness = 2
     stealth = 4
 
     armorClass = 2
@@ -1345,8 +1345,8 @@ class Alchemist(Enemy):
     
     maxHealth = 20
     gold = 10
-    stealth = 2
-    awareness = 2
+    stealth = 3
+    awareness = 4
 
     armorClass = 1
     dodgeChance = 10
@@ -1383,8 +1383,8 @@ class Worm(Enemy):
 
     maxHealth = 17
     gold = 3
-    awareness = 7
-    stealth = 1
+    awareness = 8
+    stealth = 0
 
     resistance = 3
     armorClass = 1
@@ -1434,8 +1434,8 @@ class AncientDraugr(Enemy):
 
     maxHealth = 28
     gold = 26
-    awareness = 8
-    stealth = 2
+    awareness = 7
+    stealth = 5
     
     resistance = 2
     armorClass = 4
